@@ -1,0 +1,346 @@
+.marketing {
+  background: var(--cf-bg);
+  color: var(--cf-text);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+.marketing a {
+  color: var(--cf-brand);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.mk-nav,
+.mk-footer,
+.mk-main,
+.mk-article {
+  max-width: 76rem;
+  margin: auto;
+  padding-inline: clamp(1rem, 5vw, 4rem);
+}
+.mk-nav {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  min-height: 5rem;
+  border-bottom: 1px solid var(--cf-line);
+}
+.mk-nav nav {
+  display: flex;
+  gap: clamp(0.7rem, 3vw, 2rem);
+  margin-left: auto;
+}
+.mk-nav a,
+.mk-footer a {
+  text-decoration: none;
+}
+.mk-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  letter-spacing: -0.065em;
+  font-weight: 750;
+  font-size: 1.5rem;
+}
+.mk-mark {
+  display: grid;
+  place-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 40% 40% 40% 0;
+  background: var(--cf-brand);
+  color: var(--cf-card);
+  line-height: 1;
+  font-weight: 800;
+}
+.mk-login,
+.mk-btn {
+  font-weight: 650;
+  border: 1px solid var(--cf-line);
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.mk-mark::after {
+  content: '';
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 0.2rem solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+}
+.marketing .mk-btn,
+.marketing button.mk-btn {
+  background: var(--cf-brand);
+  color: var(--cf-card);
+  border-color: var(--cf-brand);
+  text-decoration: none;
+  padding: 0.72rem 1.25rem;
+}
+.mk-btn:disabled {
+  opacity: 0.55;
+}
+.mk-footer {
+  border-top: 1px solid var(--cf-line);
+  padding-block: 3rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+.mk-footer strong,
+.mk-footer div a {
+  display: block;
+}
+.mk-footer strong {
+  margin-bottom: 0.5rem;
+}
+.mk-footer div a {
+  font-size: 0.9rem;
+  margin: 0.35rem 0;
+}
+.mk-article {
+  max-width: 60rem;
+  padding-block: 2rem 4rem;
+}
+.marketing h1,
+.marketing h2,
+.marketing h3 {
+  font-weight: 630;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+.marketing h1 {
+  font-size: clamp(2.55rem, 6.5vw, 5rem);
+  margin: 1rem 0 1.5rem;
+}
+.marketing h2 {
+  font-size: clamp(1.75rem, 3.6vw, 3rem);
+  margin: 1.5em 0 0.6em;
+}
+.marketing h3 {
+  font-size: 1.35rem;
+  margin: 0.8em 0 0.4em;
+}
+.marketing p {
+  margin: 0.75rem 0;
+}
+.marketing details {
+  border-top: 1px solid var(--cf-line);
+  padding: 0.85rem 0;
+}
+.marketing summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.mk-article ul,
+.mk-main ul {
+  list-style: disc;
+  padding-left: 1.5em;
+}
+.marketing ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+}
+.mk-meta,
+.cf-breadcrumb {
+  font-size: 0.9rem;
+  color: var(--cf-muted);
+}
+.cf-breadcrumb ol {
+  list-style: none;
+  display: flex;
+  gap: 0.7em;
+  padding: 0;
+  flex-wrap: wrap;
+}
+.cf-breadcrumb li + li:before {
+  content: '/';
+  margin-right: 0.7em;
+}
+.guide-answer {
+  border-left: 3px solid var(--cf-brand);
+  padding: 0.25rem 1.25rem;
+  margin: 1.5rem 0;
+  background: var(--cf-wash);
+}
+.guide-answer strong {
+  display: block;
+  font-size: 0.85rem;
+  margin-top: 0.45rem;
+}
+.cf-skip {
+  position: absolute;
+  left: -100vw;
+}
+.cf-skip:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 99;
+  background: var(--cf-card);
+  padding: 0.8rem;
+}
+.mk-hero {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+  align-items: center;
+  text-align: center;
+  padding-block: clamp(3rem, 6.5vw, 5.5rem);
+}
+.mk-hero h1 {
+  max-width: 55rem;
+  margin: 0;
+  font-size: clamp(2.5rem, 6.5vw, 5rem);
+  line-height: 1.04;
+  letter-spacing: -0.06em;
+}
+.mk-hero-sources {
+  display: block;
+  margin-block: 0.35em;
+  color: var(--cf-brand);
+  font-size: clamp(1.5rem, 3.3vw, 2.8rem);
+  letter-spacing: -0.04em;
+  line-height: 1.16;
+  text-wrap: balance;
+}
+.mk-hero .guide-answer {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  color: var(--cf-muted);
+  max-width: 42rem;
+  text-wrap: pretty;
+}
+.mk-hero .guide-answer p {
+  margin: 0.5rem 0 0;
+}
+.mk-hero .guide-answer strong {
+  color: var(--cf-brand);
+  margin: 0;
+}
+.mk-actions {
+  display: flex;
+  gap: 0.75rem 1.25rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.mk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 1rem;
+}
+.mk-panel {
+  padding: 1.35rem;
+  border: 1px solid var(--cf-line);
+  border-radius: 0.8rem;
+  background: var(--cf-card);
+}
+.mk-panel h3 {
+  margin-top: 0;
+}
+.mk-main {
+  padding-bottom: 4rem;
+}
+.mk-price {
+  font-size: 1.8rem;
+  font-weight: 650;
+}
+.marketing table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.marketing th,
+.marketing td {
+  padding: 0.7rem;
+  text-align: left;
+  border-bottom: 1px solid var(--cf-line);
+  vertical-align: top;
+}
+.marketing th {
+  background: var(--cf-wash);
+}
+.mk-section {
+  margin: 2.5rem 0;
+}
+.marketing input,
+.marketing textarea,
+.marketing select {
+  max-width: 100%;
+  padding: 0.65rem;
+  border: 1px solid var(--cf-line);
+  border-radius: 0.4rem;
+  background: var(--cf-card);
+  color: var(--cf-text);
+}
+.mk-answer-links {
+  margin: 2rem 0;
+}
+.mk-panel p {
+  color: var(--cf-muted);
+}
+@media (max-width: 760px) {
+  .mk-nav {
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding-block: 0.75rem;
+  }
+  .mk-nav nav {
+    order: 3;
+    flex-basis: 100%;
+    margin: 0;
+  }
+  .mk-login {
+    margin-left: auto;
+  }
+  .mk-footer {
+    justify-content: start;
+  }
+  .marketing table {
+    font-size: 0.94rem;
+  }
+}
+.public-search {
+  margin: 1.25rem 0;
+}
+.public-search form {
+  display: flex;
+  align-items: end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.public-search label {
+  display: grid;
+  gap: 0.35rem;
+}
+.public-search button {
+  border-radius: 2rem;
+  background: var(--cf-brand);
+  color: var(--cf-card);
+  padding: 0.72rem 1rem;
+  font-weight: 600;
+}
+.marketing .public-search ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 1rem;
+}
+.public-search li {
+  background: var(--cf-card);
+  border: 1px solid var(--cf-line);
+  padding: 1.25rem;
+  border-radius: 0.8rem;
+}
+.public-search small {
+  color: var(--cf-muted);
+}
+.public-search li h3 {
+  margin-top: 0.5rem;
+}

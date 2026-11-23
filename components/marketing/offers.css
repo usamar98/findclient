@@ -1,0 +1,98 @@
+.cf-offers {
+  width: min(100%, 74rem);
+  margin-inline: auto;
+  color: #171717;
+  padding-block: clamp(3.5rem, 7vw, 6rem);
+}
+.cf-plans-intro { margin: 0 auto 2rem; max-width: 42rem; text-align: center; }
+.cf-offers .cf-plans-intro :is(h1, h2) {
+  color: #101010;
+  margin: 0 0 .8rem;
+  font-size: clamp(2.35rem, 5vw, 4.1rem);
+  font-weight: 650;
+  line-height: 1.04;
+  letter-spacing: -.065em;
+}
+.cf-offers .cf-plans-intro p { margin: 0 auto; max-width: 46ch; color: #575757; text-wrap: pretty; line-height: 1.5; }
+.cf-plan-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(.7rem, 1.35vw, 1.1rem); align-items: stretch; }
+.cf-plan-card {
+  --plan-fg: #141414;
+  --plan-muted: #535353;
+  --plan-line: #dedede;
+  --plan-bg: #fff;
+  background: var(--plan-bg);
+  border: 1px solid var(--plan-line);
+  color: var(--plan-fg);
+  padding: clamp(1.15rem, 2.4vw, 2rem);
+  border-radius: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  text-align: left;
+}
+.cf-plan-featured {
+  --plan-fg: #fff;
+  --plan-muted: #cecece;
+  --plan-line: #444;
+  --plan-bg: #171717;
+  background: radial-gradient(ellipse at 115% -20%, #404040, #171717 51%);
+  border-color: #171717;
+}
+.cf-plan-heading { display: flex; justify-content: space-between; align-items: center; gap: .4rem; }
+.cf-plan-card .cf-plan-heading h3 { margin: 0; font-size: clamp(1.2rem, 2vw, 1.55rem); font-weight: 640; letter-spacing: -.045em; color: var(--plan-fg); }
+.cf-plan-icon { position: relative; width: 2.15rem; height: 2.15rem; display: grid; place-items: center; border: 1px solid var(--plan-line); border-radius: .7rem; flex-shrink: 0; }
+.cf-icon-free::after { content: ''; border: 1.5px solid currentColor; width: .75rem; height: .75rem; border-radius: 50%; }
+.cf-icon-monthly::before, .cf-icon-monthly::after { content: ''; inset: .55rem .64rem .73rem .52rem; border: 1.5px solid currentColor; position: absolute; border-radius: 3px; background: var(--plan-bg); }
+.cf-icon-monthly::after { transform: translate(3px, 3px); }
+.cf-icon-lifetime { font-family: Georgia, serif; font-size: 1.75rem; line-height: 1; }
+.cf-plan-card .cf-plan-purpose { color: var(--plan-muted); font-size: .92rem; margin: .65rem 0 1.25rem; line-height: 1.5; }
+.cf-plan-price { display: flex; align-items: baseline; flex-wrap: wrap; gap: .45rem; margin: .1rem 0 1.35rem; }
+.cf-plan-price strong { font-size: clamp(2.75rem, 5vw, 4.25rem); letter-spacing: -.09em; line-height: 1; font-weight: 600; }
+.cf-plan-price span { color: var(--plan-muted); font-size: .82rem; }
+.cf-plan-card .cf-plan-features { padding: 1.15rem 0 0; margin: 0 0 1.4rem; border-top: 1px solid var(--plan-line); list-style: none; display: grid; gap: .65rem; }
+.cf-plan-features li { position: relative; font-size: .87rem; line-height: 1.45; padding-left: 1.45rem; margin: 0; color: var(--plan-fg); }
+.cf-plan-features li::before { content: ''; position: absolute; left: .12rem; top: .28rem; width: .32rem; height: .62rem; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(42deg); }
+.cf-plan-bottom { margin-top: auto; }
+.cf-plan-card .cf-tier-note, .cf-plan-card .cf-clock-note { font-size: .76rem; color: var(--plan-muted); margin: 0 0 .55rem; line-height: 1.5; }
+.cf-deal-clock { border-top: 1px dashed var(--plan-line); padding: .9rem 0; }
+.cf-countdown { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .62rem; }
+.cf-countdown span { font-size: .71rem; color: var(--plan-muted); }
+.cf-countdown b { font-family: ui-monospace, monospace; font-size: 1rem; font-variant-numeric: tabular-nums; color: var(--plan-fg); font-weight: 550; }
+.cf-plan-card .cf-plan-action {
+  display: flex; align-items: center; justify-content: space-between; gap: .5rem; width: 100%; min-height: 2.8rem;
+  color: var(--plan-fg); background: var(--plan-bg); border: 1px solid var(--plan-line); padding: .65rem .9rem;
+  border-radius: .65rem; text-decoration: none; font: inherit; font-size: .86rem; font-weight: 650; text-align: left; cursor: pointer;
+}
+.cf-plan-action span { font-size: 1.15rem; line-height: 1; transition: transform .15s ease; }
+.cf-plan-featured .cf-plan-action { background: #fff; color: #161616; border-color: #fff; }
+.cf-plan-action:not(:disabled):hover { border-color: var(--plan-fg); }
+.cf-plan-action:not(:disabled):hover span { transform: translate(2px, -2px); }
+.cf-plan-action:disabled, .cf-pack-list button:disabled { opacity: .67; cursor: default; }
+.cf-plan-featured :focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.cf-pricing-page { width: min(100% - 2.5rem, 70rem); margin-inline: auto; padding-block: clamp(1.5rem, 4vw, 3rem) clamp(4rem, 7vw, 6rem); }
+.cf-pricing-page .cf-offers { padding-block: 2.25rem 0; }
+.cf-credit-packs { padding: clamp(1.2rem, 3vw, 2rem); border: 1px solid #ddd; border-radius: 1.25rem; margin-top: 1.25rem; background: #f8f8f8; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
+.cf-credit-packs > div:first-child { max-width: 34ch; }
+.cf-credit-packs h2 { font-size: 1.35rem; margin: 0 0 .4rem; font-weight: 650; }
+.cf-credit-packs p { color: #555; font-size: .87rem; line-height: 1.55; margin: 0; }
+.cf-pack-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
+.cf-pack-list button { display: grid; grid-template-columns: 1fr auto; gap: .35rem .7rem; align-items: center; width: 100%; min-width: 6rem; padding: .75rem .85rem; background: white; color: #171717; text-align: left; border: 1px solid #ddd; border-radius: .65rem; cursor: pointer; }
+.cf-pack-list button:hover:not(:disabled) { border-color: #555; }
+.cf-pack-list button span:first-child { grid-column: 1 / -1; color: #555; font-size: .8rem; }
+.cf-pack-list button strong { font-size: 1.15rem; letter-spacing: -.04em; }
+.cf-pricing-faq { max-width: 48rem; margin: clamp(3rem, 6vw, 5rem) auto 0; }
+.cf-pricing-faq h2 { margin: 0 0 1.3rem; }
+.cf-pricing-faq p { color: #555; }
+@media (max-width: 760px) {
+  .cf-plan-grid { grid-template-columns: 1fr; }
+  .cf-plan-card { padding: 1.4rem; }
+  .cf-plan-card .cf-plan-purpose { margin-bottom: .85rem; }
+  .cf-credit-packs { display: block; }
+  .cf-pack-list { margin-top: 1rem; }
+}
+@media (max-width: 410px) {
+  .cf-pack-list { grid-template-columns: 1fr; }
+  .cf-pack-list button { display: flex; gap: .75rem; }
+  .cf-pack-list button span:first-child { margin-right: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .cf-plan-action span { transition: none; } }

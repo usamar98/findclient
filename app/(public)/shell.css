@@ -1,0 +1,94 @@
+.cf-mast {
+  position: sticky;
+  top: .65rem;
+  z-index: 40;
+  width: min(calc(100% - 2rem), 72rem);
+  height: 4.25rem;
+  margin: .8rem auto 0;
+  pointer-events: none;
+}
+.cf-bar {
+  pointer-events: auto;
+  position: relative;
+  background: rgb(255 255 255 / 96%);
+  border: 1px solid #dedede;
+  box-shadow: 0 3px 12px #00000009, 0 1px 2px #00000008;
+  backdrop-filter: blur(16px);
+  width: 100%;
+  height: 4rem;
+  margin: 0 auto;
+  padding: 0 clamp(.875rem,2vw,1.7rem);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  border-radius: 18px;
+  transition: width .25s ease, height .25s ease, border-radius .25s ease, box-shadow .25s ease;
+}
+.cf-mast[data-compact='true'] .cf-bar {
+  width: min(100%, 54rem);
+  height: 3.3rem;
+  border-radius: 3rem;
+  box-shadow: 0 6px 30px #00000016;
+}
+.cf-primary, .cf-account { display: flex; align-items: center; gap: clamp(.8rem,2vw,1.75rem); }
+.cf-account { justify-self: end; gap: 1.1rem; }
+.cf-primary a, .cf-account a, .cf-footer a { text-decoration: none; }
+.cf-primary a, .cf-account a { font-size: .88rem; font-weight: 570; }
+.cf-primary a:hover, .cf-primary a[aria-current='page'], .cf-login:hover { text-decoration: underline; text-underline-offset: .35rem; }
+.marketing .cf-register { border-radius: 3rem; padding: .55rem 1.05rem; background: #151515; color: white; }
+.cf-register:hover { background: #393939; }
+.cf-menu-button, .cf-menu-login { display: none; }
+.cf-footer { background: #101010; color: #fff; padding: clamp(2.7rem,7vw,5.5rem) max(1.25rem,calc((100vw - 70rem)/2)) 1.4rem; }
+.cf-footer-grid { display: grid; grid-template-columns: 1.55fr repeat(4,1fr); gap: 2rem; }
+.cf-footer-grid strong { display: block; margin-bottom: .9rem; font-size: .83rem; font-weight: 650; }
+.cf-footer-grid a:not(.cf-wordmark) { display:block; color:#b5b5b5; font-size:.88rem; margin:.45rem 0; width:fit-content; }
+.cf-footer-grid a:hover { color:white; text-decoration:underline; }
+.cf-footer-brand p { max-width:18ch; font-size:1.04rem; color:#bcbcbc; line-height:1.45; }
+.cf-footer-base { margin-top:3.5rem; border-top:1px solid #393939; padding-top:1.2rem; color:#b5b5b5; font-size:.8rem; }
+.marketing .cf-footer .cf-wordmark { color:white; }
+.cf-footer .cf-symbol { background:white; color:#151515; }
+.mk-article { width:min(100% - 2.4rem, 57rem); padding:clamp(2.4rem,6vw,5rem) 0 clamp(4rem,8vw,7rem); }
+.mk-article h1 { max-width:19ch; margin:.35em 0 .48em; font-weight:680; letter-spacing:-.054em; }
+.mk-article > section,.cf-info-sections > section { border-top:1px solid var(--cf-line); margin-top:2.2rem; padding-top:1.3rem; }
+.mk-article > section h2,.cf-info-sections h2 { margin:.2em 0 .5em; font-size:clamp(1.5rem,3vw,2.35rem); }
+.mk-article > section p,.cf-info-sections p,.mk-article .guide-answer p { max-width:70ch; line-height:1.75; color:#454545; }
+.cf-how-page { width:min(100% - 2.4rem,66rem); max-width:none; }
+.cf-how-page .cf-info-intro { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,.9fr); gap:clamp(1.5rem,5vw,5rem); align-items:center; margin:1.1rem 0; }
+.cf-how-page .guide-answer { padding:0; border:none; background:none; }
+.cf-how-example { margin:0; min-height:15rem; display:grid; align-content:center; justify-items:center; padding:2rem; border-radius:18px; border:1px solid #ddd; background-color:#f6f6f6; background-image:radial-gradient(#d5d5d5 1px,transparent 1px); background-size:13px 13px; }
+.cf-how-example img { width:100%; border-radius:.65rem; transform:rotate(-4deg); box-shadow:0 .7rem 1rem -1rem #333a; }
+.cf-how-example figcaption { font-size:.86rem; margin-top:1.45rem; color:#505050; }
+.cf-how-page .cf-info-sections { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:2rem; counter-reset:stage; }
+.cf-how-page .cf-info-sections section { counter-increment:stage; border:1px solid #ddd; border-radius:16px; padding:1.5rem; margin:0; }
+.cf-how-page .cf-info-sections section:before { content:counter(stage,decimal-leading-zero); font:500 .9rem ui-monospace,monospace; display:inline-block; background:#171717; color:white; padding:.28rem .55rem; border-radius:6px; margin-bottom:1.4rem; }
+.cf-how-page .cf-info-sections h2 { font-size:1.65rem; }
+.mk-article .guide-answer,.guides-wrap .guide-answer { padding:1rem 1.45rem; border-radius:0 14px 14px 0; }
+.mk-article .guide-answer strong,.guides-wrap .guide-answer strong { font-size:.76rem; letter-spacing:.07em; text-transform:uppercase; }
+.mk-article .mk-meta { color:#626262; }
+.cf-breadcrumb { text-transform:capitalize; }
+.marketing section[aria-label="Frequently asked questions"] summary { padding-right:1.8rem; position:relative; list-style:none; }
+.marketing section[aria-label="Frequently asked questions"] summary::-webkit-details-marker { display:none; }
+.marketing section[aria-label="Frequently asked questions"] summary:after { content:'+'; font-size:1.25rem; line-height:1; position:absolute; right:.2rem; top:.2rem; }
+.marketing section[aria-label="Frequently asked questions"] details[open] > summary:after { content:'−'; }
+@media(max-width:780px) {
+  .cf-footer-grid { grid-template-columns:repeat(2,1fr); }
+  .cf-footer-brand { grid-column:1/-1; }
+  .cf-footer-brand p { max-width:32ch; }
+}
+@media(max-width:660px) {
+  .cf-how-page .cf-info-intro,.cf-how-page .cf-info-sections { grid-template-columns:1fr; }
+  .cf-how-example { min-height:0; }
+  .cf-how-example img { max-width:17rem; }
+  .cf-mast { width:calc(100% - 1.3rem); margin-top:.55rem; height:3.7rem; top:.45rem; }
+  .cf-bar { height:3.4rem; grid-template-columns:1fr auto; }
+  .cf-primary { display:none; position:absolute; top:calc(100% + .4rem); left:0; right:0; background:white; border:1px solid var(--cf-line); border-radius:18px; padding:.55rem; box-shadow:0 12px 28px #0002; }
+  .cf-primary[data-open='true'] { display:grid; gap:0; }
+  .cf-primary a { padding:.7rem .9rem; border-radius:10px; }
+  .cf-menu-login { display:block; }
+  .cf-account .cf-login { display:none; }
+  .cf-account { gap:.4rem; }
+  .cf-menu-button { background:#f5f5f5; width:2.4rem; height:2.4rem; border-radius:50%; display:grid; align-content:center; justify-content:center; gap:4px; }
+  .cf-menu-button span { width:15px; height:2px; background:#181818; }
+  .cf-mast[data-compact='true'] .cf-bar { width:calc(100% - .85rem); height:3.1rem; }
+}
+@media(prefers-reduced-motion:reduce) { .cf-bar { transition:none; } }

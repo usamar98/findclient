@@ -16,7 +16,7 @@ export default async function Checkout({
     return (
       <section className="panel">
         <h1>The lifetime deal has ended</h1>
-        <Link href="/pricing">View available plans</Link>
+        <Link href="/pricing">View pricing</Link>
       </section>
     )
   const { data: offer, error } = await admin()
@@ -37,15 +37,11 @@ export default async function Checkout({
         <p>
           {price === null
             ? 'Current price unavailable'
-            : '$' +
-              price +
-              (product === 'monthly'
-                ? ' USD per month · Cancel in billing settings'
-                : ' USD · One-time payment')}
+            : '$' + price + ' USD · One-time payment'}
         </p>
         <p>
           {offer.credits} credits{' '}
-          {product === 'monthly' || product === 'lifetime'
+          {product === 'lifetime'
             ? 'included each month'
             : 'added to your balance'}
           .
@@ -55,7 +51,7 @@ export default async function Checkout({
           <button disabled={price === null}>Continue to Stripe Checkout</button>
         </form>
       </section>
-      <Link href="/pricing">Review all plans</Link>
+      <Link href="/pricing">View pricing</Link>
     </>
   )
 }

@@ -12,6 +12,7 @@ export type AccountQuery = { message?: string; purchase?: string }
 export async function AccountPage({ mode, query }: { mode: 'login' | 'signup'; query: AccountQuery }) {
   const signup = mode === 'signup'
   const purchase = products.safeParse(query.purchase)
+  if (query.purchase && !purchase.success) redirect('/pricing')
   const continuation = purchase.success ? '?purchase=' + purchase.data : ''
   if (authConfigured()) {
     const db = await database()

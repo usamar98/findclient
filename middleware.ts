@@ -22,6 +22,8 @@ export async function middleware(request: NextRequest) {
     }
   }
   if (!/^\/app(?:\/|$)/.test(u.pathname)) return NextResponse.next()
+  if (u.pathname === '/app/checkout/monthly' || u.pathname === '/app/checkout/free')
+    return NextResponse.redirect(new URL('/pricing', u))
   let response = NextResponse.next({ request })
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL,
     key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY

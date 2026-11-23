@@ -1,10 +1,10 @@
 export const infoPages = {
   pricing: {
-    title: 'Clientfind pricing | Free, monthly and lifetime access',
+    title: 'Clientfind pricing | Lifetime access and credit packs',
     description:
-      'Compare free access, the $49 monthly subscription and the limited lifetime deal starting at $149. See credit allowances and one-time top-ups.',
+      'See the current lifetime price, monthly credit allowance and optional one-time credit packs. Lifetime access starts at $149.',
     answer:
-      'Start with 15 free credits to explore one niche. A monthly subscription or lifetime purchase includes fresh credits every month. The lifetime deal starts at $149 and goes up by $10 for each ten completed deals. You can also buy credit packs for extra searches and drafts.',
+      'Lifetime access includes one niche and a fresh credit allowance each month for a single payment. The deal starts at $149 and goes up by $10 after every ten completed purchases. You can also buy a one-time credit pack for extra searches and drafts.',
     sections: [],
   },
   'how-it-works': {
@@ -35,7 +35,7 @@ export const infoPages = {
   faq: {
     title: 'Clientfind questions about leads, credits and replies',
     description:
-      'Answers on buying intent, lead sources, free credits, paid plans, Telegram alerts, replies and tracking client conversations.',
+      'Answers on buying intent, lead sources, lifetime access, credit packs, Telegram alerts, replies and tracking client conversations.',
     answer:
       'Clientfind helps freelancers find recent public requests, judge whether they fit a service and prepare a reply. These answers cover how searches work, what credits pay for, when alerts arrive and how to approach a community respectfully. You choose which conversations deserve your time and attention.',
     sections: [],
@@ -116,7 +116,7 @@ export const infoPages = {
       ],
       [
         'How do purchases work?',
-        'Review the price and credit allowance before paying. The monthly plan renews each month until canceled through billing settings. Lifetime access is a one-time purchase with a monthly credit refill. One-time credit packs add credits to the existing plan.',
+        'Review the price and credit allowance before paying. Lifetime access is a one-time purchase with a monthly credit refill. One-time packs add credits to your balance. If you already have a monthly subscription, you can manage renewal and cancellation in billing settings.',
       ],
       [
         'Can Clientfind guarantee a sale?',

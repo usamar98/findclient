@@ -4,6 +4,14 @@ import { NextRequest } from 'next/server'
 import { middleware } from '../middleware'
 import { isBillingOrigin } from '../lib/origin'
 
+test('retired checkout links send visitors to current pricing before sign-in', async () => {
+  for (const plan of ['free', 'monthly']) {
+    const response = await middleware(new NextRequest('https://clientfind.test/app/checkout/' + plan))
+    assert.equal(response.status, 307)
+    assert.equal(response.headers.get('location'), 'https://clientfind.test/pricing')
+  }
+})
+
 test('billing POSTs behind a proxy require the configured production or preview origin', (t) => {
   const variables = ['NEXT_PUBLIC_SITE_URL', 'VERCEL_URL', 'VERCEL_ENV'] as const
   const previous = variables.map((name) => process.env[name])

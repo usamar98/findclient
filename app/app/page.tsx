@@ -79,6 +79,9 @@ export default async function Inbox({
     <>
       <p className="meta">Workspace · {profile.credits} credits available</p>
       <h1>Lead inbox</h1>
+      {profile.credits === 0 && (
+        <p>New searches and replies need credits. <Link href="/pricing">View pricing</Link></p>
+      )}
       <div className="stats">
         {['Leads found', 'Replied', 'Won'].map((label, i) => (
           <div key={label}>

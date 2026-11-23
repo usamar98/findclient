@@ -2,14 +2,12 @@ import Stripe from 'stripe'
 import { z } from 'zod'
 export const products = z.enum([
   'lifetime',
-  'monthly',
   'topup9',
   'topup19',
   'topup29',
 ])
 export const productNames = {
   lifetime: 'Lifetime deal',
-  monthly: 'Monthly subscription',
   topup9: '100 credits',
   topup19: '250 credits',
   topup29: '400 credits',

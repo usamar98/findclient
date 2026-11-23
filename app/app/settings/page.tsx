@@ -3,6 +3,12 @@ import { requireUser } from '@/lib/db/server'
 import { NicheEditor } from '@/components/workspace/niche-editor'
 import { removeNiche } from '../niche-actions'
 import { connectTelegram, disconnectTelegram, savePreferences } from './actions'
+const planLabels = {
+  free: 'No active plan',
+  lifetime: 'Lifetime access',
+  monthly: 'Monthly subscription',
+  agency: 'Lifetime agency access',
+}
 export default async function Settings() {
   const { db, user } = await requireUser(),
     [{ data: p, error }, { data: niches, error: nicheError }] =
@@ -17,9 +23,9 @@ export default async function Settings() {
       <section className="panel">
         <h2>Plan and balance</h2>
         <p>
-          {p.plan} · {p.credits} credits
+          {planLabels[p.plan]} · {p.credits} credits
         </p>
-        <Link href="/pricing">View plans and credit packs</Link>
+        <Link href="/pricing">View pricing and credit packs</Link>
         {p.stripe_customer_id && (
           <form action="/api/portal" method="post">
             <button>View billing and receipts</button>

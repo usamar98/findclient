@@ -60,8 +60,8 @@ const entries = [
     'Yes. Review the suggested response, select a tone and edit the wording before copying. Regeneration spends credits.',
   ],
   [
-    'How many credits does the free plan include?',
-    'The free plan starts with 15 credits and one niche. Scoring and drafting spend credits, so the number of qualifying leads varies.',
+    'What can I do with a credit?',
+    'Scoring one public request uses one credit. Generating or regenerating a reply also uses one credit. You can see your remaining balance in workspace settings.',
   ],
   [
     'Is a credit a guaranteed client?',
@@ -72,8 +72,8 @@ const entries = [
     'The first 10 lifetime deals start at $149 each. The price increases by $10 after every 10 completed deals. The offer ends on December 26, 2026 at 11:59 pm Pakistan time. Your one-time payment includes one niche and a monthly credit refill.',
   ],
   [
-    'What does the monthly subscription include?',
-    'The monthly subscription costs $49 and includes one niche and a credit refill each paid month. You can manage your subscription in billing settings.',
+    'Do unused credits carry over?',
+    'Yes. Your unused credits stay in your workspace when your lifetime allowance refills or you buy a one-time pack.',
   ],
   [
     'Can I purchase more credits?',

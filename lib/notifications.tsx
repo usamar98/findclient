@@ -63,7 +63,8 @@ async function deliver(n: Notice) {
     case 'welcome':
       title = 'Welcome to Clientfind'
       body =
-        'Your workspace starts with 15 credits. Pick your niche and sources to start the hourly lead scan.'
+        'Choose your niche and the sources you want to search. Hourly lead scans start once your workspace has credits.'
+      items = [{ label: 'View pricing', url: base + '/pricing' }]
       break
     case 'receipt': {
       const r = z

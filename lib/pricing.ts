@@ -28,14 +28,13 @@ export const getPricing = cache(async function getPricing(): Promise<{
   return error || !data ? unavailable : data
 })
 type Offer = {
-  product: 'lifetime' | 'monthly' | 'topup9' | 'topup19' | 'topup29'
+  product: 'lifetime' | 'topup9' | 'topup19' | 'topup29'
   price: number | null
   credits: number
 }
 // Seeded fixed offers keep the marketing preview usable before a Supabase project is connected.
 const defaults: Offer[] = [
   { product: 'lifetime', price: 149, credits: 150 },
-  { product: 'monthly', price: 49, credits: 150 },
   { product: 'topup9', price: 9, credits: 100 },
   { product: 'topup19', price: 19, credits: 250 },
   { product: 'topup29', price: 29, credits: 400 },

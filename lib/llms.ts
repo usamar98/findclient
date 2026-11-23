@@ -7,7 +7,6 @@ import { niches } from './niche-content'
 export async function llmsDocument(full: boolean) {
   const offers = await getOffers()
   const lifetime = offers.find((o) => o.product === 'lifetime')!
-  const monthly = offers.find((o) => o.product === 'monthly')!
   const lifetimeOpen = Date.now() < Date.parse(LIFETIME_ENDS_AT)
   const intro = [
     '# Clientfind',
@@ -22,14 +21,12 @@ export async function llmsDocument(full: boolean) {
     '',
     'Supported sources include Hacker News, Bluesky, Stack Exchange, Shopify Community and indexed public conversations from Reddit, Indie Hackers, X and forums. Coverage depends on source availability, search indexing and configured providers.',
     '',
-    '## Plans and credits',
+    '## Lifetime access and credits',
     '',
-    '- Free includes 15 starting credits and one niche. Scoring a post or generating a response uses one credit.',
+    '- Scoring a post or generating a response uses one credit.',
     lifetimeOpen
       ? `- Lifetime starts at $149 and increases by $10 after each 10 deals. The one-time purchase includes ${lifetime.credits} credits per month and one niche. The offer ends December 26, 2026 at 11:59 pm Pakistan time.`
       : '- The lifetime offer ended on December 26, 2026.',
-    `- Monthly includes ${monthly.credits} credits per paid month and one niche.` +
-      (monthly.price !== null ? ` The subscription costs $${monthly.price} per month.` : ''),
     ...offers
       .filter((o) => o.product.startsWith('topup') && o.price !== null)
       .map(

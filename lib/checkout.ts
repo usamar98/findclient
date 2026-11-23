@@ -158,26 +158,22 @@ export async function startCheckout(
   }
   const expiry = Math.floor(Date.parse(quote.expires_at) / 1000)
   if (expiry < Date.now() / 1000 + 1800) return null
-  const recurring = product === 'monthly'
   const metadata = { app: 'clientfind', quote: quote.id, product }
   const session = await api.checkout.sessions.create(
     {
-      mode: recurring ? 'subscription' : 'payment',
+      mode: 'payment',
       payment_method_types: ['card'],
       customer,
       client_reference_id: userId,
       metadata,
       expires_at: expiry,
-      ...(recurring
-        ? { subscription_data: { metadata } }
-        : { invoice_creation: { enabled: true } }),
+      invoice_creation: { enabled: true },
       line_items: [
         {
           quantity: 1,
           price_data: {
             currency: 'usd',
             unit_amount: quote.amount,
-            ...(recurring ? { recurring: { interval: 'month' as const } } : {}),
             product_data: { name: 'Clientfind · ' + productNames[product] },
           },
         },

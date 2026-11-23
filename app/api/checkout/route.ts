@@ -8,7 +8,10 @@ export async function POST(req: Request) {
   if (!isBillingOrigin(req))
     return new Response('Unexpected origin', { status: 403 })
 
-  const p = products.safeParse((await req.formData()).get('product'))
+  const requested = (await req.formData()).get('product')
+  if (requested === 'monthly' || requested === 'free')
+    return NextResponse.redirect(new URL('/pricing', siteOrigin()), 303)
+  const p = products.safeParse(requested)
   if (!p.success) return new Response('Unknown product', { status: 400 })
   const db = authConfigured() ? await database() : null
   const user = db ? (await db.auth.getUser()).data.user : null

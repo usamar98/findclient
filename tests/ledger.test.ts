@@ -8,12 +8,15 @@ const db = new PGlite()
 const query = async <T>(sql: string, params: unknown[] = []) =>
   (await db.query<T>(sql, params)).rows
 
-async function newUser() {
+async function newUser(startingCredits = 0) {
   const id = randomUUID()
   await db.query('insert into auth.users(id,email) values($1,$2)', [
     id,
     id + '@example.org',
   ])
+  if (startingCredits > 0) {
+    await db.query('update profiles set credits=$1 where id=$2', [startingCredits, id])
+  }
   return id
 }
 
@@ -81,7 +84,7 @@ describe('Clientfind Postgres ledger', { concurrency: false }, () => {
   })
 
   it('admits one debit for duplicate attempts and caps outstanding charges at the balance', async () => {
-    const user = await newUser()
+    const user = await newUser(15)
     assert.equal(await balance(user), 15)
     const duplicates = await Promise.all(
       Array.from({ length: 6 }, () => reserve(user, 'same-post', 3)),
@@ -101,8 +104,8 @@ describe('Clientfind Postgres ledger', { concurrency: false }, () => {
   })
 
   it('refunds only the matching owner once and allows a failed operation to retry', async () => {
-    const owner = await newUser()
-    const other = await newUser()
+    const owner = await newUser(15)
+    const other = await newUser(15)
     assert.equal(await reserve(owner, 'request', 4), true)
     await db.query('select refund_usage($1,$2)', [other, 'request'])
     assert.equal(await balance(owner), 11)
@@ -118,7 +121,7 @@ describe('Clientfind Postgres ledger', { concurrency: false }, () => {
   })
 
   it('settles a score and its result together and restores abandoned reservations', async () => {
-    const owner = await newUser()
+    const owner = await newUser(15)
     const [{ id: niche }] = await query<{ id: string }>(
       "insert into niches(user_id,skill,keywords,sources) values($1,'Shopify developer',array['theme'],array['shopify']) returning id",
       [owner],
@@ -181,7 +184,7 @@ describe('Clientfind Postgres ledger', { concurrency: false }, () => {
   })
 
   it('checks quote ownership and amount and fulfills a paid session exactly once', async () => {
-    const owner = await newUser()
+    const owner = await newUser(15)
     const other = await newUser()
     await assert.rejects(quote(owner, 'agency'), /retired/i)
     // An already-issued agency quote can still settle after the migration.
@@ -210,7 +213,7 @@ describe('Clientfind Postgres ledger', { concurrency: false }, () => {
       [owner],
     )
     assert.deepEqual(entitlement, { plan: 'agency', refill: true })
-    await assert.rejects(quote(owner, 'monthly'), /already owned/i)
+    await assert.rejects(quote(owner, 'monthly'), /offer ended/i)
     const [receipt] = await query<{ count: number }>(
       "select count(*)::int as count from notifications where user_id=$1 and kind='receipt'",
       [owner],
@@ -231,6 +234,8 @@ describe('Clientfind Postgres ledger', { concurrency: false }, () => {
 
   it('uses completed lifetime sales for tier boundaries and reserves the final spot', async () => {
     const buyer = await newUser()
+    assert.equal(await balance(buyer), 0)
+    assert.equal(await reserve(buyer, 'before-first-purchase', 1), false)
     const next = await newUser()
     const prices = async () =>
       (
@@ -263,6 +268,7 @@ describe('Clientfind Postgres ledger', { concurrency: false }, () => {
     assert.deepEqual(await prices(), { sales: 9, price: 149, spots: 1 })
     await assert.rejects(quote(next, 'lifetime'), /spots/i)
     assert.ok(await fulfill(buyer, last.id, last.amount, 'cs_tier_last'))
+    assert.equal(await balance(buyer), last.credits)
     assert.deepEqual(await prices(), { sales: 10, price: 159, spots: 10 })
     const later = await quote(next, 'lifetime')
     assert.equal(later.amount, 15900)
@@ -274,10 +280,18 @@ describe('Clientfind Postgres ledger', { concurrency: false }, () => {
     assert.deepEqual(await prices(), { sales: 20, price: 169, spots: 10 })
   })
 
-  it('refills monthly plans once per paid invoice and handles late delivery after cancellation', async () => {
-    const user = await newUser()
-    const order = await quote(user, 'monthly')
-    assert.equal(order.amount, 4900)
+  it('closes new monthly quotes and honors invoices and cancellations for earlier quotes', async () => {
+    const user = await newUser(15)
+    await db.exec(
+      "update product_config set sale_ends_at=now()+interval '1 day' where product='lifetime'",
+    )
+    await assert.rejects(quote(user, 'monthly'), /offer ended/i)
+    const historicalQuote = async () =>
+      (await query<{ id: string }>(
+        "insert into checkout_quotes(user_id,product,amount,credits,expires_at) values($1,'monthly',4900,150,now()-interval '1 day') returning id",
+        [user],
+      ))[0]
+    const order = await historicalQuote()
     await db.query(
       "update profiles set stripe_customer_id='cus_monthly' where id=$1",
       [user],
@@ -295,7 +309,7 @@ describe('Clientfind Postgres ledger', { concurrency: false }, () => {
     await pay('in_first', periodEnd)
     await pay('in_first', periodEnd)
     assert.equal(await balance(user), 165)
-    await assert.rejects(quote(user, 'monthly'), /already owned/i)
+    await assert.rejects(quote(user, 'lifetime'), /already owned/i)
     const plan = async () =>
       (
         await query<{ plan: string }>('select plan from profiles where id=$1', [
@@ -309,7 +323,7 @@ describe('Clientfind Postgres ledger', { concurrency: false }, () => {
     )
     await db.exec('select refill_credits()')
     assert.equal(await plan(), 'free')
-    await assert.rejects(quote(user, 'monthly'), /existing plan/i)
+    await assert.rejects(quote(user, 'lifetime'), /existing plan/i)
     await pay('in_renewal', periodEnd)
     assert.equal(await plan(), 'monthly')
     await db.query("select end_subscription($1,'sub_monthly','cus_monthly')", [
@@ -318,7 +332,8 @@ describe('Clientfind Postgres ledger', { concurrency: false }, () => {
     await pay('in_renewal', periodEnd)
     assert.equal(await balance(user), 315)
     assert.equal(await plan(), 'free')
-    const restarted = await quote(user, 'monthly')
+    await assert.rejects(quote(user, 'monthly'), /offer ended/i)
+    const restarted = await historicalQuote()
     await db.query("select end_subscription($1,'sub_new','cus_monthly')", [
       restarted.id,
     ])
@@ -332,7 +347,7 @@ describe('Clientfind Postgres ledger', { concurrency: false }, () => {
 
   it('enforces row and column permissions for authenticated and anonymous callers', async () => {
     const owner = await newUser()
-    const other = await newUser()
+    const other = await newUser(15)
     const scope = await query<{ id: string }>(
       "insert into niches(user_id,skill,keywords,sources) values($1,'Designer','{}',array['reddit']) returning id",
       [owner],
@@ -387,7 +402,7 @@ describe('Clientfind Postgres ledger', { concurrency: false }, () => {
   })
 
   it('enqueues a niche once per source and hour and honors a shared search-provider cooldown', async () => {
-    const user = await newUser()
+    const user = await newUser(15)
     const settings = {
       skill: 'Shopify developer',
       keywords: ['variant image'],
@@ -471,9 +486,9 @@ describe('Clientfind Postgres ledger', { concurrency: false }, () => {
   })
 
   it('refills each due lifetime account once and keeps free accounts at their existing balance', async () => {
-    const free = await newUser()
-    const solo = await newUser()
-    const agency = await newUser()
+    const free = await newUser(15)
+    const solo = await newUser(15)
+    const agency = await newUser(15)
     await db.query(
       "update profiles set plan=case when id=$1 then 'lifetime' else 'agency' end, next_refill_at=now()-interval '1 hour' where id in ($1,$2)",
       [solo, agency],

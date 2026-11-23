@@ -23,8 +23,8 @@ export function LifetimeLink({ className, children }: { className: string; child
   }, [])
 
   return (
-    <Link className={className} href={ended ? '/pricing#other-plans' : '/pricing#lifetime-deal'}>
-      {ended ? 'View plans' : 'Get lifetime access'}{children}
+    <Link className={className} href={ended ? '/pricing' : '/pricing#lifetime-deal'}>
+      {ended ? 'View pricing' : 'Get lifetime access'}{children}
     </Link>
   )
 }

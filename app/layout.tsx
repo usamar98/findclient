@@ -2,7 +2,9 @@ import type { ReactNode } from 'react'
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import { siteOrigin } from '@/lib/origin'
+import { themeBootstrap } from '@/lib/theme'
 import './globals.css'
+import './workspace-theme.css'
 
 export const metadata: Metadata = { metadataBase: new URL(siteOrigin()) }
 
@@ -15,7 +17,8 @@ const geist = localFont({
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={geist.className}>
+    <html lang="en" className={geist.className} suppressHydrationWarning>
+      <head><script dangerouslySetInnerHTML={{ __html: themeBootstrap }} /></head>
       <body>{children}</body>
     </html>
   )

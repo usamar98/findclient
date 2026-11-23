@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Wordmark } from '@/components/wordmark'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { requireUser } from '@/lib/db/server'
 import { signOut } from '../auth/actions'
 export const metadata: Metadata = {
@@ -22,6 +23,7 @@ export default async function Layout({
           <Link href="/app">Lead inbox</Link>
           <Link href="/app/settings">Settings</Link>
           <Link href="/pricing">Pricing</Link>
+          <ThemeToggle />
           <form action={signOut}>
             <button>Sign out</button>
           </form>

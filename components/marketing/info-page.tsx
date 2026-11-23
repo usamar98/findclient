@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { LifetimeLink } from './lifetime-link'
 import Image from 'next/image'
 import { infoPages, type InfoSlug } from '@/lib/marketing-pages'
 import { absolute, buildMetadata } from '@/lib/seo'
@@ -87,9 +88,7 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
             : 'Browse all Clientfind questions'}
         </Link>
       </div>
-      <Link className="mk-btn" href="/auth/login">
-        Find your first 3 clients free
-      </Link>
+      <LifetimeLink className="mk-btn" />
       <JsonLd
         data={{
           '@context': 'https://schema.org',

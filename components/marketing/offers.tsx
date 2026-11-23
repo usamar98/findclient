@@ -3,6 +3,7 @@ import { LIFETIME_ENDS_AT } from '@/lib/offers'
 import { getOffers, getPricing } from '@/lib/pricing'
 import { absolute } from '@/lib/seo'
 import { LifetimeCheckout } from './lifetime-checkout'
+import { LifetimeOffer } from './lifetime-offer'
 import { JsonLd } from './seo'
 import './offers.css'
 
@@ -35,54 +36,71 @@ export async function Offers({ full = false }: { full?: boolean }) {
   const hasLivePrice = tier.sales !== null && lifetime.price !== null
   const Title = full ? 'h1' : 'h2'
 
+  const otherPlans = (
+    <>
+      <article className="cf-plan-card">
+        <div className="cf-plan-heading">
+          <h3>Free</h3>
+          <span className="cf-plan-icon cf-icon-free" aria-hidden="true" />
+        </div>
+        <p className="cf-plan-purpose">Try Clientfind in your niche.</p>
+        <div className="cf-plan-price"><strong>$0</strong><span>to start</span></div>
+        <Features items={['15 starter credits', '1 niche with hourly discovery', 'Intent scores and editable replies']} />
+        <div className="cf-plan-bottom">
+          <Link className="cf-plan-action" href="/auth/signup">Start free<span aria-hidden="true">↗</span></Link>
+        </div>
+      </article>
+      <article className="cf-plan-card">
+        <div className="cf-plan-heading">
+          <h3>Monthly</h3>
+          <span className="cf-plan-icon cf-icon-monthly" aria-hidden="true" />
+        </div>
+        <p className="cf-plan-purpose">Keep your lead inbox refreshed.</p>
+        <div className="cf-plan-price">
+          <strong>{monthly.price === null ? '—' : '$' + monthly.price}</strong><span>/ month</span>
+        </div>
+        <Features items={[`${monthly.credits} credits per paid month`, '1 niche with hourly discovery', 'Manage your subscription in billing']} />
+        <div className="cf-plan-bottom">
+          <Checkout product="monthly" label="Start monthly" disabled={monthly.price === null} />
+        </div>
+      </article>
+    </>
+  )
   return (
     <section className={`cf-offers${full ? ' cf-offers-page' : ''}`} aria-labelledby="cf-plans-title">
       <div className="cf-plans-intro">
-        <Title id="cf-plans-title">{full ? 'Clientfind pricing' : 'Choose your plan'}</Title>
-        <p>Explore your niche with free credits. Go monthly for regular searches, or pay once for lifetime access.</p>
+        <Title id="cf-plans-title">{full ? 'One payment for lifetime access' : 'Choose your plan'}</Title>
+        {full ? <p><a href="#other-plans">Compare free and monthly plans</a></p> :
+          <p>Explore your niche with free credits. Go monthly for regular searches, or pay once for lifetime access.</p>}
       </div>
-      <div className="cf-plan-grid">
-        <article className="cf-plan-card">
-          <div className="cf-plan-heading">
-            <h3>Free</h3>
-            <span className="cf-plan-icon cf-icon-free" aria-hidden="true" />
-          </div>
-          <p className="cf-plan-purpose">Try Clientfind in your niche.</p>
-          <div className="cf-plan-price"><strong>$0</strong><span>to start</span></div>
-          <Features items={['15 starter credits', '1 niche with hourly discovery', 'Intent scores and editable replies']} />
-          <div className="cf-plan-bottom">
-            <Link className="cf-plan-action" href="/auth/login">Find your first 3 clients free<span aria-hidden="true">↗</span></Link>
-          </div>
-        </article>
-        <article className="cf-plan-card">
-          <div className="cf-plan-heading">
-            <h3>Monthly</h3>
-            <span className="cf-plan-icon cf-icon-monthly" aria-hidden="true" />
-          </div>
-          <p className="cf-plan-purpose">Keep your lead inbox refreshed.</p>
-          <div className="cf-plan-price">
-            <strong>{monthly.price === null ? '—' : '$' + monthly.price}</strong><span>/ month</span>
-          </div>
-          <Features items={[`${monthly.credits} credits per paid month`, '1 niche with hourly discovery', 'Manage your subscription in billing']} />
-          <div className="cf-plan-bottom">
-            <Checkout product="monthly" label="Start monthly" disabled={monthly.price === null} />
-          </div>
-        </article>
-        <article className="cf-plan-card cf-plan-featured">
-          <div className="cf-plan-heading">
-            <h3>Lifetime deal</h3>
-            <span className="cf-plan-icon cf-icon-lifetime" aria-hidden="true">∞</span>
-          </div>
-          <p className="cf-plan-purpose">One payment for ongoing discovery.</p>
-          <div className="cf-plan-price">
-            {!hasLivePrice && <span>From</span>}
-            <strong>${lifetime.price ?? 149}</strong><span>once</span>
-          </div>
-          <Features items={[`${lifetime.credits} credits every month`, '1 niche with hourly discovery', 'Price rises $10 every 10 deals']} />
-          {hasLivePrice && tier.price === lifetime.price && tier.spots !== null && !expired && <p className="cf-tier-note">{tier.spots} {tier.spots === 1 ? 'deal' : 'deals'} left at this price</p>}
-          <LifetimeCheckout initialTime={now} available={lifetime.price !== null} />
-        </article>
-      </div>
+      {full ? (
+        <>
+          <LifetimeOffer price={lifetime.price} credits={lifetime.credits} sales={hasLivePrice ? tier.sales : null}
+            spots={tier.price === lifetime.price ? tier.spots : null} now={now} />
+          <section className="cf-secondary-plans" id="other-plans" aria-labelledby="cf-other-plans-title">
+            <h2 id="cf-other-plans-title">Free and monthly plans</h2>
+            <div className="cf-plan-grid">{otherPlans}</div>
+          </section>
+        </>
+      ) : (
+        <div className="cf-plan-grid">
+          {otherPlans}
+          <article className="cf-plan-card cf-plan-featured">
+            <div className="cf-plan-heading">
+              <h3>Lifetime deal</h3>
+              <span className="cf-plan-icon cf-icon-lifetime" aria-hidden="true">∞</span>
+            </div>
+            <p className="cf-plan-purpose">One payment for ongoing discovery.</p>
+            <div className="cf-plan-price">
+              {!hasLivePrice && <span>From</span>}
+              <strong>${lifetime.price ?? 149}</strong><span>once</span>
+            </div>
+            <Features items={[`${lifetime.credits} credits every month`, '1 niche with hourly discovery', 'Price rises $10 every 10 deals']} />
+            {hasLivePrice && tier.price === lifetime.price && tier.spots !== null && !expired && <p className="cf-tier-note">{tier.spots} {tier.spots === 1 ? 'deal' : 'deals'} left at this price</p>}
+            <LifetimeCheckout initialTime={now} available={lifetime.price !== null} />
+          </article>
+        </div>
+      )}
       {full && (
         <div className="cf-credit-packs">
           <div>

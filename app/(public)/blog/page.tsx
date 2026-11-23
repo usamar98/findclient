@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { LifetimeLink } from '@/components/marketing/lifetime-link'
 import { z } from 'zod'
 import { posts } from '@/lib/posts'
 import { absolute, buildMetadata } from '@/lib/seo'
@@ -113,7 +114,7 @@ export default async function Blog({
         </p>
       )}
       <p>
-        <Link href="/auth/login">Find your first 3 clients free</Link>
+        <LifetimeLink className="guide-cta" />
       </p>
       <JsonLd
         data={{

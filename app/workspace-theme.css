@@ -1,0 +1,21 @@
+html[data-theme='dark'] .workspace {
+  background: var(--cf-bg);
+}
+
+html[data-theme='dark'] .workspace header,
+html[data-theme='dark'] .workspace .stats div {
+  background: var(--cf-card);
+}
+
+html[data-theme='dark'] .workspace input[type='checkbox'] {
+  accent-color: var(--cf-brand);
+}
+
+html[data-theme='dark'] :is(.workspace, .tool-form, .guide-filter, .auth-content) :is(input, select, textarea) {
+  border-color: color-mix(in srgb, var(--cf-muted) 65%, var(--cf-card));
+}
+
+html[data-theme='dark'] :is(.workspace, .tool-form, .guide-filter, .auth-content) ::placeholder {
+  color: var(--cf-muted);
+  opacity: 1;
+}

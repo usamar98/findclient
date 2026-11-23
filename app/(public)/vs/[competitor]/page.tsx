@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { LifetimeLink } from '@/components/marketing/lifetime-link'
 import { notFound } from 'next/navigation'
 import { comparisons } from '@/lib/comparisons'
 import { absolute, buildMetadata } from '@/lib/seo'
@@ -95,7 +96,7 @@ export default async function Compare({ params }: Props) {
         </Link>{' '}
         · <Link href="/pricing">Review Clientfind pricing</Link>
       </p>
-      <Link href="/auth/login">Find your first 3 clients free</Link>
+      <LifetimeLink className="guide-cta" />
       <JsonLd
         data={{
           '@context': 'https://schema.org',

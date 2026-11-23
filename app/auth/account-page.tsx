@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Wordmark } from '@/components/wordmark'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { authConfigured, database } from '@/lib/db/server'
 import { products } from '@/lib/payments'
 import { signIn } from './actions'
@@ -24,7 +25,7 @@ export async function AccountPage({ mode, query }: { mode: 'login' | 'signup'; q
   return (
     <main className="auth-shell">
       <div className="auth-form-side">
-        <Wordmark />
+        <header className="cf-auth-bar"><Wordmark /><ThemeToggle /></header>
         <div className="auth-content">
           <h1>{signup ? 'Create your account.' : 'Welcome back.'}</h1>
           <p>{signup ? 'Set up your lead inbox and choose the work you want to find.' : 'Sign in to review new leads and pick up your conversations.'}</p>

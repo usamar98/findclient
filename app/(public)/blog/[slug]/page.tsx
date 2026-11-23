@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { LifetimeLink } from '@/components/marketing/lifetime-link'
 import { getPost, posts, relatedPosts } from '@/lib/posts'
 import { absolute, buildMetadata } from '@/lib/seo'
 import { Breadcrumbs, JsonLd, QuickAnswer } from '@/components/marketing/seo'
@@ -80,7 +81,7 @@ export default async function Article({ params }: Props) {
         </ul>
       </section>
       <p>
-        <Link href="/auth/login">Find your first 3 clients free</Link>
+        <LifetimeLink className="guide-cta" />
       </p>
       <JsonLd
         data={{

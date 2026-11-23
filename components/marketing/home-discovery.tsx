@@ -5,6 +5,7 @@ import type { CSSProperties } from 'react'
 import Link from 'next/link'
 import { homeSources, type HomeSource } from './home-sources'
 import { HeroGallery } from './hero-gallery'
+import { LifetimeLink } from './lifetime-link'
 
 function SourceMark({ source }: { source: HomeSource }) {
   const style: CSSProperties | undefined = source.mark
@@ -56,7 +57,7 @@ export function DiscoveryHero() {
             <p>Find people asking for the work you do. Clientfind searches your communities, spots requests that match your skills, and drafts a personal reply. See the original post, check the budget and timing, then choose the conversations you want to join.</p>
           </aside>
           <div className="cf-hero-actions">
-            <Link className="cf-home-primary" href="/auth/login">Find your first 3 clients free <span aria-hidden="true">↗</span></Link>
+            <LifetimeLink className="cf-home-primary"><span aria-hidden="true">↗</span></LifetimeLink>
             <Link className="cf-home-secondary" href="/pricing"><span className="cf-alert-icon" aria-hidden="true" /> Alert</Link>
           </div>
         </div>

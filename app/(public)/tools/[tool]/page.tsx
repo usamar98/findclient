@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { LifetimeLink } from '@/components/marketing/lifetime-link'
 import { notFound } from 'next/navigation'
 import { toolPages, redditSnapshot, type ToolName } from '@/lib/free-tools'
 import { buildMetadata, absolute } from '@/lib/seo'
@@ -63,7 +64,7 @@ export default async function Tool({ params }: Props) {
         Last updated <time dateTime={contentUpdated}>{contentUpdated}</time>
       </p>
       <div className="guide-links">
-        <Link href="/auth/login">Find your first 3 clients free</Link>
+        <LifetimeLink className="guide-cta" />
         <Link href="/blog/how-to-write-a-forum-proposal">
           Read the forum proposal guide
         </Link>

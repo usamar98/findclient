@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { Wordmark } from '@/components/wordmark'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 const pages = [
   ['/how-it-works', 'How it works'],
@@ -49,6 +50,7 @@ export function Navigation() {
           <Link className="cf-menu-login" href="/auth/login">Sign in</Link>
         </nav>
         <div className="cf-account">
+          <ThemeToggle />
           <Link className="cf-login" href="/auth/login">Sign in</Link>
           <Link className="cf-register" href="/auth/signup">Get started</Link>
           <button ref={menuButton} type="button" className="cf-menu-button" aria-controls="cf-primary" aria-expanded={menuOpen}

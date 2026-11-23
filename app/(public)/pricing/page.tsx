@@ -3,6 +3,7 @@ import { Breadcrumbs, FAQ } from '@/components/marketing/seo'
 import { marketingFaq } from '@/lib/marketing-faq'
 import { infoPages } from '@/lib/marketing-pages'
 import { buildMetadata } from '@/lib/seo'
+import './pricing-page.css'
 export const dynamic = 'force-dynamic'
 
 export const generateMetadata = () => buildMetadata({ ...infoPages.pricing, path: '/pricing' })

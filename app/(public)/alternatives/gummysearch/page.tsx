@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { LifetimeLink } from '@/components/marketing/lifetime-link'
 import { comparisons } from '@/lib/comparisons'
 import { absolute, buildMetadata } from '@/lib/seo'
 import { contentUpdated } from '@/lib/public-pages'
@@ -112,7 +113,7 @@ export default function Alternatives() {
           Read the full migration guide
         </Link>
       </p>
-      <Link href="/auth/login">Find your first 3 clients free</Link>
+      <LifetimeLink className="guide-cta" />
       <JsonLd
         data={{
           '@context': 'https://schema.org',

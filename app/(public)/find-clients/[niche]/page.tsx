@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { LifetimeLink } from '@/components/marketing/lifetime-link'
 import { notFound } from 'next/navigation'
 import { niches } from '@/lib/niche-content'
 import { buildMetadata, absolute } from '@/lib/seo'
@@ -92,7 +93,7 @@ export default async function Niche({ params }: Props) {
           Search public Reddit requests
         </Link>
       </p>
-      <Link href="/auth/login">Find your first 3 clients free</Link>
+      <LifetimeLink className="guide-cta" />
       <JsonLd
         data={{
           '@context': 'https://schema.org',

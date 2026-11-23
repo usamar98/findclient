@@ -10,8 +10,9 @@
 .cf-bar {
   pointer-events: auto;
   position: relative;
-  background: rgb(255 255 255 / 96%);
-  border: 1px solid #dedede;
+  background: var(--cf-card);
+  background: color-mix(in srgb, var(--cf-card) 96%, transparent);
+  border: 1px solid var(--cf-line);
   box-shadow: 0 3px 12px #00000009, 0 1px 2px #00000008;
   backdrop-filter: blur(16px);
   width: 100%;
@@ -35,8 +36,8 @@
 .cf-primary a, .cf-account a, .cf-footer a { text-decoration: none; }
 .cf-primary a, .cf-account a { font-size: .88rem; font-weight: 570; }
 .cf-primary a:hover, .cf-primary a[aria-current='page'], .cf-login:hover { text-decoration: underline; text-underline-offset: .35rem; }
-.marketing .cf-register { border-radius: 3rem; padding: .55rem 1.05rem; background: #151515; color: white; }
-.cf-register:hover { background: #393939; }
+.marketing .cf-register { border-radius: 3rem; padding: .55rem 1.05rem; background: var(--cf-brand); color: var(--cf-bg); }
+.marketing .cf-register:hover { background: light-dark(#393939, #d7d7d7); }
 .cf-menu-button, .cf-menu-login { display: none; }
 .cf-footer { background: #101010; color: #fff; padding: clamp(2.7rem,7vw,5.5rem) max(1.25rem,calc((100vw - 70rem)/2)) 1.4rem; }
 .cf-footer-grid { display: grid; grid-template-columns: 1.55fr repeat(4,1fr); gap: 2rem; }
@@ -51,20 +52,20 @@
 .mk-article h1 { max-width:19ch; margin:.35em 0 .48em; font-weight:680; letter-spacing:-.054em; }
 .mk-article > section,.cf-info-sections > section { border-top:1px solid var(--cf-line); margin-top:2.2rem; padding-top:1.3rem; }
 .mk-article > section h2,.cf-info-sections h2 { margin:.2em 0 .5em; font-size:clamp(1.5rem,3vw,2.35rem); }
-.mk-article > section p,.cf-info-sections p,.mk-article .guide-answer p { max-width:70ch; line-height:1.75; color:#454545; }
+.mk-article > section p,.cf-info-sections p,.mk-article .guide-answer p { max-width:70ch; line-height:1.75; color:light-dark(#454545, #c8c8c8); }
 .cf-how-page { width:min(100% - 2.4rem,66rem); max-width:none; }
 .cf-how-page .cf-info-intro { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,.9fr); gap:clamp(1.5rem,5vw,5rem); align-items:center; margin:1.1rem 0; }
 .cf-how-page .guide-answer { padding:0; border:none; background:none; }
-.cf-how-example { margin:0; min-height:15rem; display:grid; align-content:center; justify-items:center; padding:2rem; border-radius:18px; border:1px solid #ddd; background-color:#f6f6f6; background-image:radial-gradient(#d5d5d5 1px,transparent 1px); background-size:13px 13px; }
+.cf-how-example { margin:0; min-height:15rem; display:grid; align-content:center; justify-items:center; padding:2rem; border-radius:18px; border:1px solid var(--cf-line); background-color:var(--cf-wash); background-image:radial-gradient(light-dark(#d5d5d5, #434343) 1px,transparent 1px); background-size:13px 13px; }
 .cf-how-example img { width:100%; border-radius:.65rem; transform:rotate(-4deg); box-shadow:0 .7rem 1rem -1rem #333a; }
-.cf-how-example figcaption { font-size:.86rem; margin-top:1.45rem; color:#505050; }
+.cf-how-example figcaption { font-size:.86rem; margin-top:1.45rem; color:var(--cf-muted); }
 .cf-how-page .cf-info-sections { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:2rem; counter-reset:stage; }
-.cf-how-page .cf-info-sections section { counter-increment:stage; border:1px solid #ddd; border-radius:16px; padding:1.5rem; margin:0; }
-.cf-how-page .cf-info-sections section:before { content:counter(stage,decimal-leading-zero); font:500 .9rem ui-monospace,monospace; display:inline-block; background:#171717; color:white; padding:.28rem .55rem; border-radius:6px; margin-bottom:1.4rem; }
+.cf-how-page .cf-info-sections section { counter-increment:stage; border:1px solid var(--cf-line); border-radius:16px; padding:1.5rem; margin:0; }
+.cf-how-page .cf-info-sections section:before { content:counter(stage,decimal-leading-zero); font:500 .9rem ui-monospace,monospace; display:inline-block; background:var(--cf-brand); color:var(--cf-bg); padding:.28rem .55rem; border-radius:6px; margin-bottom:1.4rem; }
 .cf-how-page .cf-info-sections h2 { font-size:1.65rem; }
 .mk-article .guide-answer,.guides-wrap .guide-answer { padding:1rem 1.45rem; border-radius:0 14px 14px 0; }
 .mk-article .guide-answer strong,.guides-wrap .guide-answer strong { font-size:.76rem; letter-spacing:.07em; text-transform:uppercase; }
-.mk-article .mk-meta { color:#626262; }
+.mk-article .mk-meta { color:var(--cf-muted); }
 .cf-breadcrumb { text-transform:capitalize; }
 .marketing section[aria-label="Frequently asked questions"] summary { padding-right:1.8rem; position:relative; list-style:none; }
 .marketing section[aria-label="Frequently asked questions"] summary::-webkit-details-marker { display:none; }
@@ -81,14 +82,21 @@
   .cf-how-example img { max-width:17rem; }
   .cf-mast { width:calc(100% - 1.3rem); margin-top:.55rem; height:3.7rem; top:.45rem; }
   .cf-bar { height:3.4rem; grid-template-columns:1fr auto; }
-  .cf-primary { display:none; position:absolute; top:calc(100% + .4rem); left:0; right:0; background:white; border:1px solid var(--cf-line); border-radius:18px; padding:.55rem; box-shadow:0 12px 28px #0002; }
+  .cf-primary { display:none; position:absolute; top:calc(100% + .4rem); left:0; right:0; background:var(--cf-card); border:1px solid var(--cf-line); border-radius:18px; padding:.55rem; box-shadow:0 12px 28px #0002; }
   .cf-primary[data-open='true'] { display:grid; gap:0; }
   .cf-primary a { padding:.7rem .9rem; border-radius:10px; }
   .cf-menu-login { display:block; }
   .cf-account .cf-login { display:none; }
   .cf-account { gap:.4rem; }
-  .cf-menu-button { background:#f5f5f5; width:2.4rem; height:2.4rem; border-radius:50%; display:grid; align-content:center; justify-content:center; gap:4px; }
-  .cf-menu-button span { width:15px; height:2px; background:#181818; }
+  .cf-menu-button { background:var(--cf-wash); width:2.4rem; height:2.4rem; border-radius:50%; display:grid; align-content:center; justify-content:center; gap:4px; }
+  .cf-menu-button span { width:15px; height:2px; background:var(--cf-text); }
   .cf-mast[data-compact='true'] .cf-bar { width:calc(100% - .85rem); height:3.1rem; }
+}
+@media(max-width:410px) {
+  .cf-bar { padding-inline:.6rem; }
+  .cf-bar .cf-wordmark { font-size:1.23rem; gap:.37rem; }
+  .cf-account { gap:.2rem; }
+  .cf-account .cf-theme-toggle { width:2.15rem; }
+  .marketing .cf-register { padding:.52rem .74rem; font-size:.8rem; }
 }
 @media(prefers-reduced-motion:reduce) { .cf-bar { transition:none; } }

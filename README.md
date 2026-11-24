@@ -30,7 +30,7 @@ The [environment template](.env.example) lists every application setting. The [f
 | Telegram | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET` | Required for account linking and private lead alerts. |
 | Scheduled jobs | `CRON_SECRET` | Authorizes Vercel jobs and IndexNow submission. |
 | Brand and contact | `FOUNDER_NAME`, `FOUNDER_URL`, `BRAND_X_URL`, `BRAND_GITHUB_URL`, `BRAND_PRODUCT_HUNT_URL`, `BRAND_LINKEDIN_URL`, `NEXT_PUBLIC_TWITTER_HANDLE`, `SUPPORT_EMAIL` | Add the real public identity, official profiles and monitored contact address for launch. |
-| Indexing | `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`, `INDEXNOW_KEY` | Use the two ownership tokens if verifying via HTML. Set an IndexNow key of 8–128 letters, digits or hyphens. |
+| Indexing | `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`, `INDEXNOW_KEY` | Use the verification tokens issued by Google and Bing when verifying via HTML. The site serves its public IndexNow ownership key at `/indexnow-key.txt`. Optionally override it with 8–128 letters, digits or hyphens. |
 | Traffic tracker | `TRUSTMRR_SCRIPT_URL`, `TRUSTMRR_WEBSITE_ID` | Copy the values from the official snippet, or paste it once into the slot in `app/(public)/layout.tsx`. |
 
 ## Database and sign-in
@@ -111,6 +111,8 @@ These measurements used the optimized production build on localhost with a tempo
 
 ## Launch checklist
 
+For the verified Google property and other search platforms, use the [submission guide](docs/search-submission.md) and [downloadable launch files](docs/downloads/lead-to-client-search-pack-2026-11-24.zip). Google and Bing read the current sitemap at [leadtoclient.app/sitemap.xml](https://leadtoclient.app/sitemap.xml).
+
 The November 24, 2026 rebrand was checked against a local production build. All 35 sitemap pages were reachable through links from the homepage and had canonical links, distinct titles and descriptions, and working social previews. The six Markdown guides linked to their canonical articles. The FAQ showed 30 answers matching its structured data. Mobile and desktop checks covered the new wordmark, navigation, theme control and service directory. These checks cover the application build. Production HTTPS, domain ownership verification and search-engine submission are tracked below.
 
 - [ ] Link the existing Lead To Client deployment project in the intended Vercel Pro team using an account with project creation or deployment access. Use the Next.js preset, Node 22, `npm ci --include=dev` for install and `npm run build` for build. Supply environment variables at the proper scope and redeploy.
@@ -121,10 +123,10 @@ The November 24, 2026 rebrand was checked against a local production build. All 
 - [ ] Add the Ship or Die / TrustMRR tracker using the public layout’s single script slot. Connect TrustMRR in the provider dashboard. Check the tracker loads once on a public page.
 - [ ] Add the founder details, official brand profile links and monitored support email. Review the published privacy terms against the services enabled for launch.
 - [ ] Connect leadtoclient.app and www.leadtoclient.app to the production deployment, confirm HTTPS works for both, set the full origin, and register https://leadtoclient.app/auth/callback with Supabase Auth. Verify the host redirect, private route headers and public indexing rules.
-- [ ] Verify domain ownership in Google Search Console and Bing Webmaster Tools. Submit `/sitemap.xml` to both. Set up the IndexNow key, then request indexing for the home, pricing, tools, niche pages and leading guides.
+- [ ] Verify domain ownership in Google Search Console and Bing Webmaster Tools. Submit `/sitemap.xml` to both. Check that the live IndexNow key file returns HTTP 200 before notifying participating engines about new or changed pages.
 - [ ] Test the deployed pages with [Google Rich Results Test](https://search.google.com/test/rich-results) and [PageSpeed Insights](https://pagespeed.web.dev/). Verify canonical links, card images, JSON-LD, `robots.txt`, RSS, `llms.txt` and `llms-full.txt` using the final domain.
 
-After the domain is connected, the following PowerShell command submits all published URLs to IndexNow. Load the production origin and cron secret into the shell environment first. A response with `accepted: true` confirms that IndexNow received the request.
+After deployment, the following PowerShell command submits the published URLs to IndexNow. Load the production origin and cron secret into the shell environment first. A response with `accepted: true` confirms receipt. The provider may still need to verify the ownership key. For subsequent updates, send just the changed paths in the request body.
 
 ```powershell
 Invoke-RestMethod -Method Post -Uri "$env:NEXT_PUBLIC_SITE_URL/api/indexnow" -Headers @{ Authorization = "Bearer $env:CRON_SECRET" } -ContentType 'application/json' -Body '{}'

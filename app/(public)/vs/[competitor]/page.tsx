@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props) {
   const { competitor } = await params,
     p = comparison(competitor)
   return buildMetadata({
-    title: 'Clientfind vs ' + p.name + ' for freelancers',
+    title: 'Lead To Client vs ' + p.name + ' for freelancers',
     description: p.description,
     path: '/vs/' + competitor,
   })
@@ -33,7 +33,7 @@ export default async function Compare({ params }: Props) {
   const { competitor } = await params,
     p = comparison(competitor),
     path = '/vs/' + competitor
-  const title = 'Clientfind vs ' + p.name
+  const title = 'Lead To Client vs ' + p.name
   const rows = [
     ['Primary task', 'Find requests that match a freelance service', p.goal],
     [
@@ -71,7 +71,7 @@ export default async function Compare({ params }: Props) {
           <thead>
             <tr>
               <th scope="col">Decision</th>
-              <th scope="col">Clientfind</th>
+              <th scope="col">Lead To Client</th>
               <th scope="col">{p.name}</th>
             </tr>
           </thead>
@@ -94,7 +94,7 @@ export default async function Compare({ params }: Props) {
         <Link href="/alternatives/gummysearch">
           Compare four GummySearch alternatives
         </Link>{' '}
-        · <Link href="/pricing">Review Clientfind pricing</Link>
+        · <Link href="/pricing">Review Lead To Client pricing</Link>
       </p>
       <LifetimeLink className="guide-cta" />
       <JsonLd

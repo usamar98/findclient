@@ -54,7 +54,7 @@ export function DiscoveryHero() {
             on Autopilot
           </h1>
           <aside className="guide-answer cf-hero-answer" aria-label="Quick answer">
-            <p>Find people asking for the work you do. Clientfind searches your communities, spots requests that match your skills, and drafts a personal reply. See the original post, check the budget and timing, then choose the conversations you want to join.</p>
+            <p>Lead To Client finds public posts asking for the work you do. See why a request fits, check budget and timing signals, and draft a reply in your own voice. Open the original conversation when you’re ready to respond.</p>
           </aside>
           <div className="cf-hero-actions">
             <LifetimeLink className="cf-home-primary"><span aria-hidden="true">↗</span></LifetimeLink>

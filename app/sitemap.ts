@@ -1,5 +1,8 @@
 import type { MetadataRoute } from 'next'
 import { sitemapEntries, sitemapLimit } from '@/lib/public-pages'
+
+export const dynamicParams = false
+
 export function generateSitemaps() {
   return Array.from(
     { length: Math.max(1, Math.ceil(sitemapEntries().length / sitemapLimit)) },

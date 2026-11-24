@@ -1,6 +1,6 @@
-# Clientfind
+# Lead To Client
 
-Clientfind finds public requests related to a freelancer’s niche, scores buying intent and prepares a solution and personal pitch for the user to review. A person edits, copies and posts each reply. The first workflow is designed for Shopify freelancers.
+Lead To Client helps freelancers and small agencies find public requests for their services, qualify leads, draft replies and track proposals and won revenue. The user reviews each reply and posts it in the original conversation. The production domain is [leadtoclient.app](https://leadtoclient.app).
 
 ## Local setup
 
@@ -14,13 +14,13 @@ npm run dev
 
 Open [the local site](http://localhost:3000). A fresh checkout can build the marketing pages before service credentials are available. The workspace requires Supabase, the discovery worker requires an AI key, and indexed web sources require a search provider key.
 
-The [environment template](.env.example) lists every application setting. The [file inventory](FILES.md) groups the delivered files by implementation phase. Configure secrets in the server environment. Set `NEXT_PUBLIC_SITE_URL` to the full HTTPS production origin when the domain is decided. With that setting empty, visitors can explore the marketing site and all three public tools. The site publishes no indexable URLs. Vercel supplies `VERCEL`, `VERCEL_URL` and `VERCEL_ENV` automatically. Next.js sets `NODE_ENV`. Use separate service keys for preview and production.
+The [environment template](.env.example) lists every application setting. The [file inventory](FILES.md) groups the delivered files by implementation phase. Configure secrets in the server environment. Production metadata, the sitemap, RSS, and public guide links use https://leadtoclient.app. Set `NEXT_PUBLIC_SITE_URL=https://leadtoclient.app` in production for sign-in and checkout. Local development and Vercel previews request exclusion from search. Vercel supplies `VERCEL`, `VERCEL_URL` and `VERCEL_ENV` automatically. Next.js sets `NODE_ENV`. Use separate service keys for preview and production.
 
 ## Environment variables
 
 | Feature | Variables | When to set them |
 | --- | --- | --- |
-| Canonical origin | `NEXT_PUBLIC_SITE_URL` | Set the final production origin to enable indexing. |
+| Canonical origin | `NEXT_PUBLIC_SITE_URL` | Use https://leadtoclient.app for production. Configure preview and local origins separately. |
 | Supabase | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | Required for authenticated accounts, the database, shared rate limits and live pricing. |
 | AI | `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_INPUT_USD_PER_MILLION`, `OPENAI_OUTPUT_USD_PER_MILLION`, `AI_MAX_USD_PER_CREDIT` | The key enables generation. The default model and cost guard have built-in settings. Set both rates for another model. |
 | Discovery | `EXA_API_KEY`, `STACK_EXCHANGE_KEY` | Exa enables indexed Reddit, X, Indie Hackers and forum results. The Stack Exchange key increases the available quota. |
@@ -35,9 +35,9 @@ The [environment template](.env.example) lists every application setting. The [f
 
 ## Database and sign-in
 
-1. Select the Supabase project intended for Clientfind. In its SQL Editor run the pending [migrations](supabase/migrations) in filename order. For the CLI workflow, run `npx supabase init` to create the local configuration, `npx supabase link --project-ref <project-ref>`, and `npx supabase db push`.
+1. Select the Supabase project intended for Lead To Client. In its SQL Editor run the pending [migrations](supabase/migrations) in filename order. For the CLI workflow, run `npx supabase init` to create the local configuration, `npx supabase link --project-ref <project-ref>`, and `npx supabase db push`.
 2. Copy the project URL, publishable key and server-only service key into their matching environment variables. The SQL grants reads and limited updates to authenticated users under RLS. Financial writes, outbox delivery, scanning and niche limits use server-side RPCs.
-3. Enable Email and Google in Supabase Auth. Set the Site URL and allow-list the exact `/auth/callback` URLs used by development, preview and production. In Google Cloud create a Web application OAuth client. Add Supabase’s displayed callback (normally `https://<project-ref>.supabase.co/auth/v1/callback`) to its authorized redirect URIs, then enter the client ID and secret in the Supabase Google provider settings. For an external Google consent screen in testing, add the accounts you will use to test. On `/auth/signup`, email requests can create an account. On `/auth/login`, email requests sign in existing accounts. Google works on both screens.
+3. Enable Email and Google in Supabase Auth. Set the production Site URL to https://leadtoclient.app and allow-list the exact `/auth/callback` URLs used by development, preview and production. In Google Cloud create a Web application OAuth client. Add Supabase’s displayed callback (normally `https://<project-ref>.supabase.co/auth/v1/callback`) to its authorized redirect URIs, then enter the client ID and secret in the Supabase Google provider settings. For an external Google consent screen in testing, add the accounts you will use to test. On `/auth/signup`, email requests can create an account. On `/auth/login`, email requests sign in existing accounts. Google works on both screens.
 4. Use Supabase SMTP settings with a verified sender for production magic links. The app handles the default PKCE code exchange. To support opening an email link in another browser, use `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email` as the link in the Supabase email template. The app supplies the callback URL without query parameters.
 5. Sign in, choose a skill, optionally add a public HTTPS portfolio, review the suggested phrases, and enable sources. New accounts start with zero credits. Lifetime access or a one-time credit pack funds discovery and drafts. A portfolio excerpt goes through Jina Reader and OpenAI. Keywords remain editable when suggestions are unavailable.
 
@@ -64,7 +64,7 @@ Each AI call must fit both `AI_MAX_USD_PER_CREDIT` and half the price of one cre
 
 ## Stripe, email and Telegram
 
-- After deploying, add `STRIPE_SECRET_KEY` to the deployment's server environment. In Stripe Workbench create an HTTPS snapshot event destination at `https://<your-domain>/api/stripe/webhook` for your own account using API version `2025-08-27.basil` (the installed Stripe SDK version). Select `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired`, `invoice.paid`, `customer.subscription.updated`, and `customer.subscription.deleted`. Copy its signing secret into `STRIPE_WEBHOOK_SECRET` and redeploy. Keep test and live keys and endpoints in their respective environments.
+- After deploying, add `STRIPE_SECRET_KEY` to the deployment's server environment. In Stripe Workbench create an HTTPS snapshot event destination at `https://leadtoclient.app/api/stripe/webhook` for your own account using API version `2025-08-27.basil` (the installed Stripe SDK version). Select `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired`, `invoice.paid`, `customer.subscription.updated`, and `customer.subscription.deleted`. Copy its signing secret into `STRIPE_WEBHOOK_SECRET` and redeploy. Keep test and live keys and endpoints in their respective environments.
 - Enable cancellation, payment method updates and invoice history in the Stripe customer portal. New checkouts use a one-time USD price from the database quote. For existing subscriptions, each paid invoice credits the account once, including renewals. The portal cancellation policy determines when the subscription ends. A failed renewal grants no credits.
 - Verify a sending domain in Resend and set `RESEND_API_KEY` and `EMAIL_FROM`. New accounts, paid purchases and low-credit threshold crossings enqueue emails. A daily digest includes up to five leads for opted-in users. The outbox retries failed deliveries and uses Resend idempotency keys.
 - Create a Telegram bot and set its token and username. Choose a strong webhook secret accepted by Telegram. Register the HTTPS URL `/api/telegram/webhook` with Bot API `setWebhook` and supply the same `secret_token`. Users click **Connect my Telegram account** in Settings and start the bot in a private chat. Each connection code expires after ten minutes and is consumed once.
@@ -99,7 +99,7 @@ The SQL tests execute the migration with PGlite and a small Supabase Auth role f
 
 The integrated release passed lint, TypeScript checking, the Next.js production build and all 19 automated tests. The dependency audit reported zero known vulnerabilities. Four read-only source checks returned recent posts from Hacker News, Bluesky, Stack Overflow and Shopify Community. Indexed search and paid services still require their production credentials.
 
-The configured-origin crawl checked 33 public HTML pages, their initial metadata, canonical URLs, 40–60-word answers, structured data, internal links, five Markdown guides, RSS and the sitemap. In the domain-unset build, public pages send `noindex, nofollow` and the sitemap has no entries. Browser checks covered the homepage demo, three Reddit sample links, editing and copying both writing-tool drafts, checkout sign-in continuation, FAQ expansion and eight mobile layouts.
+The configured-origin crawl checked 33 public HTML pages, their initial metadata, canonical URLs, 40–60-word answers, structured data, internal links, five Markdown guides, RSS and the sitemap. Browser checks covered the homepage demo, three Reddit sample links, editing and copying both writing-tool drafts, checkout sign-in continuation, FAQ expansion and eight mobile layouts.
 
 | Mobile Lighthouse 12.8.2 | Performance | Accessibility | Best practices | SEO | LCP | CLS |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -111,14 +111,16 @@ These measurements used the optimized production build on localhost with a tempo
 
 ## Launch checklist
 
-- [ ] Create or link the `clientfind` project in the intended Vercel Pro team using an account with project creation or deployment access. Use the Next.js preset, Node 22, `npm ci --include=dev` for install and `npm run build` for build. Supply environment variables at the proper scope and redeploy.
+The November 24, 2026 rebrand was checked against a local production build. All 35 sitemap pages were reachable through links from the homepage and had canonical links, distinct titles and descriptions, and working social previews. The six Markdown guides linked to their canonical articles. The FAQ showed 30 answers matching its structured data. Mobile and desktop checks covered the new wordmark, navigation, theme control and service directory. These checks cover the application build. Production HTTPS, domain ownership verification and search-engine submission are tracked below.
+
+- [ ] Link the existing Lead To Client deployment project in the intended Vercel Pro team using an account with project creation or deployment access. Use the Next.js preset, Node 22, `npm ci --include=dev` for install and `npm run build` for build. Supply environment variables at the proper scope and redeploy.
 - [ ] Apply the Supabase migration, enable auth providers and verify a magic link and Google login. Check that one user cannot read another user’s leads.
 - [ ] Set the AI and external search keys, verify a recent result from each enabled source, and run an authenticated hourly scan. Check a charge, a below-threshold result and an edited draft.
 - [ ] Configure Stripe webhook events and the customer portal. In test mode complete a lifetime purchase and a credit top-up, then replay the events. Verify the credits, plan, billing history and lifetime tier counter. For an existing test subscription, verify renewal and cancellation.
 - [ ] Verify a Resend sender and confirm one welcome email and one opted-in digest. Connect the Telegram bot, link an account and confirm an alert from a qualifying lead.
 - [ ] Add the Ship or Die / TrustMRR tracker using the public layout’s single script slot. Connect TrustMRR in the provider dashboard. Check the tracker loads once on a public page.
 - [ ] Add the founder details, official brand profile links and monitored support email. Review the published privacy terms against the services enabled for launch.
-- [ ] Choose the canonical domain, connect it and the www/non-www alias to Vercel, set the full origin, and update auth redirect configuration. Verify the host redirect, private route headers and public indexing rules.
+- [ ] Connect leadtoclient.app and www.leadtoclient.app to the production deployment, confirm HTTPS works for both, set the full origin, and register https://leadtoclient.app/auth/callback with Supabase Auth. Verify the host redirect, private route headers and public indexing rules.
 - [ ] Verify domain ownership in Google Search Console and Bing Webmaster Tools. Submit `/sitemap.xml` to both. Set up the IndexNow key, then request indexing for the home, pricing, tools, niche pages and leading guides.
 - [ ] Test the deployed pages with [Google Rich Results Test](https://search.google.com/test/rich-results) and [PageSpeed Insights](https://pagespeed.web.dev/). Verify canonical links, card images, JSON-LD, `robots.txt`, RSS, `llms.txt` and `llms-full.txt` using the final domain.
 

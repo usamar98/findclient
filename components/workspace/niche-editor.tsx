@@ -137,7 +137,7 @@ export function NicheEditor({
           <h2>Which work should shape your pitch?</h2>
           <p>
             Add a public portfolio to suggest search phrases and a writing
-            style. Clientfind sends the URL to Jina Reader and an excerpt to its
+            style. Lead To Client sends the URL to Jina Reader and an excerpt to its
             AI provider.
           </p>
           <label>

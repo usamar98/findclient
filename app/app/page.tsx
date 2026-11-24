@@ -97,7 +97,7 @@ export default async function Inbox({
       <div className="stats cf-inbox-stats">
         {[
           ['Leads found', stats.data.found], ['Replied or later', stats.data.replied], ['Won', stats.data.won],
-          ['Revenue won with Clientfind', money.format(stats.data.revenue_cents / 100)],
+          ['Revenue won with Lead To Client', money.format(stats.data.revenue_cents / 100)],
         ].map(([label, value]) => (
           <div key={label}>
             <b>{value}</b>

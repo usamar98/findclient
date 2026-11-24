@@ -39,6 +39,7 @@ export default async function Niche({ params }: Props) {
       <Breadcrumbs
         items={[
           { name: 'Home', href: '/' },
+          { name: 'Find clients by service', href: '/find-clients' },
           { name: p.skill + ' clients', href: path },
         ]}
       />
@@ -68,7 +69,7 @@ export default async function Niche({ params }: Props) {
           <li key={s}>{s}</li>
         ))}
       </ul>
-      <h2>How can Clientfind help me respond?</h2>
+      <h2>How can Lead To Client help me respond?</h2>
       <p>{p.approach}</p>
       <FAQ items={[...p.faq]} />
       <h2>Which related services could I offer?</h2>

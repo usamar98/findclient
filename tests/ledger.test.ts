@@ -57,7 +57,7 @@ async function fulfill(
   return result.ok
 }
 
-describe('Clientfind Postgres ledger', { concurrency: false }, () => {
+describe('Lead To Client Postgres ledger', { concurrency: false }, () => {
   before(async () => {
     await db.exec(`
       create role anon;

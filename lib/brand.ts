@@ -1,4 +1,4 @@
-import { absolute } from './seo'
+import { absolute, siteConfig } from './seo'
 
 const profiles = [
   ['X', process.env.BRAND_X_URL],
@@ -16,9 +16,16 @@ export const brandProfiles = profiles.flatMap(([name, url]) =>
 export const organization = {
   '@type': 'Organization',
   '@id': absolute('/#organization'),
-  name: 'Clientfind',
+  name: siteConfig.name,
   url: absolute('/'),
-  sameAs: brandProfiles.map((profile) => profile.url),
+  logo: {
+    '@type': 'ImageObject',
+    '@id': absolute('/#logo'),
+    url: absolute('/brand/logo-512.png'),
+    width: 512,
+    height: 512,
+  },
+  ...(brandProfiles.length > 0 && { sameAs: brandProfiles.map((profile) => profile.url) }),
   ...(process.env.FOUNDER_NAME && {
     founder: {
       '@type': 'Person',
@@ -26,4 +33,16 @@ export const organization = {
       url: process.env.FOUNDER_URL || undefined,
     },
   }),
+}
+
+export const softwareApplication = {
+  '@type': 'SoftwareApplication',
+  '@id': absolute('/#app'),
+  name: siteConfig.name,
+  url: absolute('/'),
+  description: 'A freelance lead finder for discovering public requests, reviewing buyer intent, drafting replies, sharing proposals and tracking won work.',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  publisher: { '@id': organization['@id'] },
+  inLanguage: 'en',
 }

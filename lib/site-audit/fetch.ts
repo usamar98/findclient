@@ -63,7 +63,7 @@ async function requestPage(url: URL, signal: AbortSignal) {
         signal,
         headers: {
           host: url.host,
-          'user-agent': 'ClientfindAudit/1.0',
+          'user-agent': 'LeadToClientAudit/1.0',
           accept: 'text/html, application/xhtml+xml, text/plain',
           'accept-encoding': 'identity',
         },
@@ -126,12 +126,8 @@ async function checkRobots(url: URL, signal: AbortSignal) {
       break
     }
     const { text } = await readText(response, 512 * 1024)
-    if (
-      robotsParser(original.href, text).isAllowed(
-        url.href,
-        'ClientfindAudit',
-      ) === false
-    )
+    const rules = robotsParser(original.href, text)
+    if (['LeadToClientAudit', 'ClientfindAudit'].some(agent => rules.isAllowed(url.href, agent) === false))
       throw new Error('This site disallows the audit crawler.')
     return
   }

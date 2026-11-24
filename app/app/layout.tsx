@@ -5,7 +5,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { requireUser } from '@/lib/db/server'
 import { signOut } from '../auth/actions'
 export const metadata: Metadata = {
-  title: 'Workspace | Clientfind',
+  title: 'Workspace | Lead To Client',
   robots: { index: false, follow: false },
 }
 export const dynamic = 'force-dynamic'

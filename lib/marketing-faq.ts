@@ -1,11 +1,13 @@
+import { coverageIntro, freshnessAnswer } from './marketing-coverage'
+
 const entries = [
   [
-    'How does Clientfind find freelance leads?',
-    'A niche combines your skill, keywords, exclusions and selected sources. Scheduled searches bring back recent public posts for intent scoring.',
+    'How does Lead To Client find freelance leads?',
+    'Choose the service you sell, the phrases a buyer might use, and the communities you want to monitor. Lead To Client scores matching public posts, saves qualifying requests in your inbox and links each one to the original conversation.',
   ],
   [
-    'Who is Clientfind designed for?',
-    'Freelancers and small agencies can use it to find people describing problems they can solve. Shopify development and design are starting points.',
+    'Who is Lead To Client designed for?',
+    'Lead To Client is for freelancers and small agencies selling a defined service. A Shopify developer might look for a merchant requesting a theme fix, while a design studio might look for a founder seeking a landing-page quote.',
   ],
   [
     'What makes a post a promising lead?',
@@ -20,7 +22,7 @@ const entries = [
     'Choose Shopify as a source when configuring a niche. Look for merchant questions with enough detail for a useful answer.',
   ],
   [
-    'Does Clientfind include Hacker News?',
+    'Does Lead To Client include Hacker News?',
     'Yes. Hacker News search can surface founder requests and technical questions. Check whether the thread invites commercial responses.',
   ],
   [
@@ -29,11 +31,11 @@ const entries = [
   ],
   [
     'How recent are leads?',
-    'The lead engine considers posts from the preceding seven days. Check the original discussion for new replies and closed requests.',
+    freshnessAnswer,
   ],
   [
     'What does an intent score mean?',
-    'The score estimates buying intent from zero to one hundred. An author can still decline help or decide to solve the problem independently.',
+    'The intent score estimates how strongly a public post signals demand for the service you selected, on a scale of 0–100. Your minimum intent score controls which requests enter your inbox. Each saved lead includes the reason and the original thread so you can check the interpretation.',
   ],
   [
     'Can I change the minimum score?',
@@ -48,7 +50,7 @@ const entries = [
     'An exclusion filters out irrelevant conversations. A Shopify specialist might exclude interview preparation and job-seeker introductions.',
   ],
   [
-    'Does Clientfind publish replies or send direct messages?',
+    'Does Lead To Client publish replies or send direct messages?',
     'You control publication. Edit the draft and open the original post to respond yourself if community rules permit.',
   ],
   [
@@ -81,7 +83,7 @@ const entries = [
   ],
   [
     'How do Telegram alerts work?',
-    'Connect Telegram in settings and choose a minimum intent score for priority alerts. Clientfind checks the qualifying post before delivery where the source provides that information.',
+    'Connect Telegram in settings and choose a minimum intent score for priority alerts. Lead To Client checks the qualifying post before delivery where the source provides that information.',
   ],
   [
     'Can I receive a digest instead?',
@@ -93,7 +95,28 @@ const entries = [
   ],
   [
     'How do I track results?',
-    'Move relevant leads through saved, replied and won as the conversation develops. Use ignored for threads outside your service.',
+    'Assign the lead to a teammate and set a follow-up date. Record when you reply, book a call or send a proposal. Enter the deal value in US dollars and mark the deal won or lost. The revenue counter sums the values of deals your team marked won.',
+  ],
+  ['How often does Lead To Client check for new leads?', coverageIntro],
+  [
+    'What does the buyer quality score measure?',
+    'Buyer quality is a separate 0–100 score based on evidence of a hiring request, budget, an existing business or website, urgency and account age where available. Open the source to verify the budget and authority to hire before quoting.',
+  ],
+  [
+    'What happens when a lead includes a website?',
+    'Lead To Client checks the linked public page for speed, search metadata and mobile layout issues. Completed checks can supply specific observations for a reply. A teammate can also enter a business website on the lead.',
+  ],
+  [
+    'Can I write pitches in my own voice?',
+    'Add a portfolio and writing samples in your workspace. You can also opt in to using your own edited replies as examples. Review each generated pitch and decide what to publish.',
+  ],
+  [
+    'Can clients open a proposal without an account?',
+    'Yes. Publish a proposal with your branding, packages, prices and timelines, then send its share link. Anyone with that link can read the published version or download the PDF. The workspace shows when the link was first and last opened and lets you revoke it.',
+  ],
+  [
+    'Does refreshing the inbox start a live search?',
+    'The workspace shows leads collected by scheduled searches. The public Reddit lead finder can run a search on demand and can reuse results for the same query for up to one hour. Its results depend on which public Reddit posts the provider has indexed.',
   ],
 ]
 

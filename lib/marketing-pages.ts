@@ -1,6 +1,6 @@
 export const infoPages = {
   pricing: {
-    title: 'Clientfind pricing | Lifetime access and credit packs',
+    title: 'Lead To Client pricing | Lifetime access and credit packs',
     description:
       'See the current lifetime price, monthly credit allowance and optional one-time credit packs. Lifetime access starts at $149.',
     answer:
@@ -8,11 +8,11 @@ export const infoPages = {
     sections: [],
   },
   'how-it-works': {
-    title: 'How Clientfind finds freelance opportunities',
+    title: 'How Lead To Client finds freelance opportunities',
     description:
-      'Follow a public request from keyword discovery and intent scoring to a useful answer, a personal pitch and a manual reply.',
+      'See which communities Lead To Client searches, how often it checks them and how to qualify a lead, send a proposal and track won revenue.',
     answer:
-      'Describe the freelance work you deliver, choose the communities to search and review recent posts that meet your intent threshold. Open a suitable request, draft a solution, verify each claim and publish the edited reply yourself. Your inbox keeps track of the conversations that turn into work.',
+      'Lead To Client finds public requests for freelance services and keeps each conversation in a shared agency inbox. Choose your service and sources, inspect the evidence behind a match, then decide whether to reply. If the conversation develops, one lead record follows it through a proposal, a follow-up and a won or lost deal.',
     sections: [
       [
         'How do I describe my niche?',
@@ -20,32 +20,32 @@ export const infoPages = {
       ],
       [
         'How do I qualify the request?',
-        'Read the date, problem summary and reason for the score. Open the original post and check whether the author has already accepted an answer.',
+        'Read the original words that indicate a request, a budget or a deadline. The intent score estimates how closely the request fits your service. The separate buyer quality score reflects the available hiring and business signals. Open the original discussion to check that the author still needs help.',
       ],
       [
         'How should I write my reply?',
-        'Offer a safe first step the author can try. Review the draft for assumptions, add relevant experience and make any commercial offer optional.',
+        'If the requester links a business website, check the audit for a specific speed, SEO or mobile layout finding you can explain. Draft a reply using your portfolio style and optional writing samples, check the finding and post the edited reply yourself.',
       ],
       [
-        'How do I record the outcome?',
-        'Open the thread, publish your edited reply and mark the lead replied. Mark a project won only after the customer agrees to work with you.',
+        'How do I send a proposal and record revenue?',
+        'Create a branded proposal from the lead, add packages, prices and a timeline, and share a link or PDF. Check when the published link was opened. Assign the next follow-up, enter the USD deal value and mark the lead won once the buyer agrees. The won-revenue total uses the values your team records.',
       ],
     ],
   },
   faq: {
-    title: 'Clientfind questions about leads, credits and replies',
+    title: 'Lead To Client questions about leads, credits and replies',
     description:
       'Answers on buying intent, lead sources, lifetime access, credit packs, Telegram alerts, replies and tracking client conversations.',
     answer:
-      'Clientfind helps freelancers find recent public requests, judge whether they fit a service and prepare a reply. These answers cover how searches work, what credits pay for, when alerts arrive and how to approach a community respectfully. You choose which conversations deserve your time and attention.',
+      'Lead To Client helps freelancers find recent public requests, judge whether they fit a service and prepare a reply. These answers cover how searches work, what credits pay for, when alerts arrive and how to approach a community respectfully. You choose which conversations deserve your time and attention.',
     sections: [],
   },
   about: {
-    title: 'About Clientfind and its editorial team',
+    title: 'About Lead To Client and its editorial team',
     description:
-      'Learn who Clientfind serves, how public requests become leads and how the editorial team develops its freelance guides.',
+      'Learn who Lead To Client serves, how public requests become leads and how the editorial team develops its freelance guides.',
     answer:
-      'Clientfind is a lead discovery and reply drafting tool for independent freelancers and small agencies. Its starting point is a specific public request for help. The product brings the thread, intent evidence and an editable response together so the professional can decide what to say and when.',
+      'Lead To Client is a web app for freelancers and small agencies that find work in public communities. It connects the original request, evidence of buying intent, a website audit when a site is available, an editable reply and a proposal in one shared lead record. Teams use the same record to assign follow-ups and track won revenue.',
     sections: [
       [
         'Why start with Shopify freelancers?',
@@ -53,17 +53,21 @@ export const infoPages = {
       ],
       [
         'How are the guides written?',
-        'The Clientfind editorial team uses worked examples, links to original sources and visible update dates. Illustrative situations are identified separately from links to real public requests.',
+        'The Lead To Client editorial team uses worked examples, links to original sources and visible update dates. Illustrative situations are identified separately from links to real public requests.',
       ],
     ],
   },
   changelog: {
-    title: 'Clientfind product changelog',
+    title: 'Lead To Client product changelog',
     description:
-      'Read dated release notes on Clientfind’s freelance lead discovery, drafting, billing and public resources.',
+      'Read dated release notes on Lead To Client’s freelance lead discovery, drafting, billing and public resources.',
     answer:
-      'The Clientfind changelog records changes that affect how freelancers find requests, review intent, draft responses and manage credits. Use the dated entries to check which workflows are available, then follow the product guides for instructions on configuring a niche or reviewing a potential client conversation.',
+      'The Lead To Client changelog records changes that affect how freelancers find requests, review intent, draft responses and manage credits. Use the dated entries to check which workflows are available, then follow the product guides for instructions on configuring a niche or reviewing a potential client conversation.',
     sections: [
+      [
+        'November 24, 2026 · Lead qualification and agency workflow',
+        'The shared inbox now supports assignments, follow-up reminders, proposal tracking and won revenue. Leads include buyer evidence, a separate quality score and website checks where a site is available. Teams can draft in their own voice, publish a branded proposal and see when its link was opened.',
+      ],
       [
         'What is included in the November 2026 build?',
         'The initial build brings niche setup, lead scoring, a review inbox and editable solution and pitch drafts together. It also adds free discovery tools, a public guide library and one-time credit purchases.',
@@ -71,14 +75,14 @@ export const infoPages = {
     ],
   },
   privacy: {
-    title: 'Clientfind privacy and data practices',
+    title: 'Lead To Client privacy and data practices',
     description:
-      'See how Clientfind handles account data, public discussions, AI drafts, payments, email, Telegram and public-site traffic analytics.',
+      'See how Lead To Client handles account data, public discussions, AI drafts, payments, email, Telegram and public-site traffic analytics.',
     answer:
-      'Clientfind processes account details, niche settings and excerpts of public discussions to provide a private lead inbox. Your choices determine which sources are searched and which alerts you receive. Payment, hosting, AI, email and optional messaging providers process the information needed to deliver their respective services.',
+      'Lead To Client processes account details, niche settings and excerpts of public discussions to provide a private lead inbox. Your choices determine which sources are searched and which alerts you receive. Payment, hosting, AI, email and optional messaging providers process the information needed to deliver their respective services.',
     sections: [
       [
-        'What information does Clientfind use?',
+        'What information does Lead To Client use?',
         'Account email, profile details, public source links and text, workspace settings, generated responses, credit usage and purchase records support your account. Providing a portfolio link makes its public content available for keyword and style suggestions through Jina Reader.',
       ],
       [
@@ -87,11 +91,11 @@ export const infoPages = {
       ],
       [
         'What can my team and proposal recipients see?',
-        'Invited members can access shared leads, drafts, assignments, deals and proposals. Anyone with a published proposal link can read that version and download its PDF. Clientfind records link opens for the workspace. You can revoke a link or replace it from the proposal editor.',
+        'Invited members can access shared leads, drafts, assignments, deals and proposals. Anyone with a published proposal link can read that version and download its PDF. Lead To Client records link opens for the workspace. You can revoke a link or replace it from the proposal editor.',
       ],
       [
         'What does the website and writing analysis use?',
-        'Clientfind reads a public business page linked to a lead to check its HTML, response time, search metadata and mobile layout signals. When mobile testing is enabled, Google PageSpeed Insights receives the public page URL. Draft generation can send findings, your writing samples and opted-in edits to OpenAI. Change your writing preferences in Settings.',
+        'Lead To Client reads a public business page linked to a lead to check its HTML, response time, search metadata and mobile layout signals. When mobile testing is enabled, Google PageSpeed Insights receives the public page URL. Draft generation can send findings, your writing samples and opted-in edits to OpenAI. Change your writing preferences in Settings.',
       ],
       [
         'Which providers process data?',
@@ -108,11 +112,11 @@ export const infoPages = {
     ],
   },
   terms: {
-    title: 'Clientfind terms of service',
+    title: 'Lead To Client terms of service',
     description:
-      'Read the terms for using Clientfind’s discovery, AI drafting, credits, subscriptions, one-time payments and manual community outreach features.',
+      'Read the terms for using Lead To Client’s discovery, AI drafting, credits, subscriptions, one-time payments and manual community outreach features.',
     answer:
-      'Use Clientfind to research public requests and draft responses you can stand behind. You are responsible for checking each source, verifying generated advice and following community rules before publishing. The price and credit allowance shown at purchase describe what you are buying and how the plan operates.',
+      'Use Lead To Client to research public requests and draft responses you can stand behind. You are responsible for checking each source, verifying generated advice and following community rules before publishing. The price and credit allowance shown at purchase describe what you are buying and how the plan operates.',
     sections: [
       [
         'How may I use the service?',
@@ -127,7 +131,7 @@ export const infoPages = {
         'Review the price and credit allowance before paying. Lifetime access is a one-time purchase with a monthly credit refill. One-time packs add credits to your balance. If you already have a monthly subscription, you can manage renewal and cancellation in billing settings.',
       ],
       [
-        'Can Clientfind guarantee a sale?',
+        'Can Lead To Client guarantee a sale?',
         'Source availability, ranking and the willingness of a potential client to buy can change. Review the original thread and agree on scope and terms directly with the client.',
       ],
       [
@@ -137,11 +141,11 @@ export const infoPages = {
     ],
   },
   contact: {
-    title: 'Contact Clientfind support',
+    title: 'Contact Lead To Client support',
     description:
-      'Reach Clientfind about your account, a payment, a public source or an editorial correction. Find the details that help support investigate.',
+      'Reach Lead To Client about your account, a payment, a public source or an editorial correction. Find the details that help support investigate.',
     answer:
-      'Use this page for questions about your Clientfind account, credits, a purchase or a source listing. Include the email on your account and the relevant lead or receipt reference. For an editorial correction, include the guide URL, the passage in question and a primary source we can check.',
+      'Use this page for questions about your Lead To Client account, credits, a purchase or a source listing. Include the email on your account and the relevant lead or receipt reference. For an editorial correction, include the guide URL, the passage in question and a primary source we can check.',
     sections: [
       [
         'What should I include in a report?',

@@ -18,6 +18,7 @@ const groups = [
   {
     name: 'Find clients',
     links: [
+      ['All service guides', '/find-clients'],
       ['Shopify developers', '/find-clients/shopify-developers'],
       ['Shopify designers', '/find-clients/shopify-designers'],
       ['Web designers', '/find-clients/web-designers'],
@@ -34,7 +35,7 @@ const groups = [
     ],
   },
   {
-    name: 'Clientfind',
+    name: 'Lead To Client',
     links: [
       ['About', '/about'],
       ['Contact', '/contact'],
@@ -64,7 +65,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
             ))}
           </div>
         ))}
-      </div><div className="cf-footer-base">© {new Date().getUTCFullYear()} Clientfind</div></footer>
+      </div><div className="cf-footer-base">© {new Date().getUTCFullYear()} Lead To Client</div></footer>
       {/* Ship or Die / TrustMRR analytics slot. Replace with the official snippet or configure the script URL and site ID. */}
       {process.env.TRUSTMRR_SCRIPT_URL && (
         <Script

@@ -1,11 +1,10 @@
 import Link from 'next/link'
+import { Wordmark } from '@/components/wordmark'
 export default function NotFound() {
   return (
     <div className="workspace">
       <main>
-        <Link className="brand" href="/">
-          Clientfind
-        </Link>
+        <Wordmark />
         <h1>Page not found</h1>
         <p>
           This link may have changed. You can return to your inbox or browse the

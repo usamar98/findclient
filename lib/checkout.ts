@@ -174,7 +174,7 @@ export async function startCheckout(
           price_data: {
             currency: 'usd',
             unit_amount: quote.amount,
-            product_data: { name: 'Clientfind · ' + productNames[product] },
+            product_data: { name: 'Lead To Client · ' + productNames[product] },
           },
         },
       ],

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getPost } from '@/lib/posts'
 import { shareCard } from '@/lib/share-card'
-export const alt = 'Clientfind freelance guide'
+export const alt = 'Lead To Client freelance guide'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 export default async function Image({

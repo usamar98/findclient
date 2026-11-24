@@ -1,4 +1,5 @@
 import { getPost, posts } from '@/lib/posts'
+import { absolute } from '@/lib/seo'
 export function generateStaticParams() {
   return posts().map((p) => ({ filename: p.slug + '.md' }))
 }
@@ -25,6 +26,7 @@ export async function GET(
     {
       headers: {
         'Content-Type': 'text/markdown; charset=utf-8',
+        Link: '<' + absolute('/blog/' + post.slug) + '>; rel="canonical"',
         'X-Robots-Tag': 'noindex, follow',
       },
     },

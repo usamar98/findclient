@@ -1,20 +1,8 @@
 import { posts } from '@/lib/posts'
-import { siteOrigin } from '@/lib/origin'
-const escapeXml = (text: string) =>
-  text.replace(
-    /[<>&"']/g,
-    (c) =>
-      ({
-        '<': '&lt;',
-        '>': '&gt;',
-        '&': '&amp;',
-        '"': '&quot;',
-        "'": '&apos;',
-      })[c]!,
-  )
+import { absolute } from '@/lib/seo'
+import { xmlEscape as escapeXml } from '@/lib/public-pages'
 export async function GET() {
-  const base = siteOrigin(),
-    link = (path: string) => escapeXml(base + path)
+  const link = (path: string) => escapeXml(absolute(path))
   const data = posts()
     .map((p) => {
       const url = link('/blog/' + p.slug)
@@ -36,7 +24,7 @@ export async function GET() {
     })
     .join('')
   return new Response(
-    '<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Clientfind guides</title><link>' +
+    '<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Lead To Client Journal</title><language>en</language><link>' +
       link('/blog') +
       '</link><description>Field guides to finding freelance work in public conversations.</description><atom:link href="' +
       link('/rss.xml') +

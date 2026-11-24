@@ -2,9 +2,9 @@ export const comparisons = {
   gummysearch: {
     name: 'GummySearch',
     description:
-      'Compare GummySearch’s Reddit audience research with Clientfind’s request discovery, intent scoring and editable freelancer replies.',
+      'Compare GummySearch’s Reddit audience research with Lead To Client’s request discovery, intent scoring and editable freelancer replies.',
     quick:
-      'GummySearch helped teams study Reddit audiences, recurring problems and conversations across communities. Clientfind focuses on one narrower job: finding public requests a freelancer can solve and drafting a reply for review. GummySearch closed new signups in 2025 and scheduled its final shutdown for December 1, 2026.',
+      'GummySearch helped teams study Reddit audiences, recurring problems and conversations across communities. Lead To Client focuses on one narrower job: finding public requests a freelancer can solve and drafting a reply for review. GummySearch closed new signups in 2025 and scheduled its final shutdown for December 1, 2026.',
     goal: 'Study Reddit audiences and recurring pain points',
     coverage: 'Reddit communities selected for an audience',
     output: 'Audience research, conversations and saved insights',
@@ -22,15 +22,15 @@ export const comparisons = {
   f5bot: {
     name: 'F5Bot',
     description:
-      'Compare F5Bot keyword alerts with Clientfind’s freelancer inbox, buying-intent explanations and editable replies.',
+      'Compare F5Bot keyword alerts with Lead To Client’s freelancer inbox, buying-intent explanations and editable replies.',
     quick:
-      'F5Bot is a useful choice when you know which terms to monitor on Reddit, Hacker News or Lobsters and want an alert when they appear. Clientfind starts with a freelance skill, scores requests against that niche and keeps the source, draft reply and follow-up status together.',
+      'F5Bot is a useful choice when you know which terms to monitor on Reddit, Hacker News or Lobsters and want an alert when they appear. Lead To Client starts with a freelance skill, scores requests against that niche and keeps the source, draft reply and follow-up status together.',
     goal: 'Track keywords and relevant mentions',
     coverage: 'Reddit, Hacker News and Lobsters',
     output: 'Email alerts, with additional feeds and integrations by plan',
     question: 'Which workflow makes sense for a small agency?',
     answer:
-      'Try F5Bot with a distinctive brand name or product keyword that rarely appears by accident. Test Clientfind with a phrase a buyer would use to describe an implementation problem.',
+      'Try F5Bot with a distinctive brand name or product keyword that rarely appears by accident. Test Lead To Client with a phrase a buyer would use to describe an implementation problem.',
     fits: 'For each test, count how many matches justify a reply and how long a person spends preparing it. F5Bot advertises advanced filters and AI features on its site, so check which plan includes the filtering you need.',
     faq: {
       question: 'Does F5Bot have a free option?',
@@ -42,9 +42,9 @@ export const comparisons = {
   syften: {
     name: 'Syften',
     description:
-      'Compare Syften community monitoring with Clientfind’s niche-based discovery, lead status tracking and draft solutions.',
+      'Compare Syften community monitoring with Lead To Client’s niche-based discovery, lead status tracking and draft solutions.',
     quick:
-      'Syften watches community conversations using configurable filters across channels including Reddit, Hacker News, Slack and Discourse. Clientfind is designed for freelancers who want a queue of relevant public requests, an explanation of buying intent and a first response to edit. Choose according to the channels and outcome you need.',
+      'Syften watches community conversations using configurable filters across channels including Reddit, Hacker News, Slack and Discourse. Lead To Client is designed for freelancers who want a queue of relevant public requests, an explanation of buying intent and a first response to edit. Choose according to the channels and outcome you need.',
     goal: 'Monitor community conversations with search filters',
     coverage:
       'Multiple communities including Slack, Discourse, Reddit and Stack Exchange',
@@ -63,20 +63,20 @@ export const comparisons = {
   octolens: {
     name: 'Octolens',
     description:
-      'Compare Octolens social listening and brand monitoring with Clientfind’s freelancer request discovery and reply drafting.',
+      'Compare Octolens social listening and brand monitoring with Lead To Client’s freelancer request discovery and reply drafting.',
     quick:
-      'Octolens helps teams monitor mentions of their brand, products and competitors across social channels, communities, media and reviews. Clientfind serves a freelancer looking for someone with a specific problem to solve. Compare the tools using a real brand-monitoring task and a separate freelance opportunity search.',
+      'Octolens helps teams monitor mentions of their brand, products and competitors across social channels, communities, media and reviews. Lead To Client serves a freelancer looking for someone with a specific problem to solve. Compare the tools using a real brand-monitoring task and a separate freelance opportunity search.',
     goal: 'Track brand, competitor and customer conversations',
     coverage: 'Social networks, news, reviews and developer communities',
     output: 'AI-filtered mentions and integrations for teams and agents',
     question: 'Which product fits a brand or competitor research brief?',
     answer:
       'Octolens documents brand monitoring, competitor research and feedback collection as core use cases. For those tasks, define the brands, channels and handoff your team needs before testing the trial.',
-    fits: 'A freelancer can evaluate Clientfind by selecting one service, reviewing the source posts and checking whether each suggested solution is relevant. Useful numbers are time to a qualified conversation and time spent editing a draft.',
+    fits: 'A freelancer can evaluate Lead To Client by selecting one service, reviewing the source posts and checking whether each suggested solution is relevant. Useful numbers are time to a qualified conversation and time spent editing a draft.',
     faq: {
       question: 'Can both products help with public conversations?',
       answer:
-        'Yes. Octolens organizes mentions around topics and brands. Clientfind organizes requests around a freelancer’s skill, score threshold and lead status.',
+        'Yes. Octolens organizes mentions around topics and brands. Lead To Client organizes requests around a freelancer’s skill, score threshold and lead status.',
     },
     url: 'https://octolens.com/',
   },

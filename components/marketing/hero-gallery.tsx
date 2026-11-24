@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { BrandMark } from '../brand-mark'
 import { homeSources, type HomeSource } from './home-sources'
 import './hero-gallery.css'
 
@@ -144,7 +145,7 @@ export function HeroGallery({ kind, paused }: { kind: Kind; paused: boolean }) {
               <button type="button" className="cf-gallery-card" key={example.source.id} tabIndex={copy ? -1 : undefined}
                 aria-label={`Read ${example.source.name} ${kind} example. ${example.brief.title}`} onClick={() => show(example)}>
                 <span className="cf-gallery-chrome">
-                  <span className="cf-gallery-appmark" aria-hidden="true"><i /><i /><i /></span>
+                  <span className="cf-gallery-appmark"><BrandMark /></span>
                   {request ? 'Lead inbox' : 'Reply draft'}
                 </span>
                 <Platform source={example.source} />

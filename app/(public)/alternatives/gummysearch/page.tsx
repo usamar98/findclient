@@ -16,7 +16,7 @@ export function generateMetadata() {
   return buildMetadata({
     title,
     description:
-      'Compare Clientfind, F5Bot, Syften and Octolens for leads, keyword alerts and brand listening. Choose a GummySearch replacement that fits your workflow.',
+      'Compare Lead To Client, F5Bot, Syften and Octolens for leads, keyword alerts and brand listening. Choose a GummySearch replacement that fits your workflow.',
     path,
   })
 }
@@ -32,7 +32,7 @@ export default function Alternatives() {
       <h1>{title}</h1>
       <QuickAnswer>
         Choose a GummySearch alternative by the job you need to keep doing.
-        Clientfind fits finding freelance requests and preparing a response.
+        Lead To Client fits finding freelance requests and preparing a response.
         F5Bot offers keyword alerts, Syften covers community monitoring, and
         Octolens supports brand and competitor listening. Preserve saved
         audience research separately while your GummySearch account still has
@@ -59,7 +59,7 @@ export default function Alternatives() {
           <tbody>
             <tr>
               <th>
-                <Link href="/how-it-works">Clientfind</Link>
+                <Link href="/vs/gummysearch">Lead To Client vs GummySearch</Link>
               </th>
               <td>Finding requests for a service</td>
               <td>

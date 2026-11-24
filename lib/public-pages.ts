@@ -2,22 +2,23 @@ import 'server-only'
 import { niches } from './niche-content'
 import { posts } from './posts'
 import { absolute, siteConfig } from './seo'
-export const contentUpdated = '2026-11-23'
+export const contentUpdated = '2026-11-24'
 export const staticPages = [
-  ['/', 'Clientfind'],
+  ['/', 'Lead To Client'],
   ['/pricing', 'Pricing and credits'],
-  ['/how-it-works', 'How Clientfind works'],
+  ['/how-it-works', 'How Lead To Client works'],
   ['/faq', 'Frequently asked questions'],
-  ['/about', 'About Clientfind'],
+  ['/about', 'About Lead To Client'],
   ['/blog', 'Freelance guides'],
+  ['/find-clients', 'Find freelance clients by service'],
   ['/changelog', 'Changelog'],
   ['/privacy', 'Privacy'],
   ['/terms', 'Terms'],
   ['/contact', 'Contact'],
-  ['/vs/gummysearch', 'Clientfind vs GummySearch'],
-  ['/vs/f5bot', 'Clientfind vs F5Bot'],
-  ['/vs/syften', 'Clientfind vs Syften'],
-  ['/vs/octolens', 'Clientfind vs Octolens'],
+  ['/vs/gummysearch', 'Lead To Client vs GummySearch'],
+  ['/vs/f5bot', 'Lead To Client vs F5Bot'],
+  ['/vs/syften', 'Lead To Client vs Syften'],
+  ['/vs/octolens', 'Lead To Client vs Octolens'],
   ['/alternatives/gummysearch', 'GummySearch alternatives in 2026'],
   ['/tools/reddit-lead-finder', 'Reddit lead finder'],
   ['/tools/proposal-generator', 'Freelance proposal generator'],

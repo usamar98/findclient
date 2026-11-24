@@ -32,9 +32,7 @@ export default async function Article({ params }: Props) {
     ? post.procedure.sections.map(
         (id) => post.toc.find((heading) => heading.id === id)!,
       )
-    : post.slug.startsWith('how-to-')
-      ? post.toc
-      : []
+    : []
   return (
     <main className="guides-wrap">
       <Breadcrumbs
@@ -93,6 +91,8 @@ export default async function Article({ params }: Props) {
           description: post.description,
           datePublished: post.published,
           dateModified: post.updated,
+          inLanguage: 'en',
+          isPartOf: { '@id': absolute('/blog#journal') },
           author: {
             '@type': 'Organization',
             name: post.author,
@@ -101,7 +101,7 @@ export default async function Article({ params }: Props) {
           publisher: {
             '@type': 'Organization',
             '@id': absolute('/#organization'),
-            name: 'Clientfind',
+            name: 'Lead To Client',
           },
           articleSection: post.category,
           keywords: post.tags,

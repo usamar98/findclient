@@ -71,7 +71,7 @@ async function deliver(n: Notice) {
       items = [{label:'Review this lead',url:priority.workspace_url}]
       break
     case 'welcome':
-      title = 'Welcome to Clientfind'
+      title = 'Welcome to Lead To Client'
       body =
         'Choose your niche and the sources you want to search. Lead scans start once your workspace has credits.'
       items = [{ label: 'View pricing', url: base + '/pricing' }]
@@ -80,7 +80,7 @@ async function deliver(n: Notice) {
       const r = z
         .object({ amount: z.number(), product: z.string() })
         .parse(n.payload)
-      title = 'Your Clientfind purchase'
+      title = 'Your Lead To Client purchase'
       body =
         'Payment received: ' +
         Intl.NumberFormat('en-US', {
@@ -94,7 +94,7 @@ async function deliver(n: Notice) {
     }
     case 'low':
       if (p.credits > 3) return
-      title = 'Your Clientfind balance is low'
+      title = 'Your Lead To Client balance is low'
       body =
         'You have ' +
         p.credits +
@@ -107,7 +107,7 @@ async function deliver(n: Notice) {
       if (invitation.error) throw invitation.error
       if (!invitation.data) return
       recipient = invitation.data.email
-      title = 'Invitation to a Clientfind agency inbox'
+      title = 'Invitation to a Lead To Client agency inbox'
       body = invitation.data.owner_name + ' invited you to share their lead inbox. Sign in with this email address, then accept the invitation in Settings within seven days.'
       items = [
         { label: 'Review invitation', url: base + '/app/settings#team' },
@@ -122,14 +122,14 @@ async function deliver(n: Notice) {
       if (lead.error) throw lead.error
       if (!lead.data || lead.data.follow_up_on !== reminder.date ||
           (lead.data.assignee_id ?? lead.data.user_id) !== n.user_id) return
-      title = 'Follow up on your Clientfind lead'
+      title = 'Follow up on your Lead To Client lead'
       body = 'Your follow-up for “' + lead.data.title + '” is due.'
       items = [{ label: 'Open lead', url: base + '/app/leads/' + reminder.id }]
       break
     }
     case 'digest':
       if (!p.digest_enabled) return
-      title = 'Your daily Clientfind leads'
+      title = 'Your daily Lead To Client leads'
       body =
         'These requests received the highest intent scores in your latest daily digest. You can change digest delivery in settings.'
       items = digest

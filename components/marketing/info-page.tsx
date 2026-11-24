@@ -5,6 +5,14 @@ import { infoPages, type InfoSlug } from '@/lib/marketing-pages'
 import { absolute, buildMetadata } from '@/lib/seo'
 import { brandProfiles, organization } from '@/lib/brand'
 import { marketingFaq } from '@/lib/marketing-faq'
+import {
+  buyerQualityExample,
+  buyerQualityMethod,
+  coverageIntro,
+  freshnessAnswer,
+  sourceCoverage,
+} from '@/lib/marketing-coverage'
+import { contentUpdated } from '@/lib/public-pages'
 import { Breadcrumbs, QuickAnswer, JsonLd, FAQ } from './seo'
 
 export function infoMetadata(slug: InfoSlug) {
@@ -21,7 +29,11 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
         ? [marketingFaq[8], marketingFaq[12]]
         : []
   return (
-    <main className={slug === 'how-it-works' ? 'mk-article cf-how-page' : 'mk-article'}>
+    <main
+      className={
+        slug === 'how-it-works' ? 'mk-article cf-how-page' : 'mk-article'
+      }
+    >
       <Breadcrumbs
         items={[
           { name: 'Home', href: '/' },
@@ -32,26 +44,80 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
         ]}
       />
       <div className="cf-info-intro">
-        <div><h1>{page.title}</h1><QuickAnswer>{page.answer}</QuickAnswer></div>
-        {slug === 'how-it-works' && <figure className="cf-how-example">
-          <Image src="/previews/shopify-request.webp" alt="Example project request from Shopify Community" width={648} height={370} unoptimized />
-          <figcaption>A request in your lead inbox</figcaption>
-        </figure>}
+        <div>
+          <h1>{page.title}</h1>
+          <QuickAnswer>{page.answer}</QuickAnswer>
+        </div>
+        {slug === 'how-it-works' && (
+          <figure className="cf-how-example">
+            <Image
+              src="/previews/shopify-request.webp"
+              alt="Example project request from Shopify Community"
+              width={648}
+              height={370}
+              unoptimized
+            />
+            <figcaption>A request in your lead inbox</figcaption>
+          </figure>
+        )}
       </div>
       <p className="mk-meta">
-        Last updated <time dateTime="2026-11-23">23 November 2026</time>
+        Last updated <time dateTime={contentUpdated}>{contentUpdated}</time>
       </p>
-      {page.sections.length > 0 && <div className="cf-info-sections">{page.sections.map(([title, body]) => (
-        <section key={title}>
-          <h2>{title}</h2>
-          <p>{body}</p>
+      {page.sections.length > 0 && (
+        <div className="cf-info-sections">
+          {page.sections.map(([title, body]) => (
+            <section key={title}>
+              <h2>{title}</h2>
+              <p>{body}</p>
+            </section>
+          ))}
+        </div>
+      )}
+      {slug === 'how-it-works' && (
+        <section id="source-coverage">
+          <h2>Which platforms are searched, and how often?</h2>
+          <p>{coverageIntro}</p>
+          <div className="cf-coverage-table">
+            <table>
+              <caption>
+                Workspace source coverage with Fast Discovery on
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Source</th>
+                  <th scope="col">What the search covers</th>
+                  <th scope="col">Scan interval</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sourceCoverage.map((row) => (
+                  <tr key={row.sources}>
+                    <th scope="row">{row.sources}</th>
+                    <td>
+                      {row.method} <a href={row.url}>{row.reference}</a>
+                    </td>
+                    <td>{row.fast ? '10 minutes' : '1 hour'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p>{freshnessAnswer}</p>
         </section>
-      ))}</div>}
+      )}
+      {slug === 'how-it-works' && (
+        <section id="buyer-quality">
+          <h2>How is buyer quality scored?</h2>
+          <p>{buyerQualityMethod}</p>
+          <p>{buyerQualityExample}</p>
+        </section>
+      )}
       {slug === 'about' && process.env.FOUNDER_NAME && (
         <section>
-          <h2>Who founded Clientfind?</h2>
+          <h2>Who founded Lead To Client?</h2>
           <p>
-            {process.env.FOUNDER_NAME} founded Clientfind.{' '}
+            {process.env.FOUNDER_NAME} founded Lead To Client.{' '}
             {process.env.FOUNDER_URL && (
               <a href={process.env.FOUNDER_URL}>Founder profile</a>
             )}
@@ -60,10 +126,12 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
       )}
       {slug === 'about' && brandProfiles.length > 0 && (
         <section>
-          <h2>Where can I find Clientfind online?</h2>
+          <h2>Where can I find Lead To Client online?</h2>
           <ul>
             {brandProfiles.map((profile) => (
-              <li key={profile.name}><a href={profile.url}>{profile.name}</a></li>
+              <li key={profile.name}>
+                <a href={profile.url}>{profile.name}</a>
+              </li>
             ))}
           </ul>
         </section>
@@ -82,11 +150,15 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
       )}
       {items.length > 0 && <FAQ items={items} />}
       <div className="mk-answer-links">
-        <Link href={slug === 'faq' ? '/blog' : '/faq'}>
-          {slug === 'faq'
-            ? 'Explore the freelance guides'
-            : 'Browse all Clientfind questions'}
-        </Link>
+        {slug === 'faq' ? (
+          <Link href="/how-it-works#source-coverage">
+            See source coverage and scan intervals
+          </Link>
+        ) : (
+          <Link href="/faq">Browse all product questions</Link>
+        )}
+        {' · '}
+        <Link href="/find-clients">Explore guides by service</Link>
       </div>
       <LifetimeLink className="mk-btn" />
       <JsonLd
@@ -97,12 +169,27 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
               ? 'AboutPage'
               : slug === 'contact'
                 ? 'ContactPage'
-                : 'WebPage',
+                : slug === 'faq'
+                  ? 'FAQPage'
+                  : 'WebPage',
+          '@id': absolute(path) + '#webpage',
           name: page.title,
           url: absolute(path),
           description: page.description,
-          dateModified: '2026-11-23',
+          inLanguage: 'en',
+          dateModified: contentUpdated,
+          isPartOf: { '@id': absolute('/#website') },
           ...(slug === 'about' && { mainEntity: organization }),
+          ...(slug === 'how-it-works' && {
+            about: { '@id': absolute('/#app') },
+          }),
+          ...(slug === 'faq' && {
+            mainEntity: items.map(({ question, answer }) => ({
+              '@type': 'Question',
+              name: question,
+              acceptedAnswer: { '@type': 'Answer', text: answer },
+            })),
+          }),
         }}
       />
       {slug === 'how-it-works' && (
@@ -112,7 +199,8 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
             '@type': 'HowTo',
             name: page.title,
             description: page.answer,
-            dateModified: '2026-11-23',
+            dateModified: contentUpdated,
+            mainEntityOfPage: { '@id': absolute(path) + '#webpage' },
             step: page.sections.map(([name, text], i) => ({
               '@type': 'HowToStep',
               position: i + 1,

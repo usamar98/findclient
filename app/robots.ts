@@ -1,24 +1,15 @@
 import type { MetadataRoute } from 'next'
 import { absolute, siteConfig } from '@/lib/seo'
 export default function robots(): MetadataRoute.Robots {
-  const agents = [
-    '*',
-    'GPTBot',
-    'OAI-SearchBot',
-    'ChatGPT-User',
-    'PerplexityBot',
-    'ClaudeBot',
-    'Google-Extended',
-    'Applebot-Extended',
-    'Bingbot',
-  ]
-  const privatePaths = ['/dashboard', '/api', '/auth', '/app', '/checkout', '/p/']
+  if (!siteConfig.indexable) return { rules: { userAgent: '*', disallow: '/' } }
+
+  // All crawlers use the same public catalog, including Googlebot, Bingbot,
+  // OAI-SearchBot, Claude-SearchBot and PerplexityBot. Match path boundaries
+  // so /app stays private without blocking assets such as /apple-icon.png.
+  const privatePaths = ['dashboard', 'api', 'auth', 'app', 'checkout', 'p']
+    .flatMap((path) => ['/' + path + '$', '/' + path + '/', '/' + path + '?'])
   return {
-    rules: agents.map((userAgent) =>
-      siteConfig.indexable
-        ? { userAgent, allow: '/', disallow: privatePaths }
-        : { userAgent, disallow: '/' },
-    ),
-    ...(siteConfig.indexable ? { sitemap: absolute('/sitemap.xml') } : {}),
+    rules: { userAgent: '*', allow: '/', disallow: privatePaths },
+    sitemap: absolute('/sitemap.xml'),
   }
 }

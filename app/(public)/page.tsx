@@ -13,8 +13,8 @@ export const dynamic = 'force-dynamic'
 
 export function generateMetadata() {
   return buildMetadata({
-    title: 'Clientfind | Find freelance clients asking for help',
-    description: 'Find public requests that fit your skills. Review buying intent, draft a helpful solution and reply personally when a project is a good fit.',
+    title: 'Lead To Client | Freelance leads from Reddit and communities',
+    description: 'Find freelance leads across Reddit, Hacker News and other communities. Check buyer intent, draft a personal reply and track proposals through to won work.',
     path: '/',
   })
 }
@@ -50,7 +50,7 @@ export default function Home() {
       <section className="cf-workflow-band" id="how-it-works">
         <div className="cf-home-section">
           <div className="cf-section-intro">
-            <h2>How Clientfind works</h2>
+            <h2>How Lead To Client works</h2>
             <Link href="/how-it-works">Explore the workflow <span aria-hidden="true">↗</span></Link>
           </div>
           <ol className="cf-workflow-grid">
@@ -68,9 +68,9 @@ export default function Home() {
         </div>
       </section>
       <section className="cf-home-section cf-compare">
-        <div><h2>How does it compare with manual search?</h2><p>Keep your judgment in the conversation. Spend less of your day looking for it.</p></div>
+        <div><h2>How does it compare with manual search?</h2><p>Use the original post to decide who to contact. See <Link href="/blog/how-to-qualify-freelance-leads">how to qualify a freelance lead</Link> or <Link href="/find-clients">browse guides for your service</Link>.</p></div>
         <table>
-          <thead><tr><th>Task</th><th>Manual search</th><th>Clientfind</th></tr></thead>
+          <thead><tr><th>Task</th><th>Manual search</th><th>Lead To Client</th></tr></thead>
           <tbody>{comparison.map(([task, manual, app]) => <tr key={task}><th scope="row">{task}</th><td>{manual}</td><td>{app}</td></tr>)}</tbody>
         </table>
       </section>
@@ -86,18 +86,18 @@ export default function Home() {
             {
               '@type': 'WebSite',
               '@id': absolute('/#website'),
-              name: 'Clientfind',
+              name: 'Lead To Client',
               url: absolute('/'),
               publisher: { '@id': absolute('/#organization') },
-              dateModified: '2026-11-23',
-              potentialAction: {
-                '@type': 'SearchAction',
-                target: {
-                  '@type': 'EntryPoint',
-                  urlTemplate: absolute('/blog') + '?q={search_term_string}',
-                },
-                'query-input': 'required name=search_term_string',
-              },
+              inLanguage: 'en',
+            },
+            {
+              '@type': 'WebPage',
+              '@id': absolute('/#webpage'),
+              url: absolute('/'),
+              name: 'Lead To Client | Freelance leads from Reddit and communities',
+              isPartOf: { '@id': absolute('/#website') },
+              mainEntity: { '@id': absolute('/#app') },
             },
           ],
         }}

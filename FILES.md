@@ -1,6 +1,6 @@
-# Clientfind file inventory
+# Lead To Client file inventory
 
-The application contains 126 source, configuration, content, and handoff files. Each path is relative to the project root. Shared files appear under their primary implementation phase.
+This inventory groups the main source, configuration, content and handoff files by implementation phase. Each path is relative to the project root.
 
 ## 1. Foundation
 
@@ -150,7 +150,7 @@ app/og/route.ts
 app/opengraph-image.tsx
 app/robots.ts
 app/rss.xml/route.ts
-app/sitemap-index.xml/route.ts
+app/sitemap.xml/route.ts
 app/sitemap.ts
 components/marketing/free-writer.tsx
 components/marketing/post-body.tsx

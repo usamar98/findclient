@@ -175,13 +175,15 @@ summary:focus-visible {
   min-height: 6rem;
 }
 .cf-wordmark, .marketing .cf-wordmark, .workspace .cf-wordmark {
-  display:inline-flex; align-items:center; gap:.48rem; width:fit-content;
+  display:inline-flex; align-items:center; gap:.48rem; width:fit-content; white-space:nowrap;
   color:var(--cf-text); font-weight:730; font-size:1.44rem; line-height:1; letter-spacing:-.055em; text-decoration:none;
 }
-.cf-symbol { display:inline-flex; align-items:center; justify-content:center; flex:none; gap:2px; background:var(--cf-brand); color:var(--cf-bg); width:1.8rem; height:1.8rem; border-radius:.55rem; overflow:hidden; }
-.cf-symbol i { display:block; width:3px; height:13px; background:currentColor; transform:skew(-20deg); border-radius:1px; }
-.cf-symbol i:first-child { height:7px; align-self:center; margin-top:7px; }
-.cf-symbol i:last-child { height:18px; margin-bottom:4px; }
+.cf-symbol { display:inline-flex; flex:none; background:var(--cf-brand); color:var(--cf-bg); width:1.8rem; height:1.8rem; border-radius:23%; }
+.cf-symbol svg { display:block; width:100%; height:100%; }
+@media (max-width: 360px) {
+  .marketing .cf-bar .cf-wordmark { gap:.28rem; font-size:1.05rem; }
+  .marketing .cf-bar .cf-symbol { width:1.45rem; height:1.45rem; }
+}
 .cf-auth-bar { width:100%; display:flex; align-items:center; justify-content:space-between; gap:1rem; }
 .cf-theme-toggle, .workspace header button.cf-theme-toggle {
   width:2.5rem; height:2.5rem; display:grid; place-items:center; flex:none;

@@ -70,17 +70,6 @@ export function FAQ({
           <p>{answer}</p>
         </details>
       ))}
-      <JsonLd
-        data={{
-          '@context': 'https://schema.org',
-          '@type': 'FAQPage',
-          mainEntity: items.map(({ question, answer }) => ({
-            '@type': 'Question',
-            name: question,
-            acceptedAnswer: { '@type': 'Answer', text: answer },
-          })),
-        }}
-      />
     </section>
   )
 }

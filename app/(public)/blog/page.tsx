@@ -2,33 +2,37 @@ import Link from 'next/link'
 import { LifetimeLink } from '@/components/marketing/lifetime-link'
 import { z } from 'zod'
 import { posts } from '@/lib/posts'
-import { absolute, buildMetadata } from '@/lib/seo'
+import { absolute, buildMetadata, siteConfig } from '@/lib/seo'
 import { Breadcrumbs, JsonLd, QuickAnswer } from '@/components/marketing/seo'
-export function generateMetadata() {
-  return buildMetadata({
-    title: 'Freelance client-finding guides | Clientfind',
+type JournalProps = { searchParams: Promise<Record<string, string | string[] | undefined>> }
+
+const journalFilter = z.object({
+  q: z.string().trim().max(100).catch(''),
+  category: z.string().max(60).catch(''),
+  tag: z.string().max(60).catch(''),
+})
+
+export async function generateMetadata({ searchParams }: JournalProps) {
+  const metadata = buildMetadata({
+    title: 'Freelance client-finding guides | Lead To Client',
     description:
       'Learn how to find Shopify requests, compare monitoring tools, choose freelance communities and write a useful proposal from a public brief.',
     path: '/blog',
   })
+  const filter = journalFilter.parse(await searchParams)
+  if (filter.q || filter.category || filter.tag) {
+    metadata.robots = { index: false, follow: siteConfig.indexable }
+    metadata.alternates = { ...metadata.alternates, canonical: null }
+  }
+  return metadata
 }
-export default async function Blog({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | undefined>>
-}) {
+export default async function Blog({ searchParams }: JournalProps) {
   const all = posts(),
     updated = all
       .map((p) => p.updated)
       .sort()
       .at(-1)
-  const filter = z
-    .object({
-      q: z.string().trim().max(100).catch(''),
-      category: z.string().max(60).catch(''),
-      tag: z.string().max(60).catch(''),
-    })
-    .parse(await searchParams)
+  const filter = journalFilter.parse(await searchParams)
   const result = all.filter(
     (p) =>
       (!filter.category || p.category === filter.category) &&
@@ -48,7 +52,7 @@ export default async function Blog({
         ]}
       />
       <header className="journal-masthead">
-        <h1>The Clientfind Journal</h1>
+        <h1>The Lead To Client Journal</h1>
         <p>Field guides for finding freelance clients.</p>
       </header>
       <QuickAnswer>
@@ -120,8 +124,12 @@ export default async function Blog({
         data={{
           '@context': 'https://schema.org',
           '@type': 'Blog',
-          name: 'Clientfind guides',
+          '@id': absolute('/blog#journal'),
+          name: 'The Lead To Client Journal',
           url: absolute('/blog'),
+          publisher: { '@id': absolute('/#organization') },
+          isPartOf: { '@id': absolute('/#website') },
+          inLanguage: 'en',
           dateModified: updated,
         }}
       />

@@ -1,15 +1,13 @@
 import type { Metadata } from 'next'
-import { siteOrigin } from './origin'
+import { canonicalOrigin, searchIndexingEnabled } from './origin'
 
-const origin = siteOrigin()
-const indexable =
-  Boolean(process.env.NEXT_PUBLIC_SITE_URL) &&
-  process.env.VERCEL_ENV !== 'preview'
+const origin = canonicalOrigin
+const indexable = searchIndexingEnabled()
 export const siteConfig = {
-  name: 'Clientfind',
+  name: 'Lead To Client',
   url: origin,
   description:
-    'Find public requests that match your freelance skills, check buying intent and draft a useful solution and personal pitch.',
+    'Lead To Client helps freelancers and agencies find public requests for their services, qualify buyers, draft personal replies and track proposals and won revenue.',
   twitterHandle: process.env.NEXT_PUBLIC_TWITTER_HANDLE || undefined,
   defaultOgImage: '/opengraph-image',
   indexable,
@@ -44,10 +42,12 @@ export function buildMetadata({
     description,
     keywords,
     alternates: {
-      canonical: indexable ? url : undefined,
+      canonical: url,
       types: { 'application/rss+xml': absolute('/rss.xml') },
     },
-    robots: { index: indexable, follow: indexable },
+    robots: indexable
+      ? { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 }
+      : { index: false, follow: false },
     openGraph: {
       type,
       url,
@@ -56,7 +56,7 @@ export function buildMetadata({
       siteName: siteConfig.name,
       locale: 'en_US',
       images: [
-        { url: image, width: 1200, height: 630, alt: title + ' · Clientfind' },
+        { url: image, width: 1200, height: 630, alt: title },
       ],
       ...(type === 'article'
         ? { publishedTime: published, modifiedTime: updated }

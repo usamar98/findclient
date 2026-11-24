@@ -13,14 +13,16 @@ const feed = 'https://community.shopify.com/latest.rss'
 const robotsUrl = 'https://community.shopify.com/robots.txt'
 export const shopify: Adapter = {
   async search(query, since) {
-    const headers = { 'User-Agent': 'Clientfind/1.0 (community RSS reader)' }
+    const headers = { 'User-Agent': 'LeadToClient/1.0 (community RSS reader)' }
     const robots = await remote(robotsUrl, {
       headers,
       next: { revalidate: 3600 },
     })
     const rules = robotsParser(robotsUrl, await robots.text())
-    if (rules.isAllowed(feed, 'Clientfind') !== true) return []
-    const cacheSeconds = Math.max(600, rules.getCrawlDelay('Clientfind') ?? 0)
+    // Honor existing site owners' crawler preferences after the rename.
+    const agents = ['LeadToClient', 'Clientfind']
+    if (agents.some(agent => rules.isAllowed(feed, agent) !== true)) return []
+    const cacheSeconds = Math.max(600, ...agents.map(agent => rules.getCrawlDelay(agent) ?? 0))
     const response = await remote(feed, {
       headers,
       next: { revalidate: cacheSeconds },

@@ -1,4 +1,5 @@
 import { LIFETIME_ENDS_AT } from '@/lib/offers'
+import { softwareApplication } from '@/lib/brand'
 import { getOffers, getPricing } from '@/lib/pricing'
 import { absolute } from '@/lib/seo'
 import { LifetimeOffer } from './lifetime-offer'
@@ -55,9 +56,7 @@ export async function Offers({ full = false }: { full?: boolean }) {
       )}
       <JsonLd data={{
         '@context': 'https://schema.org',
-        '@type': 'SoftwareApplication',
-        '@id': absolute('/#app'),
-        name: 'Clientfind', applicationCategory: 'BusinessApplication', operatingSystem: 'Web', url: absolute('/'),
+        ...softwareApplication,
         ...(publishedOffers.length ? { offers: publishedOffers } : {}),
       }} />
     </section>

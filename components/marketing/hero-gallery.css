@@ -69,18 +69,13 @@
 }
 .cf-gallery-appmark {
   display: inline-flex;
-  justify-content: center;
-  align-items: end;
-  gap: 1px;
   width: .85rem;
   height: .85rem;
-  padding: 0 2px 3px;
   border-radius: 3px;
   background: var(--cf-text);
+  color: var(--cf-bg);
 }
-.cf-gallery-appmark i { height: 3px; width: 1px; background: var(--cf-bg); transform: skew(-18deg); }
-.cf-gallery-appmark i:nth-child(2) { height: 5px; }
-.cf-gallery-appmark i:nth-child(3) { height: 7px; }
+.cf-gallery-appmark svg { width:100%; height:100%; }
 .cf-gallery-platform {
   display: inline-flex;
   flex-shrink: 0;

@@ -14,7 +14,7 @@ export async function signIn(form: FormData) {
     if (choice.success) params.set('purchase', choice.data)
     redirect('/auth/' + mode + '?' + params)
   }
-  if (!authConfigured()) return feedback('Accounts will open when Clientfind connects its sign-in provider.')
+  if (!authConfigured()) return feedback('Accounts will open when Lead To Client connects its sign-in provider.')
   const provider = z.enum(['email', 'google']).safeParse(form.get('provider'))
   if (!provider.success) return feedback('Choose an available sign-in method.')
   if (!(await allowRequest('login', 10, 600)))

@@ -5,9 +5,11 @@ import {
   Body,
   Container,
   Heading,
+  Img,
   Text,
   Link,
 } from 'react-email'
+import { absolute } from '@/lib/seo'
 export function Message({
   title,
   body,
@@ -33,7 +35,10 @@ export function Message({
         <Container
           style={{ backgroundColor: '#fff', padding: 32, margin: '24px auto' }}
         >
-          <Text>Clientfind</Text>
+          <Text style={{ fontWeight: 700 }}>
+            <Img alt="" src={absolute('/brand/logo-512.png')} width="28" height="28" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 8 }} />
+            Lead To Client
+          </Text>
           <Heading>{title}</Heading>
           <Text>{body}</Text>
           {items.map((i) => (

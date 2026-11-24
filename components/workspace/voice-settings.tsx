@@ -31,7 +31,7 @@ export async function VoiceSettings() {
           name="learn"
           defaultChecked={data.learn_from_edits}
         />{' '}
-        Learn from replies I edit and save in Clientfind
+        Learn from replies I edit and save in Lead To Client
       </label>
       <p className="meta">
         When enabled, up to three of your recent edits in the same workspace

@@ -1,12 +1,15 @@
 import type { ReactNode } from 'react'
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
-import { siteOrigin } from '@/lib/origin'
+import { siteConfig } from '@/lib/seo'
 import { themeBootstrap } from '@/lib/theme'
 import './globals.css'
 import './workspace-theme.css'
 
-export const metadata: Metadata = { metadataBase: new URL(siteOrigin()) }
+export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
+  applicationName: siteConfig.name,
+}
 
 const geist = localFont({
   src: '../node_modules/geist/dist/fonts/geist-sans/Geist-Variable.woff2',

@@ -45,7 +45,7 @@ export async function AccountPage({ mode, query }: { mode: 'login' | 'signup'; q
             <AuthSubmit signup={signup} />
           </form>
           <p className="auth-hint">We’ll email you a secure link. No password needed.</p>
-          <p className="auth-switch">{signup ? 'Already have an account? ' : 'New to Clientfind? '}
+          <p className="auth-switch">{signup ? 'Already have an account? ' : 'New to Lead To Client? '}
             <Link href={(signup ? '/auth/login' : '/auth/signup') + continuation}>{signup ? 'Sign in' : 'Create an account'}</Link>
           </p>
         </div>

@@ -17,7 +17,7 @@ export async function llmsDocument(full: boolean) {
     '',
     '## Product',
     '',
-    'Choose a niche, edit its search phrases and select public sources. The hourly scanner considers requests posted within the last seven days. It scores buying intent from 0 to 100. The user reviews a proposed solution and a short pitch, edits the text and chooses what to post.',
+    'Clientfind scans recent public requests. Fast discovery checks Hacker News, Bluesky and Shopify Community every ten minutes when enabled. Other sources use hourly searches. Teams qualify leads using source evidence, audit linked websites, draft replies in their voice and track proposals and won revenue.',
     '',
     'Supported sources include Hacker News, Bluesky, Stack Exchange, Shopify Community and indexed public conversations from Reddit, Indie Hackers, X and forums. Coverage depends on source availability, search indexing and configured providers.',
     '',
@@ -25,7 +25,7 @@ export async function llmsDocument(full: boolean) {
     '',
     '- Scoring a post or generating a response uses one credit.',
     lifetimeOpen
-      ? `- Lifetime starts at $149 and increases by $10 after each 10 deals. The one-time purchase includes ${lifetime.credits} credits per month and one niche. The offer ends December 26, 2026 at 11:59 pm Pakistan time.`
+      ? `- Lifetime starts at $149 and increases by $10 after each 10 deals. The one-time purchase includes ${lifetime.credits} credits per month and three service searches. The offer ends December 26, 2026 at 11:59 pm Pakistan time.`
       : '- The lifetime offer ended on December 26, 2026.',
     ...offers
       .filter((o) => o.product.startsWith('topup') && o.price !== null)

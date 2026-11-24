@@ -1,0 +1,11 @@
+.proposal-editor { margin: 1.5rem 0; }
+.proposal-editor fieldset { min-width: 0; }
+.proposal-editor legend { padding: 0 .45rem; font-weight: 650; }
+.proposal-columns { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 1rem; }
+.proposal-package { padding: 1rem 0; border-top: 1px solid var(--cf-line); margin-top: 1rem; }
+.proposal-package-head { display:flex; gap:1rem; align-items:center; justify-content:space-between; }
+.proposal-package-head h2 { margin: 0; }
+.proposal-activity { display: flex; flex-wrap: wrap; gap: 1rem 2rem; }
+.proposal-activity dt { font-size: .85rem; color: var(--cf-muted); }
+.proposal-activity dd { font-weight: 650; margin: .25rem 0 0; }
+@media (max-width: 38rem) { .proposal-columns { grid-template-columns: 1fr; } }

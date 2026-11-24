@@ -2,8 +2,9 @@ import { z } from 'zod'
 import {
   apiURL,
   cleanPosts,
+  plain,
   remote,
-  ProviderBackoff,
+  respectStackQuota,
   type Adapter,
 } from './shared'
 const str = z.string().nullish()
@@ -14,13 +15,17 @@ const hnHit = z.object({
   author: str,
   story_text: str,
   comment_text: str,
+  story_id: z.union([z.number().int().positive(), z.string()]).nullish(),
   created_at: z.string(),
 })
 export const hn: Adapter = {
-  async search(query, since) {
+  async search(query, since, watches) {
+    const threads = watches?.hn_threads ?? []
+    const tags = threads.map(id => 'story_' + id)
+    const comments = tags.length === 1 ? tags[0] : '(' + tags.join(',') + ')'
     const url = apiURL('https://hn.algolia.com/api/v1/search_by_date', {
       query,
-      tags: '(ask_hn,comment)',
+      tags: threads.length ? 'comment,' + comments : '(ask_hn,comment)',
       numericFilters: 'created_at_i>=' + Math.floor(since.getTime() / 1000),
       hitsPerPage: '18',
     })
@@ -32,10 +37,11 @@ export const hn: Adapter = {
         const r = hnHit.safeParse(x)
         if (!r.success) return []
         const p = r.data
+        if (threads.length && (!p.comment_text || !threads.includes(String(p.story_id)))) return []
         return [
           {
             source: 'hn',
-            title: p.title || p.story_title || 'Hacker News discussion',
+            title: threads.length ? plain(p.comment_text ?? '').slice(0, 180) : p.title || p.story_title || 'Hacker News discussion',
             body: p.comment_text || p.story_text || '',
             url: 'https://news.ycombinator.com/item?id=' + p.objectID,
             author: p.author || '',
@@ -130,18 +136,7 @@ export const stackexchange: Adapter = {
           )
         ).json(),
       )
-    if (r.backoff || r.quota_remaining === 0) {
-      const reset = new Date()
-      reset.setUTCHours(24, 0, 0, 0)
-      throw new ProviderBackoff(
-        new Date(
-          Math.max(
-            Date.now() + (r.backoff ?? 0) * 1000,
-            r.quota_remaining === 0 ? reset.getTime() : 0,
-          ),
-        ),
-      )
-    }
+    respectStackQuota(r)
     return cleanPosts(
       r.items.flatMap((x) => {
         const parsed = question.safeParse(x)

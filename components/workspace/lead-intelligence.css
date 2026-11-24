@@ -1,0 +1,51 @@
+.cf-lead-scores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem 3rem;
+  margin: 1rem 0;
+}
+.cf-lead-scores div {
+  display: grid;
+  gap: 0.1rem;
+}
+.cf-lead-scores span,
+.cf-lead-signals dt {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.cf-lead-scores strong {
+  font-size: 1.8rem;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+.cf-lead-scores small {
+  font-size: 0.85rem;
+  margin-left: 0.15em;
+}
+.cf-lead-intelligence blockquote {
+  margin: 1rem 0;
+  padding: 0.25rem 1rem;
+  border-inline-start: 2px solid currentColor;
+}
+.cf-lead-signals {
+  display: grid;
+  grid-template-columns: minmax(8rem, auto) 1fr;
+  gap: 0.65rem 1.5rem;
+  margin: 1.25rem 0;
+}
+.cf-lead-signals dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.cf-lead-intelligence form {
+  margin-top: 1.5rem;
+}
+@media (max-width: 550px) {
+  .cf-lead-signals {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+  .cf-lead-signals dd {
+    margin-bottom: 0.65rem;
+  }
+}

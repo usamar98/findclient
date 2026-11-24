@@ -43,9 +43,10 @@ export function LifetimeOffer({ price, credits, sales, spots, now }: LifetimeOff
         )}
         <ul className="cf-lifetime-benefits">
           <li>{credits} credits at purchase and every month</li>
-          <li>Hourly lead searches for one niche</li>
-          <li>Buying intent, budget, and urgency signals</li>
-          <li>Editable replies and a personal pitch</li>
+          <li>Three service searches in a shared agency inbox</li>
+          <li>Priority alerts and buyer scores with evidence</li>
+          <li>Website audits and replies in your voice</li>
+          <li>Branded proposals, follow-ups and won revenue</li>
         </ul>
       </LifetimeCheckout>
     </article>

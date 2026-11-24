@@ -2,6 +2,17 @@ html[data-theme='dark'] .workspace {
   background: var(--cf-bg);
 }
 
+.cf-audit-metrics { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; margin: 1rem 0; }
+.cf-audit-metrics dt { font-size: .82rem; color: var(--cf-muted); }
+.cf-audit-metrics dd { margin: .2rem 0 0; font-weight: 650; }
+.lead-section { scroll-margin-top: 7rem; }
+.workspace .lead-sections { gap: .5rem; flex-wrap: wrap; margin: 1.2rem 0; }
+.workspace .lead-sections a {
+  padding: .35rem .8rem; border: 1px solid var(--cf-line); border-radius: 1rem;
+  color: var(--cf-text); font-size: .9rem; text-decoration: none;
+}
+.workspace .lead-sections a:hover, .workspace .lead-sections a:focus-visible { background: var(--cf-wash); }
+
 html[data-theme='dark'] .workspace header,
 html[data-theme='dark'] .workspace .stats div {
   background: var(--cf-card);

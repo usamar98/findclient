@@ -30,6 +30,8 @@ export function NicheEditor({
     [selection, setSelection] = useState<NicheInput['sources']>(
       initial?.sources ?? ['hn', 'shopify', 'reddit'],
     )
+  const [subreddits, setSubreddits] = useState(initial?.subreddits?.join(', ') ?? '')
+  const [threads, setThreads] = useState(initial?.hn_threads?.join(', ') ?? '')
   const [score, setScore] = useState(initial?.min_intent ?? 65),
     [active, setActive] = useState(initial?.active ?? true),
     [notice, setNotice] = useState(''),
@@ -63,6 +65,8 @@ export function NicheEditor({
       portfolio_url: url,
       keywords: splitTerms(keywords),
       negative_keywords: splitTerms(negative),
+      subreddits: splitTerms(subreddits),
+      hn_threads: splitTerms(threads),
       pitch_style: style,
       sources: selection,
       min_intent: score,
@@ -194,6 +198,16 @@ export function NicheEditor({
               </label>
             ))}
           </fieldset>
+          {selection.includes('reddit') && <label>Watch specific subreddits (optional)
+            <input value={subreddits} onChange={e => setSubreddits(e.target.value)}
+              placeholder="r/webflow, r/smallbusiness" maxLength={1000} />
+            <small>Limit indexed Reddit searches to up to 10 communities, separated by commas.</small>
+          </label>}
+          {selection.includes('hn') && <label>Watch Hacker News hiring threads (optional)
+            <textarea value={threads} onChange={e => setThreads(e.target.value)}
+              placeholder="Paste a thread’s news.ycombinator.com/item link or ID" maxLength={2400} />
+            <small>Search matching comments in up to 10 threads. Separate links or IDs with commas.</small>
+          </label>}
           <label>
             Minimum intent score
             <input
@@ -210,7 +224,7 @@ export function NicheEditor({
               checked={active}
               onChange={(e) => setActive(e.target.checked)}
             />
-            Scan this niche hourly
+            Enable scheduled searches for this niche
           </label>
         </>
       )}

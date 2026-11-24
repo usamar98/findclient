@@ -24,6 +24,7 @@ The [environment template](.env.example) lists every application setting. The [f
 | Supabase | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | Required for authenticated accounts, the database, shared rate limits and live pricing. |
 | AI | `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_INPUT_USD_PER_MILLION`, `OPENAI_OUTPUT_USD_PER_MILLION`, `AI_MAX_USD_PER_CREDIT` | The key enables generation. The default model and cost guard have built-in settings. Set both rates for another model. |
 | Discovery | `EXA_API_KEY`, `STACK_EXCHANGE_KEY` | Exa enables indexed Reddit, X, Indie Hackers and forum results. The Stack Exchange key increases the available quota. |
+| Website audits | `PAGESPEED_API_KEY` | Optional Google PageSpeed Insights key for mobile Lighthouse metrics and rendered accessibility findings. Basic HTML audits run without a key. |
 | Checkout | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Required for purchases and signed fulfillment. |
 | Email | `RESEND_API_KEY`, `EMAIL_FROM` | Required for transactional messages and opted-in digests. |
 | Telegram | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET` | Required for account linking and private lead alerts. |
@@ -44,13 +45,17 @@ To add three illustrative leads to a specific existing demo account, run `npm ru
 
 ## Leads, credits and pricing
 
-The hourly scan uses active niches, recent source timestamps, URL deduplication, negative keywords and the user’s score threshold. Open a lead in the inbox to change its status, choose a tone, generate a reply and save edits. The inbox supports source, minimum score, date, status, title search, sorting and pagination.
+Fast discovery checks Hacker News, Bluesky and Shopify Community every ten minutes when enabled. Other sources are searched hourly. Each service search can watch specific Hacker News threads and Reddit communities. Lead details distinguish buying intent from buyer quality and show source evidence, detection time and source availability where known. Feedback helps tune future matches.
+
+The shared inbox supports invitations, assignments, follow-up emails, proposal stages and recorded won revenue in USD. Website checks use the site identified in the request, a website listed on a matched source profile when available, or a site entered by a teammate. Workers check speed, SEO and mobile markup, honor robots rules and skip private network destinations. The optional PageSpeed integration adds rendered mobile findings. New drafts use completed findings, the niche’s portfolio style and the author’s optional writing examples. Opting in also uses recent human edits in the same workspace.
+
+Use the lead’s proposal editor to set branding, scope, packages, currency and timelines. Download a PDF or publish a revocable link. The editor shows opens of the published page. Share links expose only the published proposal snapshot.
 
 Each scored request and each reply generation uses one credit. Rejected scores still involve an AI call. Credit reservation, settlement and result persistence run inside database transactions. The maintenance job refunds pending work older than 30 minutes, including interruptions during serverless execution.
 
 | Offer | Price | Credits | Niche limit |
 | --- | --- | --- | --- |
-| Lifetime deal | $149 for the first 10 completed deals, then $10 more after each 10 | 150 at purchase and 150 each month | 1 |
+| Lifetime deal | $149 for the first 10 completed deals, then $10 more after each 10 | 150 at purchase and 150 each month | 3 |
 | Credit packs | $9, $19, $29 | 100, 250, 400 respectively | Existing plan |
 
 The lifetime campaign accepts new reservations through December 26, 2026 in Asia/Karachi. A buyer with an existing Stripe session can finish at the reserved price until that session expires. The public sales counter uses completed lifetime purchases. Unspent credits carry forward. Existing monthly subscribers keep their one-niche allowance and credits for each paid period. Existing lifetime agency purchases keep their original allowance and niche limit.
@@ -63,7 +68,7 @@ Each AI call must fit both `AI_MAX_USD_PER_CREDIT` and half the price of one cre
 - Enable cancellation, payment method updates and invoice history in the Stripe customer portal. New checkouts use a one-time USD price from the database quote. For existing subscriptions, each paid invoice credits the account once, including renewals. The portal cancellation policy determines when the subscription ends. A failed renewal grants no credits.
 - Verify a sending domain in Resend and set `RESEND_API_KEY` and `EMAIL_FROM`. New accounts, paid purchases and low-credit threshold crossings enqueue emails. A daily digest includes up to five leads for opted-in users. The outbox retries failed deliveries and uses Resend idempotency keys.
 - Create a Telegram bot and set its token and username. Choose a strong webhook secret accepted by Telegram. Register the HTTPS URL `/api/telegram/webhook` with Bot API `setWebhook` and supply the same `secret_token`. Users click **Connect my Telegram account** in Settings and start the bot in a private chat. Each connection code expires after ten minutes and is consumed once.
-- An inserted lead scoring 80 or higher queues a Telegram alert for a connected account. The delivery schedule polls once per minute. Telegram delivery is at least once if the worker loses a response after the bot accepts a message.
+- Priority alerts use the configured intent threshold. Teams can connect Telegram or supported Slack, Zapier, Make and n8n Cloud webhook destinations in Settings. Resend handles optional priority email and scheduled follow-up reminders. External delivery is at least once.
 
 ## Vercel schedules
 
@@ -71,7 +76,8 @@ Set `CRON_SECRET` on Vercel Pro. Vercel sends it in an Authorization bearer head
 
 | Route | Schedule | Work |
 | --- | --- | --- |
-| `/api/cron/scan` | Hourly at minute 0 | Source discovery and intent scoring |
+| `/api/cron/scan` | Every ten minutes | Enqueue due source searches and run intent scoring |
+| `/api/cron/site-audits` | Every five minutes | Claim queued buyer website checks |
 | `/api/cron/continue-scan` | Every minute | Claim queued niche/source jobs, honor provider backoff and resume interrupted work |
 | `/api/cron/notifications` | Every minute | Deliver queued email and Telegram alerts |
 | `/api/cron/digest` | 08:00 daily | Queue each opted-in user’s top leads |

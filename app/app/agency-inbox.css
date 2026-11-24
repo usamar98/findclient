@@ -1,0 +1,14 @@
+.workspace .stats.cf-inbox-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(12rem, 1.5fr);
+}
+.cf-inbox-stats b {
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.cf-won-sources summary { cursor: pointer; font-weight: 600; }
+.cf-won-sources table { width: 100%; margin-top: .9rem; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.cf-won-sources th, .cf-won-sources td { text-align: end; border-bottom: 1px solid var(--cf-line); padding: .6rem .3rem; }
+.cf-won-sources th:first-child { text-align: start; }
+@media(max-width:760px) {
+  .workspace .stats.cf-inbox-stats { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}

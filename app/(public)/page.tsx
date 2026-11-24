@@ -26,9 +26,10 @@ const steps = [
 ]
 
 const comparison = [
-  ['Discovery', 'Repeat searches on each site', 'Check your chosen sources hourly'],
+  ['Discovery', 'Repeat searches on each site', 'Get priority alerts from your chosen sources'],
   ['Qualification', 'Read through every thread', 'Start with a score and the reason behind it'],
   ['Response', 'Write each reply from scratch', 'Edit a helpful answer and a personal pitch'],
+  ['Follow-up', 'Check a spreadsheet for the next step', 'Assign leads, share proposals and track won revenue'],
 ]
 
 export default function Home() {

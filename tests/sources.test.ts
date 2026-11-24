@@ -7,7 +7,8 @@ import {
   type NormalizedPost,
 } from '../lib/sources/shared'
 import { indexed } from '../lib/sources/discovery'
-import { bluesky } from '../lib/sources/api'
+import { bluesky, hn } from '../lib/sources/api'
+import { nicheSchema } from '../lib/niche'
 const since = new Date('2025-08-01T00:00:00Z')
 const post: NormalizedPost = {
   source: 'hn',
@@ -103,4 +104,47 @@ test('Reddit adapter requests only indexed threads with a publication date', asy
   const rows = await indexed('reddit').search('theme', since)
   assert.equal(rows.length, 1)
   assert.equal(rows[0].source, 'reddit')
+})
+
+test('watchlists normalize canonical thread URLs and subreddit names and reject external lookalikes', () => {
+  const fields = nicheSchema.pick({ subreddits:true, hn_threads:true })
+  assert.deepEqual(fields.parse({ hn_threads:['https://news.ycombinator.com/item?id=42','42'],
+    subreddits:['r/Webflow','https://www.reddit.com/r/Webflow/'] }), { hn_threads:['42'], subreddits:['webflow'] })
+  assert.deepEqual(fields.parse({}),{})
+  for (const bad of ['https://news.ycombinator.com.example/item?id=42','https://news.ycombinator.com/user?id=42','https://news.ycombinator.com/item?id=42&id=7','-1']) {
+    assert.equal(fields.safeParse({hn_threads:[bad]}).success,false)
+  }
+  assert.equal(fields.safeParse({subreddits:['webflow/comments']}).success,false)
+})
+
+test('watched hiring threads use Algolia story tags and return matching comment permalinks', async t => {
+  const tagQueries: string[] = []
+  t.mock.method(globalThis,'fetch',async (url: URL) => {
+    tagQueries.push(url.searchParams.get('tags')!)
+    const hit = { objectID:'402',story_id:42,story_title:'Freelancer thread',comment_text:'<p>Seeking Webflow migration help</p>',created_at:'2025-08-02' }
+    return Response.json({hits:[hit,{...hit,objectID:'403',story_id:888},{...hit,objectID:'404',story_id:undefined}]})
+  })
+  const rows = await hn.search('Webflow',since,{hn_threads:['42','99']})
+  assert.deepEqual(rows.map(row=>row.url),['https://news.ycombinator.com/item?id=402'])
+  assert.equal(rows[0].title,'Seeking Webflow migration help')
+  await hn.search('Webflow',since,{subreddits:['webflow']})
+  assert.deepEqual(tagQueries,['comment,(story_42,story_99)','(ask_hn,comment)'])
+})
+
+test('Reddit watchlists send path filters and reject unrelated communities returned by the index', async t => {
+  const saved = process.env.EXA_API_KEY
+  process.env.EXA_API_KEY='test-only'
+  t.after(()=>{if(saved===undefined) delete process.env.EXA_API_KEY; else process.env.EXA_API_KEY=saved})
+  t.mock.method(globalThis,'fetch',async (_url: string,init: RequestInit)=>{
+    assert.deepEqual(JSON.parse(String(init.body)).includeDomains,['reddit.com/r/webflow/'])
+    const result = {title:'Need help',publishedDate:'2025-08-02'}
+    return Response.json({results:[
+      {...result,url:'https://www.reddit.com/r/Webflow/comments/abc/help/'},
+      {...result,url:'https://reddit.com/r/WebflowJobs/comments/abc/help/'},
+      {...result,url:'https://example.com/r/webflow/comments/abc/help/'},
+      {...result,url:'https://reddit.com/r/webflow/wiki/rules'},
+    ]})
+  })
+  const rows=await indexed('reddit').search('help',since,{subreddits:['webflow']})
+  assert.deepEqual(rows.map(r=>r.url),['https://www.reddit.com/r/Webflow/comments/abc/help/'])
 })

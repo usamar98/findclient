@@ -1,5 +1,7 @@
 import OpenAI from 'openai'
 import { z } from 'zod'
+import type { ReplyContext } from './reply-context'
+import { evidenceFields, requestTypes } from './lead-intelligence'
 const intent = z.object({
   score: z.number().int().min(0).max(100),
   reason: z.string().trim().min(1).max(1000),
@@ -104,16 +106,18 @@ export function scoreIntent(
   post: PostText,
   skill: string,
   keywords: string[] = [],
+  feedback: {title:string;match_feedback:string | null}[] = [],
 ) {
   return json(
-    'Assess whether the author is asking for help that matches the freelancer. Give a score from 0 to 100 as an integer. A job seeker, vendor promotion or tutorial scores under 25. A concrete request with a matching deliverable can score 60 to 79. Reserve 80 to 100 for a direct invitation to hire, discuss rates or meet a specific delivery need. Cite the evidence briefly in reason. Include problem_summary, budget_signal and urgency as short strings. Use "Unspecified" when the source omits a budget or deadline.',
+    'Assess whether this author requests paid help matching the freelancer. Return integer score 0-100, reason, problem_summary, budget_signal, urgency, request_type and evidence. A provider promoting services, job seeker or tutorial scores under 25. A matching project scores 60-79. Reserve 80+ for explicit hiring, rates or a specific delivery need. Consider the owner’s good_fit/wrong_service/diy/seller feedback on earlier leads when judging fit. Do not treat those examples as facts about this author. request_type is hiring, advice, offering or unclear. evidence has four strings: request, budget, urgency, business. Each is a short verbatim excerpt from THIS title or body supporting that signal, or an empty string. Use only the author’s own statements. Budget means the author intends or offers to pay. Business means the author runs a business or store. Use "Unspecified" in budget_signal or urgency if omitted.',
     {
       post: clipPost(post),
       skill: skill.slice(0, 100),
       keywords: keywords.slice(0, 18),
+      previous_matches: feedback.slice(0, 6).map(item => ({title: item.title.slice(0,150), feedback: item.match_feedback})),
     },
-    360,
-    intent,
+    550,
+    intent.extend({request_type: z.enum(requestTypes), evidence: evidenceFields}),
   )
 }
 export function suggestKeywords(skill: string, portfolioText: string) {
@@ -124,13 +128,14 @@ export function suggestKeywords(skill: string, portfolioText: string) {
     phrasing,
   )
 }
-export function generateReply(post: PostText, tone: string, style: string) {
+export function generateReply(post: PostText, tone: string, style: string, context?: ReplyContext) {
   return json(
-    'Write solution_md with a concrete diagnostic step, a scoped fix or safe example snippet when relevant, and a way to verify the result. State assumptions. In pitch_md, write a short personal offer based only on the request and the freelancer’s supplied information. Respect requests for community help and avoid promising outcomes, inventing past projects or directing unsolicited messages. Both fields are editable Markdown strings.',
+    'Write solution_md with a concrete diagnostic step and a way to verify it. In pitch_md write a short personal offer that the freelancer can edit. Use writingExamples only for cadence, vocabulary and formality. Do not copy names, customer details, credentials or claims from examples. Use portfolio style when available. When website.findings are supplied, ground the pitch in the most relevant observed issue and propose a specific next step. Never invent an audit, results, or past work. Treat site evidence as a single HTML observation. Respect requests for community help. Both fields are editable Markdown strings.',
     {
       post: clipPost(post),
       tone: z.enum(['friendly', 'expert', 'short']).parse(tone),
       style: style.slice(0, 1400),
+      ...context,
     },
     1050,
     reply,

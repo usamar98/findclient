@@ -1,4 +1,11 @@
 import type { NicheInput, statuses, tones } from '@/lib/niche'
+import type {
+  AgencyTables,
+  AgencyFunctions,
+  LeadCrm,
+} from '@/lib/workspace-types'
+import type { ProposalRow, ProposalFunctions } from '@/lib/proposals/model'
+import type { SiteReport } from '@/lib/site-audit/analyze'
 export type Product =
   'lifetime' | 'agency' | 'monthly' | 'topup9' | 'topup19' | 'topup29'
 type Plan = 'free' | 'lifetime' | 'agency' | 'monthly'
@@ -12,6 +19,11 @@ type Profile = {
   onboarding_done: boolean
   digest_enabled: boolean
   branding: string
+  voice_examples: string
+  learn_from_edits: boolean
+  priority_alert_min: number
+  priority_email: boolean
+  fast_discovery: boolean
   stripe_customer_id: string | null
   next_refill_at: string | null
 }
@@ -21,7 +33,7 @@ type Niche = Omit<NicheInput, 'portfolio_url'> & {
   portfolio_url: string | null
   last_scanned_at: string | null
 }
-type Lead = {
+type Lead = LeadCrm & {
   id: string
   user_id: string
   niche_id: string
@@ -36,6 +48,10 @@ type Lead = {
   problem_summary: string
   budget_signal: string | null
   urgency: string | null
+  buyer_intelligence: unknown | null
+  match_feedback: string | null
+  match_feedback_at: string | null
+  buyer_quality_score: number | null
   status: (typeof statuses)[number]
   created_at: string
 }
@@ -47,6 +63,20 @@ type Reply = {
   pitch_md: string
   tone: (typeof tones)[number]
   created_at: string
+  voice_author_id: string | null
+  voice_edited_at: string | null
+  voice_sample: string | null
+}
+export type LeadAudit = {
+  lead_id: string
+  target_url: string | null
+  status: 'queued' | 'checking' | 'complete' | 'no_site' | 'unavailable'
+  report: SiteReport | null
+  failure: string | null
+  attempts: number
+  due_at: string
+  lease: string | null
+  updated_at: string
 }
 type Quote = {
   id: string
@@ -118,7 +148,13 @@ type Rpc<Args, Returns> = { Args: Args; Returns: Returns }
 type NoArgs = Record<PropertyKey, never>
 export type Database = {
   public: {
-    Tables: {
+    Tables: AgencyTables & {
+      lead_proposals: Table<ProposalRow, 'lead_id' | 'document'>
+      lead_site_audits: Table<LeadAudit, 'lead_id'>
+      alert_destinations: Table<
+        { user_id: string; webhook_url: string },
+        'user_id' | 'webhook_url'
+      >
       profiles: Table<Profile, 'id' | 'email'>
       niches: Table<
         Niche,
@@ -183,78 +219,114 @@ export type Database = {
     Views: Record<never, never>
     Enums: Record<never, never>
     CompositeTypes: Record<never, never>
-    Functions: {
-      allow_request: Rpc<
-        { p_key: string; p_limit: number; p_window: number },
-        boolean
-      >
-      reserve_usage: Rpc<
-        { p_user: string; p_key: string; p_type: string; p_cost: number },
-        boolean
-      >
-      refund_usage: Rpc<{ p_user: string; p_key: string }, undefined>
-      finalize_score: Rpc<
-        {
-          p_user: string
-          p_key: string
-          p_lead: Omit<Lead, 'id' | 'user_id' | 'status' | 'created_at'> | null
-        },
-        boolean
-      >
-      finalize_reply: Rpc<
-        {
-          p_user: string
-          p_key: string
-          p_lead: string
-          p_id: string
-          p_tone: (typeof tones)[number]
-          p_solution: string
-          p_pitch: string
-        },
-        boolean
-      >
-      save_niche: Rpc<
-        { p_user: string; p_id: string | null; p_data: NicheInput },
-        string
-      >
-      lifetime_price: Rpc<NoArgs, Price[]>
-      create_quote: Rpc<{ p_user: string; p_product: Product }, Quote>
-      fulfill_checkout: Rpc<
-        {
-          p_quote: string
-          p_session: string
-          p_amount: number
-          p_user: string
-          p_customer: string
-        },
-        boolean
-      >
-      enqueue_scans: Rpc<NoArgs, number>
-      apply_subscription_invoice: Rpc<
-        {
-          p_quote: string
-          p_invoice: string
-          p_subscription: string
-          p_customer: string
-          p_amount: number
-          p_period_end: string
-        },
-        boolean
-      >
-      end_subscription: Rpc<
-        {
-          p_quote: string
-          p_subscription: string
-          p_customer: string
-        },
-        undefined
-      >
-      claim_scan_jobs: Rpc<{ p_limit: number }, ScanJob[]>
-      defer_source: Rpc<{ p_source: string; p_until: string }, undefined>
-      refill_credits: Rpc<NoArgs, undefined>
-      link_telegram: Rpc<{ p_code: string; p_chat: string }, boolean>
-      queue_digests: Rpc<NoArgs, undefined>
-      claim_notifications: Rpc<{ p_limit: number }, Notice[]>
-    }
+    Functions: AgencyFunctions &
+      ProposalFunctions & {
+        save_alert_settings: Rpc<
+          {
+            p_user: string
+            p_fast: boolean
+            p_email: boolean
+            p_min: number
+            p_webhook: string | null
+          },
+          undefined
+        >
+        claim_lead_audits: Rpc<
+          { p_lead?: string; p_limit?: number },
+          {
+            lead_id: string
+            target_url: string | null
+            lease: string
+            attempts: number
+            title: string
+            body: string
+            source_url: string
+          }[]
+        >
+        allow_request: Rpc<
+          { p_key: string; p_limit: number; p_window: number },
+          boolean
+        >
+        reserve_usage: Rpc<
+          { p_user: string; p_key: string; p_type: string; p_cost: number },
+          boolean
+        >
+        refund_usage: Rpc<{ p_user: string; p_key: string }, undefined>
+        finalize_score: Rpc<
+          {
+            p_user: string
+            p_key: string
+            p_lead:
+              | (Omit<
+                  Lead,
+                  | 'id'
+                  | 'user_id'
+                  | 'status'
+                  | 'created_at'
+                  | 'match_feedback'
+                  | 'match_feedback_at'
+                  | 'buyer_quality_score'
+                  | 'buyer_intelligence'
+                  | keyof LeadCrm
+                > & { buyer_intelligence?: unknown })
+              | null
+          },
+          boolean
+        >
+        finalize_reply: Rpc<
+          {
+            p_user: string
+            p_key: string
+            p_lead: string
+            p_id: string
+            p_tone: (typeof tones)[number]
+            p_solution: string
+            p_pitch: string
+          },
+          boolean
+        >
+        save_niche: Rpc<
+          { p_user: string; p_id: string | null; p_data: NicheInput },
+          string
+        >
+        lifetime_price: Rpc<NoArgs, Price[]>
+        create_quote: Rpc<{ p_user: string; p_product: Product }, Quote>
+        fulfill_checkout: Rpc<
+          {
+            p_quote: string
+            p_session: string
+            p_amount: number
+            p_user: string
+            p_customer: string
+          },
+          boolean
+        >
+        enqueue_scans: Rpc<NoArgs, number>
+        apply_subscription_invoice: Rpc<
+          {
+            p_quote: string
+            p_invoice: string
+            p_subscription: string
+            p_customer: string
+            p_amount: number
+            p_period_end: string
+          },
+          boolean
+        >
+        end_subscription: Rpc<
+          {
+            p_quote: string
+            p_subscription: string
+            p_customer: string
+          },
+          undefined
+        >
+        claim_scan_jobs: Rpc<{ p_limit: number }, ScanJob[]>
+        defer_source: Rpc<{ p_source: string; p_until: string }, undefined>
+        refill_credits: Rpc<NoArgs, undefined>
+        link_telegram: Rpc<{ p_code: string; p_chat: string }, boolean>
+        queue_digests: Rpc<NoArgs, undefined>
+        claim_notifications: Rpc<{ p_limit: number }, Notice[]>
+      }
   }
 }

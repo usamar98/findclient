@@ -485,6 +485,31 @@ describe('Clientfind Postgres ledger', { concurrency: false }, () => {
     assert.deepEqual(await count('digest'), [{ n: 1 }])
   })
 
+  it('uses source-specific scan slots and sends enabled priority channels only for open qualified leads', async () => {
+    const owner = await newUser(15)
+    const id = randomUUID()
+    await db.query("insert into niches(id,user_id,skill,keywords,sources) values($1,$2,'designer','{design}','{hn,stackexchange}')",[id,owner])
+    await db.query("select save_alert_settings($1,true,true,85,'https://hooks.slack.com/services/T/B/test')",[owner])
+    await db.exec('select enqueue_scans(); select enqueue_scans()')
+    const slots = await query("select source, scan_hour = case when source='hn' then date_bin(interval '10 minutes',now(),'2000-01-01'::timestamptz) else date_trunc('hour',now()) end as correct from scan_jobs where niche_id=$1 order by source",[id])
+    assert.deepEqual(slots,[{source:'hn',correct:true},{source:'stackexchange',correct:true}])
+    for (const [label, score, state] of [['low',79,'visible'],['open',85,'visible'],['closed',95,'closed']] as const) {
+      await db.query("insert into leads(user_id,niche_id,source,url,title,posted_at,intent_score,intent_reason,buyer_intelligence) values($1,$2,'hn',$3,$4,now(),$5,'Evidence',$6::jsonb)",
+        [owner,id,'https://example.org/'+label,label,score,JSON.stringify({availability:{state}})])
+    }
+    assert.deepEqual(await query("select kind,payload->>'title' as title from notifications where user_id=$1 and kind in ('priority_email','telegram','webhook') order by kind",[owner]),
+      [{kind:'priority_email',title:'open'},{kind:'webhook',title:'open'}])
+    await db.query("select save_alert_settings($1,false,false,90,null)",[owner])
+    assert.deepEqual(await query('select count(*)::integer as n from alert_destinations where user_id=$1',[owner]),[{n:1}])
+    await db.query("select save_alert_settings($1,false,false,90,'')",[owner])
+    assert.deepEqual(await query('select count(*)::integer as n from alert_destinations where user_id=$1',[owner]),[{n:0}])
+    await db.exec('set role authenticated')
+    try {
+      await assert.rejects(db.query('select * from alert_destinations'),/permission denied/i)
+      await assert.rejects(db.query("select save_alert_settings($1,false,false,1,'')",[owner]),/permission denied/i)
+    } finally { await db.exec('reset role') }
+  })
+
   it('refills each due lifetime account once and keeps free accounts at their existing balance', async () => {
     const free = await newUser(15)
     const solo = await newUser(15)
@@ -497,5 +522,30 @@ describe('Clientfind Postgres ledger', { concurrency: false }, () => {
     assert.equal(await balance(free), 15)
     assert.equal(await balance(solo), 165)
     assert.equal(await balance(agency), 515)
+  })
+
+  it('queues website checks once, isolates audit results, and learns only from opted-in human edits', async () => {
+    const owner = await newUser(), other = await newUser()
+    const [niche] = await query<{ id: string }>("insert into niches(user_id,skill,keywords,sources) values($1,'Design','{}',array['hn']) returning id", [owner])
+    const [lead] = await query<{ id: string }>(`insert into leads(user_id,niche_id,source,url,title,body,posted_at,intent_score,intent_reason)
+      values ($1,$2,'hn','https://news.ycombinator.com/item?id=123','Store project','Our site: https://example.org',now(),83,'Looking for a designer') returning id`, [owner,niche.id])
+    const [lease] = await query<{lease: string}>('select lease from claim_lead_audits($1,1)', [lead.id])
+    assert.ok(lease.lease)
+    assert.deepEqual(await query('select * from claim_lead_audits($1,1)', [lead.id]), [])
+    await db.query("update lead_site_audits set status='complete' where lead_id=$1 and lease=$2", [lead.id,lease.lease])
+    const [reply] = await query<{ id: string }>("insert into responses(user_id,lead_id,solution_md,pitch_md,tone) values($1,$2,'Model solution','Model pitch','short') returning id", [owner,lead.id])
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)", [owner])
+    await db.exec('set role authenticated')
+    try {
+      await db.query("update responses set solution_md='Manual edit before opt-in' where id=$1", [reply.id])
+      assert.deepEqual(await query('select voice_sample from responses where id=$1',[reply.id]), [{voice_sample:null}])
+      await db.query('update profiles set learn_from_edits=true where id=$1', [owner])
+      await db.query("update responses set pitch_md='My own phrasing.' where id=$1", [reply.id])
+      assert.deepEqual(await query('select voice_author_id,voice_sample from responses where id=$1',[reply.id]), [{voice_author_id:owner,voice_sample:'My own phrasing.'}])
+      assert.deepEqual(await query('select status from lead_site_audits where lead_id=$1',[lead.id]), [{status:'complete'}])
+      await db.query("select set_config('request.jwt.claim.sub',$1,false)", [other])
+      assert.deepEqual(await query('select * from lead_site_audits where lead_id=$1',[lead.id]), [])
+      await assert.rejects(query('select * from claim_lead_audits($1,1)', [lead.id]), /permission denied/i)
+    } finally { await db.exec('reset role') }
   })
 })

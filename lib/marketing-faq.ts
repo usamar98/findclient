@@ -69,7 +69,7 @@ const entries = [
   ],
   [
     'How does the lifetime deal work?',
-    'The first 10 lifetime deals start at $149 each. The price increases by $10 after every 10 completed deals. The offer ends on December 26, 2026 at 11:59 pm Pakistan time. Your one-time payment includes one niche and a monthly credit refill.',
+    'The first 10 lifetime deals start at $149 each. The price increases by $10 after every 10 completed deals. The offer ends on December 26, 2026 at 11:59 pm Pakistan time. Lifetime access includes three service searches and a shared monthly credit refill.',
   ],
   [
     'Do unused credits carry over?',
@@ -81,7 +81,7 @@ const entries = [
   ],
   [
     'How do Telegram alerts work?',
-    'Connect Telegram in settings and follow the bot link. Connected accounts can receive notifications for newly discovered leads scoring at least 80.',
+    'Connect Telegram in settings and choose a minimum intent score for priority alerts. Clientfind checks the qualifying post before delivery where the source provides that information.',
   ],
   [
     'Can I receive a digest instead?',

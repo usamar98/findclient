@@ -4,7 +4,7 @@ export const infoPages = {
     description:
       'See the current lifetime price, monthly credit allowance and optional one-time credit packs. Lifetime access starts at $149.',
     answer:
-      'Lifetime access includes one niche and a fresh credit allowance each month for a single payment. The deal starts at $149 and goes up by $10 after every ten completed purchases. You can also buy a one-time credit pack for extra searches and drafts.',
+      'Lifetime access includes three service searches, a shared agency inbox and a fresh credit allowance each month. The deal starts at $149 and goes up by $10 after every ten completed purchases. You can also buy a one-time credit pack for extra searches and drafts.',
     sections: [],
   },
   'how-it-works': {
@@ -84,6 +84,14 @@ export const infoPages = {
       [
         'Where do public discussions come from?',
         'The app uses public APIs, permitted Shopify Community feeds and indexed web search results for sites including Reddit, Indie Hackers and X. Your niche terms are sent to the relevant search services.',
+      ],
+      [
+        'What can my team and proposal recipients see?',
+        'Invited members can access shared leads, drafts, assignments, deals and proposals. Anyone with a published proposal link can read that version and download its PDF. Clientfind records link opens for the workspace. You can revoke a link or replace it from the proposal editor.',
+      ],
+      [
+        'What does the website and writing analysis use?',
+        'Clientfind reads a public business page linked to a lead to check its HTML, response time, search metadata and mobile layout signals. When mobile testing is enabled, Google PageSpeed Insights receives the public page URL. Draft generation can send findings, your writing samples and opted-in edits to OpenAI. Change your writing preferences in Settings.',
       ],
       [
         'Which providers process data?',

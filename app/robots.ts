@@ -12,7 +12,7 @@ export default function robots(): MetadataRoute.Robots {
     'Applebot-Extended',
     'Bingbot',
   ]
-  const privatePaths = ['/dashboard', '/api', '/auth', '/app', '/checkout']
+  const privatePaths = ['/dashboard', '/api', '/auth', '/app', '/checkout', '/p/']
   return {
     rules: agents.map((userAgent) =>
       siteConfig.indexable

@@ -5,6 +5,8 @@ import type { ScanJob } from './db/schema'
 import { adapters, providerKey, type NormalizedPost } from './sources'
 import { scoreIntent } from './ai'
 import { nicheSchema } from './niche'
+import { assessBuyer, closedRequest } from './lead-intelligence'
+import { verifyLeadSource } from './verify-lead-source'
 
 const week = 7 * 86400000
 function validPost(post: NormalizedPost, since: Date, negative: string[]) {
@@ -42,7 +44,7 @@ async function runJob(job: ScanJob, deadline: number) {
   const service = admin()
   const { data: row, error } = await service
     .from('niches')
-    .select('*,profiles(credits)')
+    .select('*,profiles(credits,fast_discovery)')
     .eq('id', job.niche_id)
     .maybeSingle()
   if (error) throw error
@@ -58,27 +60,45 @@ async function runJob(job: ScanJob, deadline: number) {
     portfolio_url: row.portfolio_url ?? '',
   })
   const since = new Date(Date.now() - week)
-  const hour = Math.floor(Date.parse(job.scan_hour) / 3600000)
-  const phrase = niche.keywords[hour % niche.keywords.length] || niche.skill
+  const cadence =
+    row.profiles.fast_discovery && ['hn', 'bluesky', 'shopify'].includes(source)
+      ? 600000
+      : 3600000
+  const slot = Math.floor(Date.parse(job.scan_hour) / cadence)
+  const phrase = niche.keywords[slot % niche.keywords.length] || niche.skill
   const adapter = adapters[source]
-  const candidates = await adapter.search(phrase, since)
+  const candidates = await adapter.search(phrase, since, niche)
   const posts = Array.from(
     new Map(
       candidates
-        .filter((p) => validPost(p, since, niche.negative_keywords))
+        .filter(
+          (p) =>
+            validPost(p, since, niche.negative_keywords) &&
+            !closedRequest(p.title + ' ' + p.body),
+        )
         .map((p) => [p.url, p]),
     ).values(),
   )
   if (!posts.length) return { scored: 0, inserted: 0 }
-  const existing = await service
-    .from('leads')
-    .select('url')
-    .eq('user_id', row.user_id)
-    .in(
-      'url',
-      posts.map((p) => p.url),
-    )
+  const [existing, feedback] = await Promise.all([
+    service
+      .from('leads')
+      .select('url')
+      .eq('user_id', row.user_id)
+      .in(
+        'url',
+        posts.map((p) => p.url),
+      ),
+    service
+      .from('leads')
+      .select('title,match_feedback')
+      .eq('niche_id', row.id)
+      .not('match_feedback', 'is', null)
+      .order('match_feedback_at', { ascending: false })
+      .limit(6),
+  ])
   if (existing.error) throw existing.error
+  if (feedback.error) throw feedback.error
   const recorded = new Set(existing.data.map((item) => item.url))
   let scored = 0,
     inserted = 0,
@@ -101,9 +121,18 @@ async function runJob(job: ScanJob, deadline: number) {
     if (reservation.error) throw reservation.error
     if (!reservation.data) continue
     try {
-      const rating = await scoreIntent(post, niche.skill, niche.keywords)
-      const lead =
+      const rating = await scoreIntent(
+        post,
+        niche.skill,
+        niche.keywords,
+        feedback.data,
+      )
+      const verification =
         rating.score >= niche.min_intent
+          ? await verifyLeadSource(post, true)
+          : null
+      const lead =
+        verification && verification.availability.state !== 'closed'
           ? {
               niche_id: row.id,
               source: post.source,
@@ -117,6 +146,13 @@ async function runJob(job: ScanJob, deadline: number) {
               problem_summary: rating.problem_summary,
               budget_signal: rating.budget_signal,
               urgency: rating.urgency,
+              buyer_intelligence: assessBuyer(
+                post,
+                rating,
+                verification.accountCreated,
+                verification.availability,
+                verification.profileSite,
+              ),
             }
           : null
       const result = await service.rpc('finalize_score', {
@@ -143,8 +179,27 @@ export async function runEngine(enqueue = true) {
   const service = admin(),
     stats = { queued: 0, jobs: 0, scored: 0, inserted: 0, retrying: 0 }
   if (enqueue) {
-    const enqueueResult = await service.rpc('enqueue_scans')
+    const [enqueueResult, legacy] = await Promise.all([
+      service.rpc('enqueue_scans'),
+      service
+        .from('leads')
+        .select('id,title,body,url,posted_at')
+        .is('buyer_intelligence', null)
+        .order('created_at', { ascending: false })
+        .limit(25),
+    ])
     if (enqueueResult.error) throw enqueueResult.error
+    if (legacy.error) throw legacy.error
+    const saved = await Promise.all(
+      legacy.data.map((lead) =>
+        service
+          .from('leads')
+          .update({ buyer_intelligence: assessBuyer(lead) })
+          .eq('id', lead.id)
+          .is('buyer_intelligence', null),
+      ),
+    )
+    for (const write of saved) if (write.error) throw write.error
     stats.queued = enqueueResult.data ?? 0
   }
   const deadline = Date.now() + 45000

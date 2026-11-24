@@ -1,6 +1,9 @@
 import Link from 'next/link'
 import { requireUser } from '@/lib/db/server'
 import { NicheEditor } from '@/components/workspace/niche-editor'
+import { AgencySettings } from '@/components/workspace/agency-settings'
+import { VoiceSettings } from '@/components/workspace/voice-settings'
+import { AlertSettings } from '@/components/workspace/alert-settings'
 import { removeNiche } from '../niche-actions'
 import { connectTelegram, disconnectTelegram, savePreferences } from './actions'
 const planLabels = {
@@ -45,6 +48,8 @@ export default async function Settings() {
               keywords: n.keywords,
               negative_keywords: n.negative_keywords,
               sources: n.sources,
+              hn_threads: n.hn_threads ?? [],
+              subreddits: n.subreddits ?? [],
               min_intent: n.min_intent,
               active: n.active,
               portfolio_url: n.portfolio_url ?? '',
@@ -61,7 +66,7 @@ export default async function Settings() {
           </details>
         </details>
       ))}
-      {(niches?.length ?? 0) < (p.plan === 'agency' ? 5 : 1) && (
+      {(niches?.length ?? 0) < (p.plan === 'agency' ? 5 : p.plan === 'lifetime' ? 3 : 1) && (
         <Link href="/app/onboarding">Add a niche</Link>
       )}
       <form action={savePreferences} className="panel">
@@ -84,9 +89,12 @@ export default async function Settings() {
         </label>
         <button>Save preferences</button>
       </form>
+      <VoiceSettings />
+      <AlertSettings />
+      <AgencySettings />
       <section className="panel">
         <h2>Telegram alerts</h2>
-        <p>Receive a notification when a new lead scores at least 80.</p>
+        <p>Receive matching leads at your priority alert threshold.</p>
         {p.telegram_chat_id ? (
           <form action={disconnectTelegram}>
             <button>Disconnect Telegram</button>

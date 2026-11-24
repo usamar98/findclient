@@ -84,18 +84,20 @@ const exaHit = z.object({
 })
 export function indexed(source: keyof typeof scopes): Adapter {
   return {
-    async search(query, since) {
+    async search(query, since, watches) {
       const key = process.env.EXA_API_KEY
       if (!key) throw new Error('Indexed source search is not configured.')
       const domains: readonly string[] = scopes[source]
+      const communities = source === 'reddit' ? watches?.subreddits ?? [] : []
+      const paths = communities.length ? communities.map(s => 'reddit.com/r/' + s + '/') : domains
       const scope = domains.map((d) => 'site:' + d).join(' OR ')
       const r = await remote('https://api.exa.ai/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': key },
         body: JSON.stringify({
-          query: '(' + scope + ') ' + query + ' looking for help',
+          query: (communities.length ? '' : '(' + scope + ') ') + query + ' looking for help',
           type: 'lite',
-          includeDomains: domains,
+          includeDomains: paths,
           startPublishedDate: since.toISOString(),
           numResults: 8,
           contents: { highlights: { maxCharacters: 1200 } },
@@ -122,11 +124,10 @@ export function indexed(source: keyof typeof scopes): Adapter {
             )
           )
             return []
-          if (
-            source === 'reddit' &&
-            !/^\/r\/[^/]+\/comments\/[a-z0-9]+/i.test(u.pathname)
-          )
-            return []
+          if (source === 'reddit') {
+            const community = /^\/r\/([a-z0-9_]+)\/comments\/[a-z0-9]+(?:\/|$)/i.exec(u.pathname)?.[1].toLowerCase()
+            if (!community || (communities.length && !communities.includes(community))) return []
+          }
           if (source === 'x' && !/^\/[^/]+\/status\/\d+/i.test(u.pathname))
             return []
           if (source === 'indiehackers' && !/^\/post\//i.test(u.pathname))

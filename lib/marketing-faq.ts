@@ -1,4 +1,5 @@
 import { coverageIntro, freshnessAnswer } from './marketing-coverage'
+import { lifetimeLastDay } from './offers'
 
 const entries = [
   [
@@ -71,7 +72,7 @@ const entries = [
   ],
   [
     'How does the lifetime deal work?',
-    'The first 10 lifetime deals start at $149 each. The price increases by $10 after every 10 completed deals. The offer ends on December 26, 2026 at 11:59 pm Pakistan time. Lifetime access includes three service searches and a shared monthly credit refill.',
+    `The first 10 lifetime deals start at $149 each. The price increases by $10 after every 10 completed deals. The final day to buy is ${lifetimeLastDay}, through 11:59 PM Pakistan time. Lifetime access includes three service searches and a shared monthly credit refill.`,
   ],
   [
     'Do unused credits carry over?',

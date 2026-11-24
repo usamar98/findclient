@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { BrandMark } from '@/components/brand-mark'
 import { LifetimeCheckout } from './lifetime-checkout'
 
 type LifetimeOfferProps = {
@@ -14,12 +15,25 @@ export function LifetimeOffer({ price, credits, sales, spots, now }: LifetimeOff
   const firstTier = Math.max(0, currentTier - 2)
   return (
     <article id="lifetime-deal" className="cf-lifetime-offer" aria-label="Lifetime deal">
-      <LifetimeCheckout available={price !== null} initialTime={now}>
+      <div className="cf-lifetime-summary">
+        <p className="cf-lifetime-name">
+          <BrandMark size={24} ink="var(--cf-bg)" tile="var(--cf-brand)" />
+          Lead To Client
+        </p>
         <div className="cf-lifetime-price">
           {sales === null && price !== null && <span>From</span>}
           <strong>{price === null ? '—' : '$' + price}</strong>
-          <span>{price === null ? 'Price unavailable' : 'once'}</span>
+          <span>{price === null ? 'Price unavailable' : 'USD · one-time payment'}</span>
         </div>
+        <ul className="cf-lifetime-benefits">
+          <li>{credits} credits at purchase and every month</li>
+          <li>Three service searches in a shared agency inbox</li>
+          <li>Priority alerts and buyer scores with evidence</li>
+          <li>Website audits and replies in your voice</li>
+          <li>Branded proposals, follow-ups and won revenue</li>
+        </ul>
+      </div>
+      <LifetimeCheckout available={price !== null} initialTime={now}>
         {price !== null && (
           <figure className="cf-lifetime-steps">
             <ol aria-label="Lifetime price tiers in US dollars">
@@ -41,13 +55,6 @@ export function LifetimeOffer({ price, credits, sales, spots, now }: LifetimeOff
             </figcaption>
           </figure>
         )}
-        <ul className="cf-lifetime-benefits">
-          <li>{credits} credits at purchase and every month</li>
-          <li>Three service searches in a shared agency inbox</li>
-          <li>Priority alerts and buyer scores with evidence</li>
-          <li>Website audits and replies in your voice</li>
-          <li>Branded proposals, follow-ups and won revenue</li>
-        </ul>
       </LifetimeCheckout>
     </article>
   )

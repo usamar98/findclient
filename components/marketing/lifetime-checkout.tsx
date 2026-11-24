@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import { LIFETIME_ENDS_AT } from '@/lib/offers'
+import { LIFETIME_ENDS_AT, lifetimeLastDay } from '@/lib/offers'
 
 const deadline = Date.parse(LIFETIME_ENDS_AT)
 
@@ -27,13 +27,13 @@ export function LifetimeCheckout({ initialTime, available, children }: { initial
   ]
   return (
     <div className="cf-lifetime-buy" data-expired={expired}>
-      {expired ? <p className="cf-clock-note">The lifetime deal ended December 26, 2026.</p> : (
+      {expired ? <p className="cf-clock-note">The lifetime deal ended on {lifetimeLastDay}.</p> : (
         <div className="cf-lifetime-clock">
-          <p className="cf-clock-heading"><span aria-hidden="true">⌛︎</span> Lifetime deal ends in</p>
+          <p className="cf-clock-heading">Offer ends <time dateTime={LIFETIME_ENDS_AT}>{lifetimeLastDay}</time></p>
           <div className="cf-time-tiles" role="timer" aria-live="off" aria-label="Time remaining for the lifetime deal">
             {units.map(({ value, label }) => <span key={label}><b>{String(value).padStart(2, '0')}</b><small>{label === 'hrs' ? 'hours' : label}</small></span>)}
           </div>
-          <p>Ends <time dateTime={LIFETIME_ENDS_AT}>December 26, 2026 at 11:59 PM Pakistan time</time>.</p>
+          <p>Available through 11:59 PM Pakistan time.</p>
         </div>
       )}
       {children}

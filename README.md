@@ -58,7 +58,7 @@ Each scored request and each reply generation uses one credit. Rejected scores s
 | Lifetime deal | $149 for the first 10 completed deals, then $10 more after each 10 | 150 at purchase and 150 each month | 3 |
 | Credit packs | $9, $19, $29 | 100, 250, 400 respectively | Existing plan |
 
-The lifetime campaign accepts new reservations through December 26, 2026 in Asia/Karachi. A buyer with an existing Stripe session can finish at the reserved price until that session expires. The public sales counter uses completed lifetime purchases. Unspent credits carry forward. Existing monthly subscribers keep their one-niche allowance and credits for each paid period. Existing lifetime agency purchases keep their original allowance and niche limit.
+The lifetime campaign accepts new reservations through December 16, 2026 in Asia/Karachi. A buyer with an existing Stripe session can finish at the reserved price until that session expires. The public sales counter uses completed lifetime purchases. Unspent credits carry forward. Existing monthly subscribers keep their one-niche allowance and credits for each paid period. Existing lifetime agency purchases keep their original allowance and niche limit.
 
 Each AI call must fit both `AI_MAX_USD_PER_CREDIT` and half the price of one credit in the cheapest configured top-up. The estimate includes the maximum output tokens, input bytes and an allowance for message framing. Set current token rates when changing models. A one-time purchase with unlimited future refills has no fixed maximum lifetime cost. Search queries, free accounts, payment fees, hosting and notification delivery also affect margins.
 

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { readFile, readdir } from 'node:fs/promises'
 import { after, before, describe, it } from 'node:test'
+import { LIFETIME_ENDS_AT, lifetimeLastDay } from '../lib/offers'
 
 const db = new PGlite()
 const query = async <T>(sql: string, params: unknown[] = []) =>
@@ -246,10 +247,9 @@ describe('Lead To Client Postgres ledger', { concurrency: false }, () => {
     const [deadline] = await query<{ ends: string }>(
       "select sale_ends_at::text as ends from product_config where product='lifetime'",
     )
-    assert.equal(
-      new Date(deadline.ends).toISOString(),
-      '2026-12-26T19:00:00.000Z',
-    )
+    assert.equal(new Date(deadline.ends).toISOString(), LIFETIME_ENDS_AT)
+    assert.equal(LIFETIME_ENDS_AT, '2026-12-16T19:00:00.000Z')
+    assert.equal(lifetimeLastDay, 'December 16, 2026')
     await db.exec(
       "update product_config set sale_ends_at=now()-interval '1 second' where product='lifetime'",
     )

@@ -21,7 +21,14 @@ const geist = localFont({
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={geist.className} suppressHydrationWarning>
-      <head><script dangerouslySetInnerHTML={{ __html: themeBootstrap }} /></head>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
+        <script
+          defer
+          src="https://www.ship-or-die.com/hackathon/verify.js"
+          data-site="bfdec9787f8631124eebba84c2f2260f207e9b16"
+        />
+      </head>
       <body>{children}</body>
     </html>
   )

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
-import Link from 'next/link'
 import { homeSources, type HomeSource } from './home-sources'
 import { HeroGallery } from './hero-gallery'
 import { LifetimeLink } from './lifetime-link'
@@ -58,7 +57,6 @@ export function DiscoveryHero() {
           </aside>
           <div className="cf-hero-actions">
             <LifetimeLink className="cf-home-primary"><span aria-hidden="true">↗</span></LifetimeLink>
-            <Link className="cf-home-secondary" href="/pricing"><span className="cf-alert-icon" aria-hidden="true" /> Alert</Link>
           </div>
         </div>
         <HeroGallery kind="request" paused={!playing} />

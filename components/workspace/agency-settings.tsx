@@ -27,7 +27,7 @@ export async function AgencySettings() {
     </form>)}
     {workspaces.data.filter(space => space.id !== user.id).map(space => <form key={space.id} action={removeMember}>
       <input type="hidden" name="owner" value={space.id}/><input type="hidden" name="member" value={user.id}/>
-      <p><Link href={'/app?workspace=' + space.id}>{space.name}’s shared inbox</Link></p><button>Leave workspace</button>
+      <p><Link href={'/app/inbox?workspace=' + space.id}>{space.name}’s shared inbox</Link></p><button>Leave workspace</button>
     </form>)}
   </section>
 }

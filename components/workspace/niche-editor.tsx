@@ -217,6 +217,7 @@ export function NicheEditor({
               value={score}
               onChange={(e) => setScore(Number(e.target.value))}
             />
+            <small>Only posts at or above this score can enter the inbox. Scoring a post uses one credit even if it falls below the minimum.</small>
           </label>
           <label className="check">
             <input

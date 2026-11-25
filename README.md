@@ -45,6 +45,16 @@ To add three illustrative leads to a specific existing demo account, run `npm ru
 
 ## Leads, credits and pricing
 
+For an existing installation with the November 23–24 database migrations, run the [workspace upgrade SQL](docs/downloads/lead-to-client-workspace-upgrade.sql) once in the Supabase SQL Editor before deploying this version. The upgrade uses the existing scan and notification jobs and the existing provider keys.
+
+After signing in, open the dashboard at `/app` for leads, follow-ups and workspace operations. The Lead inbox at `/app/inbox` supports selecting multiple sources in one search. Profile, Pricing, Settings and Sign out are available from Account.
+
+Workspace owners can open **Scans** to run a saved search immediately and cap the total credits it can use, including any automatic reply drafts its matches trigger. Each source has a receipt showing posts found, scored, and matched, draft activity, and the credits used. Manual runs also work when the search's schedule is off. The same page sets each search's monthly scoring budget and the workspace's reply reserve. Both manual and scheduled scans use these controls. The monthly accounting window begins at midnight UTC on the first of the month. The lifetime plan continues to refill on its purchase anniversary each month.
+
+In **Automations**, owners can assign qualifying leads to teammates, prepare a reply for review, and request a Telegram alert. A generated reply uses one credit. The first recorded visit to a newly opened proposal can notify the owner and schedule an editable follow-up. The notifications cron prepares due drafts, and a call booking, a closed deal, or a revoked link stops the sequence. Email delivery uses the existing Resend configuration.
+
+**Results** groups leads, recorded replies, booked calls, wins, and won revenue by platform or saved search. Owners also see the scoring and drafting credits spent. Older charges that cannot be linked to a surviving request appear under Unattributed.
+
 Fast discovery checks Hacker News, Bluesky and Shopify Community every ten minutes when enabled. Other sources are searched hourly. Each service search can watch specific Hacker News threads and Reddit communities. Lead details distinguish buying intent from buyer quality and show source evidence, detection time and source availability where known. Feedback helps tune future matches.
 
 The shared inbox supports invitations, assignments, follow-up emails, proposal stages and recorded won revenue in USD. Website checks use the site identified in the request, a website listed on a matched source profile when available, or a site entered by a teammate. Workers check speed, SEO and mobile markup, honor robots rules and skip private network destinations. The optional PageSpeed integration adds rendered mobile findings. New drafts use completed findings, the niche’s portfolio style and the author’s optional writing examples. Opting in also uses recent human edits in the same workspace.

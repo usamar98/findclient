@@ -33,6 +33,7 @@ export const buyerSchema = z.object({
   site: z.string().nullable(),
   site_source: z.enum(['post', 'profile']).optional(),
   quality_score: z.number().int().min(0).max(100).nullable(),
+  positive_budget: z.boolean().optional(),
   availability: availabilitySchema,
 })
 export type Availability = z.infer<typeof availabilitySchema>
@@ -149,6 +150,7 @@ export function assessBuyer(
   return {
     request_type: requestType,
     evidence,
+    positive_budget: !unpaid && /(?:[$£€]\s*[1-9]\d*|\b[1-9][\d,.]*\s*(?:USD|EUR|GBP|PKR)\b|\bpaid (?:project|opportunity)|\b(?:share|send) (?:me |us )?(?:a |your )?(?:quote|rates)|\bbudget (?:is |of )(?:flexible|[1-9]))/i.test(evidence.budget),
     account_created_at: accountDate,
     site,
     site_source: site ? (postSite ? 'post' : 'profile') : undefined,

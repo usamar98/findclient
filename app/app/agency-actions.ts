@@ -63,5 +63,7 @@ export async function savePipeline(id: string, _previous: string, form: FormData
   if (error) return 'Could not save. Check that the assignee is still in this workspace.'
   revalidatePath('/app/leads/' + id)
   revalidatePath('/app')
+  revalidatePath('/app/inbox')
+  revalidatePath('/app/results')
   return data ? 'Pipeline updated.' : 'Someone updated this lead. Review the latest values and try again.'
 }

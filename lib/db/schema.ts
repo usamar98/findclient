@@ -5,7 +5,10 @@ import type {
   LeadCrm,
 } from '@/lib/workspace-types'
 import type { ProposalRow, ProposalFunctions } from '@/lib/proposals/model'
+import type { WorkflowTables, WorkflowFunctions } from '@/lib/workflow-schema'
 import type { SiteReport } from '@/lib/site-audit/analyze'
+import type { WorkspaceResult } from '@/lib/workspace-results'
+import type { NormalizedPost } from '@/lib/sources/shared'
 export type Product =
   'lifetime' | 'agency' | 'monthly' | 'topup9' | 'topup19' | 'topup29'
 type Plan = 'free' | 'lifetime' | 'agency' | 'monthly'
@@ -26,14 +29,17 @@ type Profile = {
   fast_discovery: boolean
   stripe_customer_id: string | null
   next_refill_at: string | null
+  monthly_reply_reserve: number
 }
 type Niche = Omit<NicheInput, 'portfolio_url'> & {
   id: string
   user_id: string
   portfolio_url: string | null
   last_scanned_at: string | null
+  monthly_score_limit: number | null
 }
 type Lead = LeadCrm & {
+  rule_draft_capped?: boolean
   id: string
   user_id: string
   niche_id: string
@@ -98,6 +104,10 @@ type Usage = {
   cost_credits: number
   created_at: string
   settled_at: string | null
+  niche_id: string | null
+  source: string | null
+  scan_job_id: string | null
+  scan_run_id: string | null
 }
 type Notice = {
   id: string
@@ -118,6 +128,14 @@ export type ScanJob = {
   done_at: string | null
   lease: string | null
   attempts: number
+  run_id: string | null
+  candidates: NormalizedPost[] | null
+  outcome: string | null
+}
+export type ScanRun = { id: string; user_id: string; niche_id: string; service: string; started_at: string; scheduled_for: string | null; credit_limit: number | null }
+export type ScanSourceReceipt = {
+  job_id: string; run_id: string; source: string; state: string; source_checked: boolean
+  found: number; scored: number; matched: number; spent: number; drafted: number; draft_skipped: number; retry_at: string | null
 }
 type Price = { sales: number; price: number; spots: number }
 type ForeignKey = {
@@ -148,7 +166,7 @@ type Rpc<Args, Returns> = { Args: Args; Returns: Returns }
 type NoArgs = Record<PropertyKey, never>
 export type Database = {
   public: {
-    Tables: AgencyTables & {
+    Tables: WorkflowTables & AgencyTables & {
       lead_proposals: Table<ProposalRow, 'lead_id' | 'document'>
       lead_site_audits: Table<LeadAudit, 'lead_id'>
       alert_destinations: Table<
@@ -206,6 +224,13 @@ export type Database = {
         'key' | 'window_end' | 'hits'
       >
       scan_jobs: Table<ScanJob, 'niche_id' | 'source' | 'scan_hour'>
+      scan_runs: Table<ScanRun, 'user_id' | 'niche_id' | 'service', [{
+        foreignKeyName: 'scan_runs_niche_id_fkey'
+        columns: ['niche_id']
+        referencedRelation: 'niches'
+        referencedColumns: ['id']
+      }]>
+      scan_run_sources: Table<ScanSourceReceipt, 'job_id' | 'run_id' | 'source'>
       source_backoffs: Table<
         { source: string; retry_at: string },
         'source' | 'retry_at'
@@ -219,7 +244,7 @@ export type Database = {
     Views: Record<never, never>
     Enums: Record<never, never>
     CompositeTypes: Record<never, never>
-    Functions: AgencyFunctions &
+    Functions: WorkflowFunctions & AgencyFunctions &
       ProposalFunctions & {
         save_alert_settings: Rpc<
           {
@@ -290,6 +315,7 @@ export type Database = {
           string
         >
         lifetime_price: Rpc<NoArgs, Price[]>
+        workspace_results: Rpc<{ p_owner: string; p_group: 'platform' | 'search' }, WorkspaceResult[]>
         create_quote: Rpc<{ p_user: string; p_product: Product }, Quote>
         fulfill_checkout: Rpc<
           {
@@ -322,6 +348,13 @@ export type Database = {
           undefined
         >
         claim_scan_jobs: Rpc<{ p_limit: number }, ScanJob[]>
+        claim_run_scan_jobs: Rpc<{ p_run: string; p_limit: number }, ScanJob[]>
+        start_manual_scan: Rpc<{ p_user: string; p_niche: string; p_request: string; p_limit: number }, string>
+        scan_allowance: Rpc<{ p_run: string }, number>
+        save_scan_budget: Rpc<{ p_user: string; p_niche: string | null; p_limit: number | null }, undefined>
+        monthly_scan_usage: Rpc<NoArgs, { niche_id: string | null; kind: string; credits: number }[]>
+        reserve_scan_score: Rpc<{ p_job: string; p_lease: string; p_key: string }, string>
+        finalize_scan_score: Rpc<{ p_user: string; p_key: string; p_lead: Record<string, unknown> | null }, boolean>
         defer_source: Rpc<{ p_source: string; p_until: string }, undefined>
         refill_credits: Rpc<NoArgs, undefined>
         link_telegram: Rpc<{ p_code: string; p_chat: string }, boolean>

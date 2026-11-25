@@ -117,7 +117,7 @@ const entries = [
   ],
   [
     'Does refreshing the inbox start a live search?',
-    'The workspace shows leads collected by scheduled searches. The public Reddit lead finder can run a search on demand and can reuse results for the same query for up to one hour. Its results depend on which public Reddit posts the provider has indexed.',
+    'Refreshing the inbox loads saved leads. To run a saved search now, open Scans, choose the search and set a credit cap. The receipt shows which sources responded, how many posts matched and how many credits were used.',
   ],
 ]
 

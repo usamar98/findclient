@@ -3,6 +3,7 @@ import type { Database } from './schema'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { cache } from 'react'
 export const authConfigured = () =>
   Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -28,7 +29,7 @@ export async function database() {
     },
   )
 }
-export async function requireUser() {
+export const requireUser = cache(async function requireUser() {
   if (!authConfigured()) redirect('/auth/login')
   const db = await database()
   const {
@@ -36,4 +37,4 @@ export async function requireUser() {
   } = await db.auth.getUser()
   if (!user) redirect('/auth/login')
   return { db, user }
-}
+})

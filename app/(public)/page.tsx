@@ -85,7 +85,7 @@ export default function Home() {
       <div className="cf-home-section cf-faq"><FAQ items={[marketingFaq[3], marketingFaq[12], marketingFaq[15]]} />
         <Link href="/faq">Read all questions <span aria-hidden="true">↗</span></Link>
         <aside id="workspace-preview" className="cf-workspace-preview" aria-labelledby="workspace-preview-title">
-          <h2 id="workspace-preview-title">Workspace features in development</h2>
+          <h2 id="workspace-preview-title">What you can automate in your workspace</h2>
           <ul>
             <li>Run a saved search on demand with a credit cap and a receipt for each source. Set monthly search budgets and reserve credits for replies.</li>
             <li>Use rules to assign promising leads, prepare reply drafts or send a Telegram alert. Get notified when a proposal link is first opened and review a follow-up draft later.</li>

@@ -27,7 +27,13 @@ export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL,
     key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-  if (!url || !key) return NextResponse.redirect(new URL('/auth/login', u))
+  const loginUrl = new URL('/auth/login', u)
+  const query = new URLSearchParams(u.search)
+  query.delete('_rsc')
+  if (u.pathname !== '/app' || query.size) {
+    loginUrl.searchParams.set('next', u.pathname + (query.size ? '?' + query.toString() : ''))
+  }
+  if (!url || !key) return NextResponse.redirect(loginUrl)
   const db = createServerClient(url, key, {
     cookies: {
       getAll: () => request.cookies.getAll(),
@@ -43,7 +49,7 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await db.auth.getUser()
   if (!user) {
-    const login = NextResponse.redirect(new URL('/auth/login', u))
+    const login = NextResponse.redirect(loginUrl)
     for (const cookie of response.cookies.getAll()) login.cookies.set(cookie)
     return login
   }

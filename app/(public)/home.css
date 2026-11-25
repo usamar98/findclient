@@ -93,17 +93,14 @@
 }
 .cf-home .cf-hero-answer p { margin: 0; }
 .cf-hero-actions { display: flex; gap: .6rem; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 1.55rem; }
-.cf-home .cf-home-primary, .cf-home .cf-home-secondary {
+.cf-home .cf-home-primary {
   display: inline-flex; align-items: center; justify-content: center; gap: .55rem;
   min-height: 3.1rem; font-weight: 650; font-size: .91rem; padding: .65rem 1.05rem; border-radius: .55rem;
   text-decoration: none; border: 1px solid var(--cf-text); transition: transform .18s,box-shadow .18s;
 }
 .cf-home .cf-home-primary { background: var(--cf-brand); color: var(--cf-bg); border-color: var(--cf-brand); box-shadow: 0 3px 7px #0002; }
 .cf-home .cf-home-primary span { font-size: 1.16em; }
-.cf-home .cf-home-secondary { background: var(--cf-card); color: var(--cf-text); border-color: var(--cf-line); }
-.cf-home-primary:hover, .cf-home-secondary:hover { transform: translateY(-2px); box-shadow: 0 5px 14px #0002; }
-.cf-alert-icon { position: relative; width: .79rem; height: .75rem; border: 1.5px solid currentColor; border-radius: 60% 60% 21% 21%; display: inline-block; }
-.cf-alert-icon:after { content: ''; position: absolute; left: 33%; bottom: -4px; width: 4px; height: 2px; border-radius: 0 0 4px 4px; background: currentColor; }
+.cf-home-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 14px #0002; }
 .cf-source-switcher { text-align: center; padding: 0 1.1rem 2.1rem; }
 .cf-home .cf-motion-toolbar { gap:.7rem; margin:0 0 .65rem; }
 .cf-home .cf-source-switcher p { color: var(--cf-muted); font-size: .69rem; font-weight: 700; line-height: 1.5; letter-spacing: .14em; text-transform: uppercase; margin: 0; }
@@ -204,7 +201,7 @@
   .cf-home .cf-hero-answer { max-width: 28rem; font-size: .94rem; margin-top: 1rem; }
   .cf-hero-stage { gap: 1.35rem .9rem; padding: 2rem 1rem 1.5rem; }
   .cf-hero-actions { margin-top: 1.15rem; gap: .5rem; }
-  .cf-home .cf-home-primary, .cf-home .cf-home-secondary { min-height: 2.8rem; font-size: .83rem; padding: .55rem .8rem; }
+  .cf-home .cf-home-primary { min-height: 2.8rem; font-size: .83rem; padding: .55rem .8rem; }
   .cf-source-switcher { padding-bottom: 1.5rem; }
   .cf-source-switcher > div { gap: .16rem; }
   .cf-source-switch { padding: .3rem .4rem; font-size: .76rem; }
@@ -234,5 +231,5 @@
   .cf-source-card summary { min-height: auto; }
 }
 @media(prefers-reduced-motion: reduce) {
-  .cf-home .cf-home-primary, .cf-home .cf-home-secondary { transition: none; }
+  .cf-home .cf-home-primary { transition: none; }
 }

@@ -22,7 +22,7 @@ export default async function Detail({
   if (audit.error || drafts.error) throw new Error('Unable to load lead details.')
   return (
     <>
-      <Link href="/app">Lead inbox</Link>
+      <Link href="/app/inbox">Lead inbox</Link>
       <h1>{lead.title}</h1>
       <p>
         {sources[lead.source as keyof typeof sources] ?? lead.source} · {lead.author || 'Unknown author'} ·{' '}
@@ -48,7 +48,10 @@ export default async function Detail({
       <div id="website" className="lead-section"><SiteAudit id={id} audit={audit.data} suggested={posterWebsite(lead.title, lead.body, lead.url)} /></div>
       <div id="pipeline" className="lead-section"><LeadPipeline lead={lead} /></div>
       <div id="proposal" className="lead-section"><ProposalActions leadId={id} /></div>
-      <div id="reply" className="lead-section"><Drafts lead={id} drafts={drafts.data ?? []} /></div>
+      <div id="reply" className="lead-section">
+        {lead.rule_draft_capped && <p className="meta">The automatic reply was skipped because this scan reached its credit limit.</p>}
+        <Drafts lead={id} drafts={drafts.data ?? []} />
+      </div>
     </>
   )
 }

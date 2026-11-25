@@ -4,24 +4,27 @@ import { Wordmark } from '@/components/wordmark'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { authConfigured, database } from '@/lib/db/server'
 import { products } from '@/lib/payments'
+import { workspaceDestination } from '@/lib/auth-destination'
 import { signIn } from './actions'
 import { AuthSubmit } from './auth-submit'
 
-export type AccountQuery = { message?: string; purchase?: string }
+export type AccountQuery = { message?: string; purchase?: string; next?: string }
 
 export async function AccountPage({ mode, query }: { mode: 'login' | 'signup'; query: AccountQuery }) {
   const signup = mode === 'signup'
   const purchase = products.safeParse(query.purchase)
+  const next = workspaceDestination(query.next)
   if (query.purchase && !purchase.success) redirect('/pricing')
-  const continuation = purchase.success ? '?purchase=' + purchase.data : ''
+  const continuation = purchase.success ? '?purchase=' + purchase.data : next ? '?next=' + encodeURIComponent(next) : ''
   if (authConfigured()) {
     const db = await database()
     const { data } = await db.auth.getUser()
-    if (data.user) redirect(purchase.success ? '/app/checkout/' + purchase.data : '/app')
+    if (data.user) redirect(purchase.success ? '/app/checkout/' + purchase.data : next ?? '/app')
   }
   const hidden = <>
     <input type="hidden" name="mode" value={mode} />
     {purchase.success && <input type="hidden" name="purchase" value={purchase.data} />}
+    {next && <input type="hidden" name="next" value={next} />}
   </>
   return (
     <main className="auth-shell">

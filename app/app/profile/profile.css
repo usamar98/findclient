@@ -1,0 +1,6 @@
+.work-profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1rem; }
+.workspace .work-profile-grid .panel { margin: 0; }
+.work-profile-grid dl { margin: 1rem 0 1.5rem; }
+.work-profile-grid dt { margin-top: 1rem; color: var(--cf-muted); font-size: .88rem; }
+.work-profile-grid dd { margin: .12rem 0 0; overflow-wrap: anywhere; font-weight: 580; }
+.work-profile-balance { font-size: 2rem; line-height: 1.1; }

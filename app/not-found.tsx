@@ -12,7 +12,7 @@ export default function NotFound() {
         </p>
         <nav aria-label="Available pages">
           <Link href="/">Home</Link>
-          <Link href="/app">Lead inbox</Link>
+          <Link href="/app/inbox">Lead inbox</Link>
           <Link href="/blog">Freelance guides</Link>
         </nav>
       </main>

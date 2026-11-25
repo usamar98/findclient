@@ -1,0 +1,9 @@
+.workflow-page { max-width: 56rem; }
+.workflow-rule { margin: 1rem 0; padding: .9rem 1rem; border: 1px solid var(--cf-line); border-radius: .75rem; }
+.workflow-rule summary { cursor: pointer; }
+.workflow-rule summary span { display: inline-block; margin-left: .65rem; color: var(--cf-muted); font-size: .85rem; }
+.workflow-form { display: grid; gap: .9rem; margin: 1rem 0; }
+.workflow-form fieldset { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,14rem),1fr)); gap: .8rem; padding: 1rem; min-width: 0; border: 1px solid var(--cf-line); border-radius: .6rem; }
+.workflow-form legend { padding-inline: .35rem; font-weight: 650; }
+.workflow-form > button { justify-self: start; }
+.workspace .workflow-remove { background: var(--cf-card); color: var(--cf-text); border: 1px solid var(--cf-line); }

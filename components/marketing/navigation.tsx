@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { Wordmark } from '@/components/wordmark'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { AccountMenu } from '@/components/workspace/account-menu'
 
 const pages = [
   ['/how-it-works', 'How it works'],
@@ -16,8 +17,40 @@ export function Navigation() {
   const pathname = usePathname()
   const [compact, setCompact] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [signedIn, setSignedIn] = useState<boolean | null>(null)
   const header = useRef<HTMLElement>(null)
   const menuButton = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    const cookieEvents = 'cookieStore' in window && window.cookieStore instanceof EventTarget ? window.cookieStore : null
+    let pending: AbortController | undefined
+    const syncAccount = () => {
+      if (document.hidden) return
+      pending?.abort()
+      // Supabase SSR stores its auth cookie in chunks for larger sessions.
+      if (!/(?:^|;\s*)sb-[^=;]+-auth-token(?:\.\d+)?=/.test(document.cookie)) {
+        setSignedIn(false)
+        return
+      }
+      const controller = new AbortController()
+      pending = controller
+      fetch('/auth/home', { cache: 'no-store', headers: { Accept: 'application/json' }, signal: controller.signal })
+        .then(response => response.ok ? response.json() : null)
+        .then((result: { signedIn: boolean } | null) => {
+          if (!controller.signal.aborted) setSignedIn(result?.signedIn ?? null)
+        })
+        .catch(() => { if (!controller.signal.aborted) setSignedIn(null) })
+    }
+    syncAccount()
+    document.addEventListener('visibilitychange', syncAccount)
+    window.addEventListener('pageshow', syncAccount)
+    cookieEvents?.addEventListener('change', syncAccount)
+    return () => {
+      pending?.abort()
+      document.removeEventListener('visibilitychange', syncAccount)
+      window.removeEventListener('pageshow', syncAccount)
+      cookieEvents?.removeEventListener('change', syncAccount)
+    }
+  }, [pathname])
   useEffect(() => {
     const update = () => setCompact(window.scrollY > 48)
     update()
@@ -44,15 +77,17 @@ export function Navigation() {
       if ((e.target as Element).closest('a')) setMenuOpen(false)
     }}>
       <div className="cf-bar">
-        <Wordmark />
+        <Wordmark href={signedIn === null ? '/auth/home' : signedIn ? '/app' : '/'} />
         <nav id="cf-primary" className="cf-primary" aria-label="Main navigation" data-open={menuOpen}>
-          {pages.map(([href, label]) => <Link key={href} href={href} aria-current={pathname === href ? 'page' : undefined}>{label}</Link>)}
-          <Link className="cf-menu-login" href="/auth/login">Sign in</Link>
+          {pages.filter(([href]) => !(signedIn && href === '/pricing')).map(([href, label]) => <Link key={href} href={href} aria-current={pathname === href ? 'page' : undefined}>{label}</Link>)}
+          {signedIn === false && <Link className="cf-menu-login" href="/auth/login">Sign in</Link>}
         </nav>
         <div className="cf-account">
           <ThemeToggle />
-          <Link className="cf-login" href="/auth/login">Sign in</Link>
-          <Link className="cf-register" href="/auth/signup">Get started</Link>
+          {signedIn ? <AccountMenu onOpen={() => setMenuOpen(false)} /> : signedIn === false ? <>
+            <Link className="cf-login" href="/auth/login">Sign in</Link>
+            <Link className="cf-register" href="/auth/signup">Get started</Link>
+          </> : <Link className="cf-register" href="/auth/login">Account</Link>}
           <button ref={menuButton} type="button" className="cf-menu-button" aria-controls="cf-primary" aria-expanded={menuOpen}
             aria-label={menuOpen ? 'Close navigation' : 'Open navigation'} onClick={() => setMenuOpen(!menuOpen)}>
             <span /><span />

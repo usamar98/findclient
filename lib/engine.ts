@@ -1,6 +1,7 @@
 import 'server-only'
 import { createHash } from 'node:crypto'
 import { admin } from './db/admin'
+import { missingDatabaseResource } from './db/missing-resource'
 import type { ScanJob } from './db/schema'
 import { adapters, providerKey, type NormalizedPost } from './sources'
 import { scoreIntent } from './ai'
@@ -42,19 +43,27 @@ function validPost(post: NormalizedPost, since: Date, negative: string[]) {
 }
 async function runJob(job: ScanJob, deadline: number) {
   const service = admin()
-  const { data: row, error } = await service
-    .from('niches')
-    .select('*,profiles(credits,fast_discovery)')
-    .eq('id', job.niche_id)
+  if (!job.lease || !job.run_id) return { scored: 0, inserted: 0, outcome: 'skipped' }
+  const { data: run, error } = await service
+    .from('scan_runs')
+    .select('credit_limit,niches!inner(*,profiles(credits,fast_discovery))')
+    .eq('id', job.run_id)
     .maybeSingle()
   if (error) throw error
+  const row = run?.niches
   const source = job.source as keyof typeof adapters
   if (
-    !row?.active ||
-    !row.sources.some((s) => s === source) ||
-    !row.profiles?.credits
+    !row || (!row.active && run.credit_limit === null) ||
+    !row.sources.some((s) => s === source) || !row.profiles
   )
-    return { scored: 0, inserted: 0 }
+    return { scored: 0, inserted: 0, outcome: 'skipped' }
+  const allowance = await service.rpc('scan_allowance', { p_run: job.run_id })
+  if (allowance.error) throw allowance.error
+  if (!allowance.data) return { scored: 0, inserted: 0, outcome: 'limited' }
+  if (providerKey(source) === 'exa' && !process.env.EXA_API_KEY)
+    return { scored: 0, inserted: 0, outcome: 'missing_exa' }
+  if (!process.env.OPENAI_API_KEY)
+    return { scored: 0, inserted: 0, outcome: 'missing_scorer' }
   const niche = nicheSchema.parse({
     ...row,
     portfolio_url: row.portfolio_url ?? '',
@@ -67,7 +76,15 @@ async function runJob(job: ScanJob, deadline: number) {
   const slot = Math.floor(Date.parse(job.scan_hour) / cadence)
   const phrase = niche.keywords[slot % niche.keywords.length] || niche.skill
   const adapter = adapters[source]
-  const candidates = await adapter.search(phrase, since, niche)
+  let candidates = job.candidates
+  if (candidates === null) {
+    candidates = await adapter.search(phrase, since, niche)
+    // Keep the same set of URLs on continuation and avoid another provider charge.
+    const snapshot = await service.from('scan_jobs').update({ candidates })
+      .eq('id', job.id).eq('lease', job.lease).select('id').maybeSingle()
+    if (snapshot.error) throw snapshot.error
+    if (!snapshot.data) return { scored: 0, inserted: 0, outcome: 'skipped' }
+  }
   const posts = Array.from(
     new Map(
       candidates
@@ -79,7 +96,7 @@ async function runJob(job: ScanJob, deadline: number) {
         .map((p) => [p.url, p]),
     ).values(),
   )
-  if (!posts.length) return { scored: 0, inserted: 0 }
+  if (!posts.length) return { scored: 0, inserted: 0, outcome: 'complete' }
   const [existing, feedback] = await Promise.all([
     service
       .from('leads')
@@ -102,24 +119,24 @@ async function runJob(job: ScanJob, deadline: number) {
   const recorded = new Set(existing.data.map((item) => item.url))
   let scored = 0,
     inserted = 0,
-    budget = row.profiles.credits
+    outcome = 'complete'
   for (const post of posts) {
     if (Date.now() > deadline) throw new Error('Continuation needed')
-    if (budget <= 0) break
     if (recorded.has(post.url)) continue
     const key =
       'score:' +
       createHash('sha256')
         .update(row.id + '\n' + post.url)
         .digest('hex')
-    const reservation = await service.rpc('reserve_usage', {
-      p_user: row.user_id,
-      p_key: key,
-      p_type: 'score',
-      p_cost: 1,
+    const reservation = await service.rpc('reserve_scan_score', {
+      p_job: job.id, p_lease: job.lease, p_key: key,
     })
     if (reservation.error) throw reservation.error
-    if (!reservation.data) continue
+    if (reservation.data === 'duplicate') continue
+    if (reservation.data !== 'reserved') {
+      outcome = reservation.data === 'limited' ? 'limited' : 'skipped'
+      break
+    }
     try {
       const rating = await scoreIntent(
         post,
@@ -155,14 +172,13 @@ async function runJob(job: ScanJob, deadline: number) {
               ),
             }
           : null
-      const result = await service.rpc('finalize_score', {
+      const result = await service.rpc('finalize_scan_score', {
         p_user: row.user_id,
         p_key: key,
         p_lead: lead,
       })
       if (result.error) throw result.error
       scored++
-      budget--
       if (result.data) inserted++
     } catch (error) {
       const refund = await service.rpc('refund_usage', {
@@ -173,11 +189,19 @@ async function runJob(job: ScanJob, deadline: number) {
       throw error
     }
   }
-  return { scored, inserted }
+  return { scored, inserted, outcome }
 }
-export async function runEngine(enqueue = true) {
+export async function runEngine(enqueue = true, runId?: string) {
   const service = admin(),
     stats = { queued: 0, jobs: 0, scored: 0, inserted: 0, retrying: 0 }
+  if (!runId) {
+    // A deployment and its SQL upgrade can land at different times. Leave legacy jobs unclaimed.
+    const { error } = await service.from('scan_runs').select('id').limit(0)
+    if (missingDatabaseResource(error, 'table', 'scan_runs')) {
+      return { ...stats, deferred: 'workspace_schema_pending' }
+    }
+    if (error) throw error
+  }
   if (enqueue) {
     const [enqueueResult, legacy] = await Promise.all([
       service.rpc('enqueue_scans'),
@@ -203,14 +227,25 @@ export async function runEngine(enqueue = true) {
     stats.queued = enqueueResult.data ?? 0
   }
   const deadline = Date.now() + 45000
-  const batch = await service.rpc('claim_scan_jobs', { p_limit: 4 })
+  const batch = runId
+    ? await service.rpc('claim_run_scan_jobs', { p_run: runId, p_limit: 8 })
+    : await service.rpc('claim_scan_jobs', { p_limit: 4 })
   if (batch.error) throw batch.error
   await Promise.all(
     (batch.data ?? []).map(async (job) => {
       if (!job.lease) return
-      let changes: { done_at: string } | { available_at: string }
+      if (!job.run_id) {
+        // A claim using a stale API schema must never mark a source as scanned.
+        const release = await service.from('scan_jobs').update({
+          lease: null, available_at: new Date(Date.now() + 60_000).toISOString(),
+        }).eq('id', job.id).eq('lease', job.lease)
+        if (release.error) throw release.error
+        stats.retrying++
+        return
+      }
+      let changes: { done_at: string; outcome: string } | { available_at: string; outcome: string }
       try {
-        const { scored, inserted } = await runJob(job, deadline)
+        const { scored, inserted, outcome } = await runJob(job, deadline)
         stats.scored += scored
         stats.inserted += inserted
         stats.jobs++
@@ -220,7 +255,7 @@ export async function runEngine(enqueue = true) {
           .update({ last_scanned_at: time })
           .eq('id', job.niche_id)
         if (marked.error) throw marked.error
-        changes = { done_at: time }
+        changes = { done_at: time, outcome }
       } catch (problem) {
         const retry =
           problem &&
@@ -241,6 +276,7 @@ export async function runEngine(enqueue = true) {
             ? 5
             : Math.min(3600, 30 * 2 ** Math.min(job.attempts, 7))
         changes = {
+          outcome: 'retrying',
           available_at: new Date(
             Math.max(Date.now() + delay * 1000, retry?.valueOf() ?? 0),
           ).toISOString(),

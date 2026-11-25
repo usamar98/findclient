@@ -548,4 +548,82 @@ describe('Lead To Client Postgres ledger', { concurrency: false }, () => {
       await assert.rejects(query('select * from claim_lead_audits($1,1)', [lead.id]), /permission denied/i)
     } finally { await db.exec('reset role') }
   })
+
+  it('shares manual and scheduled scoring limits, refunds failed calls, and keeps durable scan receipts', async () => {
+    const owner = await newUser(5), stranger = await newUser(5)
+    const [{ id: niche }] = await query<{id: string}>(
+      "insert into niches(user_id,skill,keywords,sources,active) values($1,'Design',array['hiring'],array['hn','shopify'],false) returning id", [owner],
+    )
+    const start = (actor: string, token: string, cap: number) =>
+      query<{id: string}>('select start_manual_scan($1,$2,$3,$4) as id', [actor, niche, token, cap])
+    const request = randomUUID()
+    await assert.rejects(start(stranger, request, 2))
+    await db.query('select save_scan_budget($1,null,3)', [owner])
+    await assert.rejects(db.query('select save_scan_budget($1,$2,0)', [stranger,niche]))
+    const [{ id: run }] = await start(owner, request, 2)
+    assert.equal(run, request)
+    assert.equal((await start(owner, request, 2))[0].id, run)
+    assert.equal((await start(owner, randomUUID(), 8))[0].id, run)
+    const jobs = await query<{id: string; lease: string}>('select * from claim_run_scan_jobs($1,8)', [run])
+    assert.equal(jobs.length, 2)
+    const charge = async (job: typeof jobs[number], key: string) =>
+      (await query<{result: string}>('select reserve_scan_score($1,$2,$3) as result', [job.id,job.lease,key]))[0].result
+    const [first, second] = jobs
+    assert.equal(await charge({ ...first, lease: randomUUID() }, 'bad lease'), 'skipped')
+    assert.equal(await charge(first, 'score:first'), 'reserved')
+    assert.equal(await charge(second, 'score:first'), 'duplicate')
+    assert.equal(await charge(second, 'score:failed'), 'reserved')
+    assert.equal(await charge(first, 'score:overflow'), 'limited')
+    await db.query("select refund_usage($1,'score:failed')", [owner])
+    assert.equal(await charge(second, 'score:replacement'), 'reserved')
+    const post = { niche_id:niche, source:'hn', url:'https://news.ycombinator.com/item?id=232', title:'Hiring', body:'Design',
+      author:'buyer', posted_at:new Date().toISOString(), intent_score:85, intent_reason:'Hiring', problem_summary:'Design' }
+    await db.query("select finalize_scan_score($1,'score:first',$2::jsonb)", [owner,JSON.stringify(post)])
+    await db.query("select finalize_scan_score($1,'score:first',$2::jsonb)", [owner,JSON.stringify(post)])
+    await db.query("select finalize_scan_score($1,'score:replacement',null)", [owner])
+    await db.query("update scan_jobs set candidates='[{},{}]'::jsonb,done_at=now(),lease=null where run_id=$1", [run])
+    await db.query('delete from scan_jobs where run_id=$1', [run])
+    assert.deepEqual(await query(`select sum(found)::int found,sum(scored)::int scored,sum(matched)::int matched,sum(spent)::int spent
+      from scan_run_sources where run_id=$1`, [run]), [{ found:4,scored:2,matched:1,spent:2 }])
+    assert.equal(await balance(owner), 3)
+    assert.ok((await query<{ok:boolean}>("select reserve_usage($1,'reply:1','response',1) ok",[owner]))[0].ok)
+    await db.query("update usage_events set settled_at=now() where user_id=$1 and request_key='reply:1'", [owner])
+    await db.query('update profiles set credits=credits+3 where id=$1',[owner])
+    const [{ id: next }] = await start(owner, randomUUID(), 10)
+    // Balance 5, two of the three reserved reply credits remain.
+    assert.equal((await query<{n:number}>('select scan_allowance($1) n',[next]))[0].n, 3)
+    await db.query('select save_scan_budget($1,$2,3)',[owner,niche])
+    const [{ run_id: scheduled }] = await query<{ run_id:string }>(
+      "insert into scan_jobs(niche_id,source,scan_hour) values($1,'hn',date_trunc('hour',now())) returning run_id", [niche],
+    )
+    const [scheduledJob] = await query<{id:string;lease:string}>('select * from claim_run_scan_jobs($1,1)',[scheduled])
+    assert.equal(await charge(scheduledJob,'score:paused'), 'skipped')
+    await db.query('update niches set active=true where id=$1',[niche])
+    assert.equal(await charge(scheduledJob,'score:scheduled'), 'reserved')
+    assert.equal((await query<{n:number}>('select scan_allowance($1) n',[next]))[0].n, 0)
+    await db.query("update usage_events set created_at=created_at-interval '1 month' where user_id=$1 and type='score'", [owner])
+    assert.equal((await query<{n:number}>('select scan_allowance($1) n',[next]))[0].n, 2)
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)", [stranger])
+    await db.exec('set role authenticated')
+    try {
+      assert.deepEqual(await query('select * from scan_runs where id=$1', [run]), [])
+      assert.deepEqual(await query('select * from scan_run_sources where run_id=$1', [run]), [])
+      await assert.rejects(start(owner, randomUUID(), 5), /permission denied/i)
+    } finally { await db.exec('reset role') }
+  })
+
+  it('leaves completed pre-upgrade slots out of the receipt history', async () => {
+    const owner=await newUser(3)
+    const [niche]=await query<{id:string}>(
+      "insert into niches(user_id,skill,keywords,sources) values($1,'Design',array['hiring'],array['hn']) returning id", [owner],
+    )
+    // A job completed before receipts shipped has a null run_id.
+    await db.exec('alter table scan_jobs disable trigger user')
+    try {
+      await db.query(`insert into scan_jobs(niche_id,source,scan_hour,done_at)
+        values($1,'hn',date_bin(interval '10 minutes',now(),'2000-01-01'::timestamptz),now())`,[niche.id])
+    } finally { await db.exec('alter table scan_jobs enable trigger user') }
+    await db.query('select enqueue_scans()')
+    assert.deepEqual(await query('select id from scan_runs where niche_id=$1',[niche.id]),[])
+  })
 })

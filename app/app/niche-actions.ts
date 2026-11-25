@@ -55,6 +55,9 @@ export async function saveNiche(raw: unknown, rawId?: string) {
         : 'The niche could not be saved.',
     }
   revalidatePath('/app/settings')
+  revalidatePath('/app')
+  revalidatePath('/app/inbox')
+  revalidatePath('/app/scans')
   return { error: null }
 }
 export async function removeNiche(form: FormData) {
@@ -68,4 +71,6 @@ export async function removeNiche(form: FormData) {
   if (error) throw new Error('Could not delete niche')
   revalidatePath('/app/settings')
   revalidatePath('/app')
+  revalidatePath('/app/inbox')
+  revalidatePath('/app/scans')
 }

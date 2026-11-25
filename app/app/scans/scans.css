@@ -1,0 +1,13 @@
+.cf-scans { max-width: 58rem; margin-inline: auto; }
+.cf-scans h3 { margin-bottom: .3rem; }
+.scan-form { display: flex; flex-wrap: wrap; align-items: end; gap: .8rem; margin: .8rem 0; }
+.scan-form label { min-width: 0; flex: 1 1 11rem; }
+.scan-form input, .scan-form select { width: 100%; }
+.scan-form [role="status"] { flex-basis: 100%; }
+.scan-setting, .scan-receipt { padding-block: 1rem; border-top: 1px solid var(--cf-line, #8885); }
+.scan-receipt summary { cursor: pointer; line-height: 1.6; }
+.scan-receipt summary span { display: block; font-size: .88rem; }
+.scan-source-list { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); margin-block: 1rem; }
+.scan-source-list > div { padding: .85rem; border: 1px solid var(--cf-line, #8885); border-radius: .65rem; }
+.scan-source-list p { margin-block: .25rem; }
+.scan-source-list span { font-size: .85rem; }

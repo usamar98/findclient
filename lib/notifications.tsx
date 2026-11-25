@@ -5,6 +5,7 @@ import { admin } from './db/admin'
 import { siteOrigin } from './origin'
 import { Message } from '@/components/email/message'
 import { priorityLead, sendPriorityWebhook } from './priority-alerts'
+import { produceReply } from './produce-reply'
 type Notice = {
   id: string
   user_id: string
@@ -29,8 +30,25 @@ async function deliver(n: Notice) {
   const isPriority = ['telegram','webhook','priority_email'].includes(n.kind)
   if (n.kind === 'priority_email' && !p.priority_email) return
   if (n.kind === 'telegram' && !p.telegram_chat_id) return
+  if (n.kind === 'rule_draft') {
+    const { id } = z.object({ id: z.uuid() }).parse(n.payload)
+    const { data: lead, error: leadError } = await db.from('leads')
+      .select('id,user_id,niche_id,title,body,status,buyer_intelligence').eq('id', id).eq('user_id', n.user_id).maybeSingle()
+    if (leadError) throw leadError
+    if (!lead || !['new','saved'].includes(lead.status) ||
+        z.object({ availability: z.object({ state: z.literal('closed') }) }).safeParse(lead.buyer_intelligence).success)
+      return
+    const previous = await db.from('responses').select('id').eq('id', n.id).eq('lead_id', id).maybeSingle()
+    if (previous.error) throw previous.error
+    if (previous.data) return
+    const message = await produceReply({ db, lead, authorId: n.user_id, ownerId: n.user_id, requestId: n.id, tone: 'friendly', automated: true })
+    if (message) throw new Error(message)
+    return
+  }
+  const ruleAlert = n.kind === 'telegram' &&
+    z.object({ rule_alert: z.literal(true) }).safeParse(n.payload).success
   const priority = isPriority
-    ? await priorityLead(n.user_id,z.object({id:z.uuid()}).parse(n.payload).id,p.priority_alert_min)
+    ? await priorityLead(n.user_id,z.object({id:z.uuid()}).parse(n.payload).id,ruleAlert ? 0 : p.priority_alert_min)
     : null
   if (isPriority && !priority) return
   if (n.kind === 'webhook' && priority) {
@@ -42,6 +60,22 @@ async function deliver(n: Notice) {
   if (n.kind === 'telegram' && priority) {
     if (!process.env.TELEGRAM_BOT_TOKEN)
       throw new Error('Telegram is not configured')
+    const draftRef = z.object({ draft_id: z.uuid() }).safeParse(n.payload)
+    let draftStatus = ''
+    if (ruleAlert && draftRef.success) {
+      const [response, receipt] = await Promise.all([
+        db.from('responses').select('id').eq('id', draftRef.data.draft_id).eq('lead_id', priority.lead_id).eq('user_id', n.user_id).maybeSingle(),
+        db.from('leads').select('rule_draft_capped').eq('id',priority.lead_id).eq('user_id',n.user_id).single(),
+      ])
+      if (response.error || receipt.error) throw new Error('Rule draft status unavailable')
+      // The draft and notification can initially be claimed by different workers.
+      // Still deliver a timely lead alert if generation needs longer retries.
+      if (receipt.data.rule_draft_capped) draftStatus = 'Automatic draft skipped. This scan reached its credit limit.'
+      else {
+        if (!response.data && n.attempts < 3) throw new Error('Waiting for the rule draft')
+        draftStatus = response.data ? 'Reply draft ready for review.' : 'Reply draft queued.'
+      }
+    }
     const res = await fetch(
       'https://api.telegram.org/bot' +
         process.env.TELEGRAM_BOT_TOKEN +
@@ -51,7 +85,7 @@ async function deliver(n: Notice) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: p.telegram_chat_id,
-          text: priority.title + '\n' + priority.summary + '\n' + priority.workspace_url,
+          text: [priority.title, priority.summary, draftStatus, priority.workspace_url + (draftStatus ? '#reply' : ''), priority.original_url].filter(Boolean).join('\n'),
         }),
         signal: AbortSignal.timeout(8000),
       },
@@ -64,6 +98,28 @@ async function deliver(n: Notice) {
     items: { label: string; url: string }[] = []
   let recipient = p.email
   switch (n.kind) {
+    case 'proposal_open':
+    case 'proposal_followup_ready': {
+      const { id } = z.object({ id: z.uuid() }).parse(n.payload)
+      const [deal, sequence, prefs] = await Promise.all([
+        db.from('leads').select('title,status').eq('id',id).eq('user_id', n.user_id).maybeSingle(),
+        db.from('proposal_followups').select('cancelled_at,prepared_at').eq('lead_id',id).maybeSingle(),
+        db.from('proposal_workflow_settings').select('enabled').eq('user_id', n.user_id).maybeSingle(),
+      ])
+      if (deal.error || sequence.error || prefs.error) throw new Error('Proposal activity unavailable')
+      if (!deal.data || !sequence.data || sequence.data.cancelled_at || prefs.data?.enabled === false ||
+          ['call_booked','won','lost','ignored'].includes(deal.data.status)) return
+      if (n.kind === 'proposal_open') {
+        title = 'Your shared proposal was opened'
+        body = 'A visitor opened the proposal for “' + deal.data.title + '”.'
+      } else {
+        if (!sequence.data.prepared_at) return
+        title = 'Your proposal follow-up is ready'
+        body = 'Review the follow-up draft for “' + deal.data.title + '”.'
+      }
+      items = [{ label: 'Review proposal activity', url: base + '/app/proposals/' + id + '#proposal-activity' }]
+      break
+    }
     case 'priority_email':
       if (!priority) return
       title = 'Priority lead · ' + priority.title
@@ -158,8 +214,11 @@ async function deliver(n: Notice) {
   if (result.error) throw new Error('Email delivery failed')
 }
 export async function deliverNotifications() {
-  const db = admin(),
-    { data, error } = await db.rpc('claim_notifications', { p_limit: 30 })
+  const db = admin()
+  const prepared = await db.rpc('prepare_proposal_followups')
+  // Existing notification deliveries continue while a new database migration is rolling out.
+  if (prepared.error && !['PGRST202','42883'].includes(prepared.error.code)) throw prepared.error
+  const { data, error } = await db.rpc('claim_notifications', { p_limit: 30 })
   if (error) throw error
   const counts = { sent: 0, retrying: 0 }
   const jobs = (data ?? []) as Notice[]

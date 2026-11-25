@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { workspaceProposal } from '@/lib/proposals/data'
+import { missingDatabaseResource } from '@/lib/db/missing-resource'
 import { siteOrigin } from '@/lib/origin'
 import { ProposalEditor } from './editor'
+import { FollowupDraft } from './followup-draft'
 import './editor.css'
 
 function formatDate(value: string) {
@@ -12,7 +14,9 @@ export default async function ProposalPage({ params, searchParams }: {
   params: Promise<{ id: string }>; searchParams: Promise<{ changed?: string }>
 }) {
   const { id } = await params
-  const { row, draft } = await workspaceProposal(id)
+  const { db, row, draft } = await workspaceProposal(id)
+  const { data: followup, error } = await db.from('proposal_followups').select('*').eq('lead_id',id).maybeSingle()
+  if (error && !missingDatabaseResource(error, 'table', 'proposal_followups')) throw new Error('Unable to load follow-up activity.')
   const { changed } = await searchParams
   return (
     <>
@@ -31,6 +35,9 @@ export default async function ProposalPage({ params, searchParams }: {
           </dl>
         ) : <p>No recorded visits yet.</p>}
         <p className="meta">Recorded when a visitor displays the shared page. Anyone with the link can open it.</p>
+        {followup && (followup.cancelled_at ? <p>Follow-up sequence stopped.</p>
+          : followup.draft ? <FollowupDraft id={id} initial={followup.draft} />
+          : <p>Follow-up draft scheduled for {formatDate(followup.due_at)}.</p>)}
       </section>
     </>
   )

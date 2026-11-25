@@ -2,6 +2,7 @@
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { products } from '@/lib/payments'
+import { workspaceDestination } from '@/lib/auth-destination'
 import { cookies } from 'next/headers'
 import { authConfigured, database } from '@/lib/db/server'
 import { siteOrigin } from '@/lib/origin'
@@ -9,9 +10,11 @@ import { allowRequest } from '@/lib/limits'
 export async function signIn(form: FormData) {
   const mode = form.get('mode') === 'signup' ? 'signup' : 'login'
   const choice = products.safeParse(form.get('purchase'))
+  const next = workspaceDestination(form.get('next'))
   const feedback = (message: string): never => {
     const params = new URLSearchParams({ message })
     if (choice.success) params.set('purchase', choice.data)
+    else if (next) params.set('next', next)
     redirect('/auth/' + mode + '?' + params)
   }
   if (!authConfigured()) return feedback('Accounts will open when Lead To Client connects its sign-in provider.')
@@ -20,15 +23,11 @@ export async function signIn(form: FormData) {
   if (!(await allowRequest('login', 10, 600)))
     return feedback('Please wait a few minutes before trying again.')
   const jar = await cookies()
-  if (choice.success)
-    jar.set('clientfind_checkout', choice.data, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: siteOrigin().startsWith('https:'),
-      path: '/auth',
-      maxAge: 1800,
-    })
+  const options = { httpOnly: true, sameSite: 'lax' as const, secure: siteOrigin().startsWith('https:'), path: '/auth', maxAge: 1800 }
+  if (choice.success) jar.set('clientfind_checkout', choice.data, options)
   else jar.delete({ name: 'clientfind_checkout', path: '/auth' })
+  if (next && !choice.success) jar.set('leadtoclient_return', next, options)
+  else jar.delete({ name: 'leadtoclient_return', path: '/auth' })
   const db = await database(),
     callback = siteOrigin() + '/auth/callback'
   if (provider.data === 'google') {
@@ -52,8 +51,13 @@ export async function signIn(form: FormData) {
       : 'Check your inbox for your secure link.',
   )
 }
-export async function signOut() {
-  const db = await database()
-  await db.auth.signOut()
+export async function signOut(): Promise<string> {
+  try {
+    const db = await database()
+    const { error } = await db.auth.signOut()
+    if (error) return 'Unable to sign out. Please try again.'
+  } catch {
+    return 'Unable to sign out. Please try again.'
+  }
   redirect('/')
 }

@@ -1,0 +1,28 @@
+.cf-account-menu { position: relative; flex: none; }
+.marketing details.cf-account-menu { padding: 0; border: 0; }
+.cf-account-menu > summary {
+  display: flex; align-items: center; justify-content: center; gap: .55rem;
+  min-height: 2.45rem; padding: .45rem .85rem; list-style: none; cursor: pointer;
+  border-radius: 2rem; background: var(--cf-brand); color: var(--cf-bg);
+  font-size: .88rem; font-weight: 630;
+}
+.cf-account-menu > summary::-webkit-details-marker { display: none; }
+.cf-account-menu[open] > summary svg { transform: rotate(180deg); }
+.cf-account-panel {
+  position: absolute; top: calc(100% + .45rem); right: 0; z-index: 10;
+  width: 10.5rem; padding: .35rem; border: 1px solid var(--cf-line);
+  border-radius: .8rem; box-shadow: 0 .5rem 1.65rem #0002; background: var(--cf-card);
+}
+.cf-account-menu .cf-account-panel a, .cf-account-menu .cf-account-panel button {
+  display: block; width: 100%; padding: .6rem .75rem; border-radius: .45rem;
+  color: var(--cf-text); background: transparent; text-align: left; font: inherit;
+  text-decoration: none; font-weight: 550; font-size: .88rem; cursor: pointer;
+}
+.cf-account-menu .cf-account-panel :is(a, button):hover, .cf-account-menu .cf-account-panel a[aria-current='page'] {
+  background: var(--cf-wash);
+}
+.cf-account-panel form { margin: .25rem 0 0; padding-top: .25rem; border-top: 1px solid var(--cf-line); }
+.cf-account-panel .cf-account-status { margin: .25rem .75rem .5rem; font-size: .82rem; color: var(--cf-muted); }
+@media (max-width: 410px) {
+  .cf-account-menu > summary { min-height: 2.15rem; gap: .3rem; padding-inline: .65rem; font-size: .8rem; }
+}

@@ -1,17 +1,12 @@
 import Link from 'next/link'
 import { requireUser } from '@/lib/db/server'
+import { planLabels } from '@/lib/offers'
 import { NicheEditor } from '@/components/workspace/niche-editor'
 import { AgencySettings } from '@/components/workspace/agency-settings'
 import { VoiceSettings } from '@/components/workspace/voice-settings'
 import { AlertSettings } from '@/components/workspace/alert-settings'
 import { removeNiche } from '../niche-actions'
 import { connectTelegram, disconnectTelegram, savePreferences } from './actions'
-const planLabels = {
-  free: 'No active plan',
-  lifetime: 'Lifetime access',
-  monthly: 'Monthly subscription',
-  agency: 'Lifetime agency access',
-}
 export default async function Settings() {
   const { db, user } = await requireUser(),
     [{ data: p, error }, { data: niches, error: nicheError }] =
@@ -28,14 +23,17 @@ export default async function Settings() {
         <p>
           {planLabels[p.plan]} · {p.credits} credits
         </p>
-        <Link href="/pricing">View pricing and credit packs</Link>
+        <div className="actions">
+          <Link href="/app/scans">Manage scan budgets and reply reserve</Link>
+          <Link href="/pricing">View pricing and credit packs</Link>
+        </div>
         {p.stripe_customer_id && (
           <form action="/api/portal" method="post">
             <button>View billing and receipts</button>
           </form>
         )}
       </section>
-      <h2>Your niches</h2>
+      <h2 id="saved-searches">Your saved searches</h2>
       {niches?.map((n) => (
         <details className="panel" key={n.id}>
           <summary>
@@ -92,7 +90,7 @@ export default async function Settings() {
       <VoiceSettings />
       <AlertSettings />
       <AgencySettings />
-      <section className="panel">
+      <section className="panel" id="telegram-alerts">
         <h2>Telegram alerts</h2>
         <p>Receive matching leads at your priority alert threshold.</p>
         {p.telegram_chat_id ? (

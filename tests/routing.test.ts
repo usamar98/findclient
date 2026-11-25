@@ -3,6 +3,21 @@ import test from 'node:test'
 import { NextRequest } from 'next/server'
 import { middleware } from '../middleware'
 import { isBillingOrigin } from '../lib/origin'
+import { workspaceDestination } from '../lib/auth-destination'
+
+test('workspace sign-in resumes filtered inbox links and defaults to the dashboard', async () => {
+  const destination = '/app/inbox?source=hn&source=bluesky'
+  const response = await middleware(new NextRequest('https://clientfind.test' + destination + '&_rsc=internal'))
+  const login = new URL(response.headers.get('location')!)
+  assert.equal(login.pathname, '/auth/login')
+  assert.equal(login.searchParams.get('next'), destination)
+  assert.equal(workspaceDestination(destination), destination)
+  assert.equal(workspaceDestination('/app#overview'), '/app#overview')
+  assert.equal(workspaceDestination(null), null)
+  for (const candidate of ['https://example.test/app', '//example.test', '/application', '/app/../other', '/app/..//example.test', '/app\\example.test']) {
+    assert.equal(workspaceDestination(candidate), null)
+  }
+})
 
 test('retired checkout links send visitors to current pricing before sign-in', async () => {
   for (const plan of ['free', 'monthly']) {

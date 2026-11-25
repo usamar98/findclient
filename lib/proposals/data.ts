@@ -17,9 +17,9 @@ export async function workspaceProposal(id: string) {
   const lead = leadResult.data
   if (!lead) notFound()
   const row = draftResult.data
-  if (row) return { lead, row, draft: proposalSchema.parse(row.document) }
+  if (row) return { db, lead, row, draft: proposalSchema.parse(row.document) }
   const team = await getWorkspacePeople(lead.user_id)
-  return { lead, row, draft: defaultProposal(lead, team.find(person => person.id === lead.user_id)?.name ?? '') }
+  return { db, lead, row, draft: defaultProposal(lead, team.find(person => person.id === lead.user_id)?.name ?? '') }
 }
 
 export async function sharedProposal(token: string) {

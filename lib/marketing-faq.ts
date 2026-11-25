@@ -64,7 +64,7 @@ const entries = [
   ],
   [
     'What can I do with a credit?',
-    'Scoring one public request uses one credit. Generating or regenerating a reply also uses one credit. You can see your remaining balance in workspace settings.',
+    'Scoring a post costs one credit, including posts below your minimum intent score. Each reply draft or regeneration costs one more. For example, 150 credits can cover 120 posts scored and 30 replies drafted.',
   ],
   [
     'Is a credit a guaranteed client?',

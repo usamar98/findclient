@@ -54,7 +54,7 @@ export function DiscoveryHero() {
             on Autopilot
           </h1>
           <aside className="guide-answer cf-hero-answer" aria-label="Quick answer">
-            <p>Lead To Client finds public posts asking for the work you do. See why a request fits, check budget and timing signals, and draft a reply in your own voice. Open the original conversation when you’re ready to respond.</p>
+            <p>Find freelance leads in public conversations. See what the buyer wants to hire for, check any budget or deadline they mention, and draft a reply in your own voice. You choose what to send.</p>
           </aside>
           <div className="cf-hero-actions">
             <LifetimeLink className="cf-home-primary"><span aria-hidden="true">↗</span></LifetimeLink>

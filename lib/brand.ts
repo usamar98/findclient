@@ -41,6 +41,12 @@ export const softwareApplication = {
   name: siteConfig.name,
   url: absolute('/'),
   description: 'A freelance lead finder for discovering public requests, reviewing buyer intent, drafting replies, sharing proposals and tracking won work.',
+  featureList: [
+    'Buyer intent and quality scores with supporting evidence',
+    'Website audits and personalized reply drafts',
+    'Branded proposal PDFs and share links with open tracking',
+    'Shared agency inbox with follow-up reminders and won revenue tracking',
+  ],
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
   publisher: { '@id': organization['@id'] },

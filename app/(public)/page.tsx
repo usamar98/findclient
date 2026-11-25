@@ -14,22 +14,15 @@ export const dynamic = 'force-dynamic'
 export function generateMetadata() {
   return buildMetadata({
     title: 'Lead To Client | Freelance leads from Reddit and communities',
-    description: 'Find freelance leads across Reddit, Hacker News and other communities. Check buyer intent, draft a personal reply and track proposals through to won work.',
+    description: 'Find freelance leads on Reddit, Hacker News and other communities. Check buyer intent, tailor your pitch with a website audit, and track branded proposals.',
     path: '/',
   })
 }
 
 const steps = [
-  { title: 'Set your niche', text: 'Choose the skills you sell, where to look and which keywords to leave out.' },
-  { title: 'Read the signals', text: 'See why a request matches, what the buyer needs and when they need it.' },
-  { title: 'Start a conversation', text: 'Edit the suggested reply in your own voice, then open the original post to respond.' },
-]
-
-const comparison = [
-  ['Discovery', 'Repeat searches on each site', 'Get priority alerts from your chosen sources'],
-  ['Qualification', 'Read through every thread', 'Start with a score and the reason behind it'],
-  ['Response', 'Write each reply from scratch', 'Edit a helpful answer and a personal pitch'],
-  ['Follow-up', 'Check a spreadsheet for the next step', 'Assign leads, share proposals and track won revenue'],
+  { title: 'Choose where to look', text: 'Save the service you sell and the phrases buyers use. You can watch specific subreddits or individual Hacker News hiring threads.' },
+  { title: 'Read the buyer’s own words', text: 'The intent score tells you how closely a post matches your service. The buyer quality score highlights clues such as a stated budget, a business website or a deadline.' },
+  { title: 'Write a reply in your voice', text: 'Add your portfolio and a few replies you’ve written so drafts use your phrasing. Edit the reply, then open the original post and decide what to send.' },
 ]
 
 export default function Home() {
@@ -39,7 +32,7 @@ export default function Home() {
       <section className="cf-home-section cf-directory" id="try-search">
         <div className="cf-section-intro">
           <h2>Who is asking for help?</h2>
-          <p>Browse example requests across eight sources. Open a card to read the brief and see a suggested first reply.</p>
+          <p>Browse example requests across eight sources. Open a card to read the brief and a suggested first reply, or <Link href="/find-clients">explore guides for your service</Link>.</p>
         </div>
         <SourceExamples />
         <details className="cf-search-live">
@@ -67,16 +60,38 @@ export default function Home() {
           </ol>
         </div>
       </section>
-      <section className="cf-home-section cf-compare">
-        <div><h2>How does it compare with manual search?</h2><p>Use the original post to decide who to contact. See <Link href="/blog/how-to-qualify-freelance-leads">how to qualify a freelance lead</Link> or <Link href="/find-clients">browse guides for your service</Link>.</p></div>
-        <table>
-          <thead><tr><th>Task</th><th>Manual search</th><th>Lead To Client</th></tr></thead>
-          <tbody>{comparison.map(([task, manual, app]) => <tr key={task}><th scope="row">{task}</th><td>{manual}</td><td>{app}</td></tr>)}</tbody>
-        </table>
+      <section className="cf-home-section" aria-labelledby="lead-to-proposal">
+        <div className="cf-section-intro"><h2 id="lead-to-proposal">From a freelance lead to a client proposal</h2></div>
+        <div className="cf-proposal-story">
+          <figure className="cf-lead-example">
+            <figcaption>Example Shopify request</figcaption>
+            <blockquote>“Our booking page is hard to use on phones. We have $800 to fix it before Friday. Can anyone help?”</blockquote>
+            <dl>
+              <dt>Why reply?</dt><dd>The merchant names the page, the budget and the deadline.</dd>
+              <dt>Website audit finding</dt><dd>The booking page is missing its mobile viewport setting.</dd>
+              <dt>A possible first reply</dt><dd>“I’d start with the viewport setting so the page fits a phone screen. Then I’d test the booking form on an iPhone and an Android. Which step gives your customers trouble?”</dd>
+            </dl>
+            <Link href="/blog/how-to-qualify-freelance-leads">How to qualify a freelance lead <span aria-hidden="true">↗</span></Link>
+          </figure>
+          <div className="cf-proposal-details">
+            <div><h3>Website audits for your pitch</h3><p>When a lead includes a public website, check its speed, search metadata and mobile layout. A completed audit gives your reply a specific issue to discuss with the owner.</p></div>
+            <div><h3>Branded proposals with open tracking</h3><p>Set the scope, packages, prices and timeline. Share a link your client can open without an account, or download the PDF. See when the link was first and last opened.</p>
+              <Link href="/tools/proposal-generator">Try the free proposal outline generator <span aria-hidden="true">↗</span></Link></div>
+            <div><h3>A shared inbox for your agency</h3><p>Assign the lead to a teammate and set a follow-up reminder. When you book a call or win the work, update the deal. Your pipeline totals the value of deals you mark won.</p></div>
+          </div>
+        </div>
       </section>
       <Offers />
       <div className="cf-home-section cf-faq"><FAQ items={[marketingFaq[3], marketingFaq[12], marketingFaq[15]]} />
         <Link href="/faq">Read all questions <span aria-hidden="true">↗</span></Link>
+        <aside id="workspace-preview" className="cf-workspace-preview" aria-labelledby="workspace-preview-title">
+          <h2 id="workspace-preview-title">Workspace features in development</h2>
+          <ul>
+            <li>Run a saved search on demand with a credit cap and a receipt for each source. Set monthly search budgets and reserve credits for replies.</li>
+            <li>Use rules to assign promising leads, prepare reply drafts or send a Telegram alert. Get notified when a proposal link is first opened and review a follow-up draft later.</li>
+            <li>Compare replies, booked calls, won revenue and credits spent by platform or saved search.</li>
+          </ul>
+        </aside>
       </div>
       <JsonLd
         data={{

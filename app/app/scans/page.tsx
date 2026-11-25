@@ -2,17 +2,13 @@ import Link from 'next/link'
 import { requireUser } from '@/lib/db/server'
 import { sources } from '@/lib/niche'
 import { readScanReceipts, scanPending, scanTotals, sourceState } from '@/lib/scan-receipts'
-import { BudgetForm, RefreshScanReceipts, ScanNowForm } from '@/components/workspace/scan-controls'
+import { BudgetForm, ContinueScan, RefreshScanReceipts, ScanNowForm } from '@/components/workspace/scan-controls'
+import { scanOutcomeLabel, isPendingScanState } from '@/lib/scan-outcomes'
 import './scans.css'
 
 export const metadata = { title: 'Scans and credits | Lead To Client' }
 export const maxDuration = 120
 const time = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' })
-const states: Record<string, string> = {
-  queued: 'Queued', running: 'Checking posts', complete: 'Complete', limited: 'Credit limit reached',
-  skipped: 'Search paused or source removed', retrying: 'Waiting to retry', expired: 'Retry window ended',
-  missing_exa: 'Exa search key missing', missing_scorer: 'OpenAI scoring key missing',
-}
 
 export default async function Scans() {
   const { db, user } = await requireUser()
@@ -25,9 +21,9 @@ export default async function Scans() {
     <p>Scan controls are unavailable. Check the database connection and apply the latest workspace migrations.</p></>
   const replySpend = usage.data.filter(x => x.kind === 'response').reduce((sum, x) => sum + x.credits, 0)
   return <div className="cf-scans">
-    <h1>Scans and credits</h1>
+    <div className="work-title-row"><h1>Scans and credits</h1><Link href="/app/research">Live research</Link></div>
     <section className="panel"><h2>Scan now</h2>
-      <p>{profile.data.credits} credits available. Scoring a post and creating an automatic reply each cost one credit.
+      <p>{profile.data.credits} credits available. An AI score and an automatic reply each cost one credit. If AI scoring is unavailable, the scan can assess the wording of a post locally at no scoring cost.
         The scan cap covers both. When it is reached, matched leads stay in your inbox and any remaining automatic drafts are skipped.</p>
       {saved.data.length ? <ScanNowForm searches={saved.data} /> :
         <p>Create a saved search to choose the sources you want to scan. <Link href="/app/onboarding">Add a saved search</Link></p>}
@@ -56,15 +52,16 @@ export default async function Scans() {
             <span>{total.found} found → {total.scored} scored → {total.matched} matched · {total.spent} credits used</span>
           </summary>
           {run.credit_limit !== null && <p>This scan used {total.spent} of its {run.credit_limit} allowed credits.</p>}
-          {total.drafted > 0 && <p>{total.scored} scoring credits · {total.drafted} automatic reply credits</p>}
+          {(total.local > 0 || total.drafted > 0) && <p>{total.scored - total.local} AI scoring credits · {total.local} local assessments at no charge · {total.drafted} automatic reply credits</p>}
           {total.skipped > 0 && <p>{total.skipped} automatic {total.skipped === 1 ? 'draft was' : 'drafts were'} skipped at the credit cap.</p>}
           <div className="scan-source-list">{run.sources.map(source => <div key={source.job_id}>
             <strong>{sources[source.source as keyof typeof sources] ?? source.source}</strong>
-            <p>{states[sourceState(run, source)] ?? source.state}{source.source_checked && ' · Source responded'}{sourceState(run, source) === 'retrying' && source.retry_at && ' · ' + time.format(new Date(source.retry_at)) + ' UTC'}</p>
+            <p>{scanOutcomeLabel(sourceState(run, source))}{source.source_checked && ' · Source responded'}{isPendingScanState(sourceState(run, source)) && source.retry_at && ' · ' + time.format(new Date(source.retry_at)) + ' UTC'}</p>
             <span>{source.found} found · {source.scored} scored · {source.matched} matched
               {source.drafted > 0 && ` · ${source.drafted} automatic replies`} · {source.spent} credits</span>
             {source.draft_skipped > 0 && <p>{source.draft_skipped} automatic {source.draft_skipped === 1 ? 'draft' : 'drafts'} skipped at the cap</p>}
           </div>)}</div>
+          {run.credit_limit !== null && scanPending(run) && <ContinueScan id={run.id} />}
         </details>
       })}
     </section>

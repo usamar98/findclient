@@ -12,7 +12,7 @@ Copy-Item .env.example .env.local
 npm run dev
 ```
 
-Open [the local site](http://localhost:3000). A fresh checkout can build the marketing pages before service credentials are available. The workspace requires Supabase, the discovery worker requires an AI key, and indexed web sources require a search provider key.
+Open [the local site](http://localhost:3000). A fresh checkout can build the marketing pages before service credentials are available. The workspace uses Supabase. The discovery worker uses OpenAI when available and can assess explicit hiring language locally after the scan recovery migration. Indexed web sources require a search provider key.
 
 The [environment template](.env.example) lists every application setting. The [file inventory](FILES.md) groups the delivered files by implementation phase. Configure secrets in the server environment. Production metadata, the sitemap, RSS, and public guide links use https://leadtoclient.app. Set `NEXT_PUBLIC_SITE_URL=https://leadtoclient.app` in production for sign-in and checkout. Local development and Vercel previews request exclusion from search. Vercel supplies `VERCEL`, `VERCEL_URL` and `VERCEL_ENV` automatically. Next.js sets `NODE_ENV`. Use separate service keys for preview and production.
 
@@ -24,6 +24,7 @@ The [environment template](.env.example) lists every application setting. The [f
 | Supabase | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | Required for authenticated accounts, the database, shared rate limits and live pricing. |
 | AI | `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_INPUT_USD_PER_MILLION`, `OPENAI_OUTPUT_USD_PER_MILLION`, `AI_MAX_USD_PER_CREDIT` | The key enables generation. The default model and cost guard have built-in settings. Set both rates for another model. |
 | Discovery | `EXA_API_KEY`, `STACK_EXCHANGE_KEY` | Exa enables indexed Reddit, X, Indie Hackers and forum results. The Stack Exchange key increases the available quota. |
+| Optional direct Reddit and X live search | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_USER_AGENT`, `X_BEARER_TOKEN` | Use credentials for a Reddit app approved for your use and a descriptive user agent identifying its operator. The X app needs recent-search access. Without these, live research uses Exa on those platforms when configured. |
 | Website audits | `PAGESPEED_API_KEY` | Optional Google PageSpeed Insights key for mobile Lighthouse metrics and rendered accessibility findings. Basic HTML audits run without a key. |
 | Checkout | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Required for purchases and signed fulfillment. |
 | Email | `RESEND_API_KEY`, `EMAIL_FROM` | Required for transactional messages and opted-in digests. |
@@ -46,6 +47,10 @@ To add three illustrative leads to a specific existing demo account, run `npm ru
 ## Leads, credits and pricing
 
 For an existing installation with the November 23–24 database migrations, run the [workspace upgrade SQL](docs/downloads/lead-to-client-workspace-upgrade.sql) once in the Supabase SQL Editor before deploying this version. The upgrade uses the existing scan and notification jobs and the existing provider keys.
+
+Then apply the [scan recovery SQL](docs/downloads/lead-to-client-scan-recovery.sql) once. An installation that already has scan receipts needs only this incremental file. A manual scan can continue from its receipt within its six-hour retry window, sharing its original credit cap. Receipts distinguish AI scores, free local assessments, source cooldowns and processing failures.
+
+Live research at `/app/research` searches the selected platforms when the user submits the form. Results link to the original post and fall within the chosen publication window as of the search snapshot. Search indexes can lag behind the original platform. Public forum coverage lists each responding feed. Research does not score posts or add them to the lead inbox. A signed-in user can submit 10 searches in 10 minutes and make 40 metered source requests per 24-hour window. The project-wide limit is 100 metered requests per 24-hour window. Adjust it with `LIVE_RESEARCH_DAILY_PROVIDER_LIMIT`, or set it to zero to use only unmetered sources. Upstream API charges and limits apply to the operator's credentials.
 
 After signing in, open the dashboard at `/app` for leads, follow-ups and workspace operations. The Lead inbox at `/app/inbox` supports selecting multiple sources in one search. Profile, Pricing, Settings and Sign out are available from Account.
 

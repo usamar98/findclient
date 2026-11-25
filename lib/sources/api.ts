@@ -11,12 +11,11 @@ const str = z.string().nullish()
 const hnHit = z.object({
   objectID: z.string().regex(/^\d+$/),
   title: str,
-  story_title: str,
   author: str,
   story_text: str,
   comment_text: str,
   story_id: z.union([z.number().int().positive(), z.string()]).nullish(),
-  created_at: z.string(),
+  created_at: z.iso.datetime({ offset: true }),
 })
 export const hn: Adapter = {
   async search(query, since, watches) {
@@ -26,22 +25,24 @@ export const hn: Adapter = {
     const url = apiURL('https://hn.algolia.com/api/v1/search_by_date', {
       query,
       tags: threads.length ? 'comment,' + comments : '(ask_hn,comment)',
-      numericFilters: 'created_at_i>=' + Math.floor(since.getTime() / 1000),
+      numericFilters: 'created_at_i>=' + Math.floor(since.getTime() / 60000) * 60,
       hitsPerPage: '18',
     })
     const raw = z
       .object({ hits: z.array(z.unknown()) })
-      .parse(await (await remote(url)).json())
+      .parse(await (await remote(url, { next: { revalidate: 60 } })).json())
     return cleanPosts(
       raw.hits.flatMap((x) => {
         const r = hnHit.safeParse(x)
         if (!r.success) return []
         const p = r.data
         if (threads.length && (!p.comment_text || !threads.includes(String(p.story_id)))) return []
+        const title = p.comment_text ? plain(p.comment_text).slice(0, 180) : p.title
+        if (!title) return []
         return [
           {
             source: 'hn',
-            title: threads.length ? plain(p.comment_text ?? '').slice(0, 180) : p.title || p.story_title || 'Hacker News discussion',
+            title,
             body: p.comment_text || p.story_text || '',
             url: 'https://news.ycombinator.com/item?id=' + p.objectID,
             author: p.author || '',
@@ -55,14 +56,14 @@ export const hn: Adapter = {
 }
 const bskyPost = z.object({
   uri: z.string(),
-  author: z.object({ handle: z.string(), did: z.string() }),
-  record: z.object({ text: z.string(), createdAt: z.string() }),
+  author: z.object({ handle: z.string(), did: z.string().regex(/^did:(plc|web):[a-zA-Z0-9.:%-]+$/) }),
+  record: z.object({ text: z.string(), createdAt: z.iso.datetime({ offset: true }) }),
 })
 export const bluesky: Adapter = {
   async search(query, since) {
     // Bluesky's AppView serves public searches without an account. Use a stable
     // request window for shared caching, then enforce the caller's exact cutoff.
-    const windowStart = new Date(Math.floor(since.getTime() / 300000) * 300000)
+    const windowStart = new Date(Math.floor(since.getTime() / 60000) * 60000)
     const url = apiURL('https://api.bsky.app/xrpc/app.bsky.feed.searchPosts', {
       q: query,
       since: windowStart.toISOString(),
@@ -71,7 +72,7 @@ export const bluesky: Adapter = {
     })
     const { posts } = z
       .object({ posts: z.array(z.unknown()) })
-      .parse(await (await remote(url, { next: { revalidate: 300 } })).json())
+      .parse(await (await remote(url, { next: { revalidate: 60 } })).json())
     return cleanPosts(
       posts.flatMap((x) => {
         const parsed = bskyPost.safeParse(x)
@@ -81,7 +82,7 @@ export const bluesky: Adapter = {
           /^at:\/\/([^/]+)\/app\.bsky\.feed\.post\/([A-Za-z0-9.~-]+)$/.exec(
             p.uri,
           )
-        if (!id || p.author.did !== id[1]) return []
+        if (!id || p.author.did !== id[1] || id[2] === '.' || id[2] === '..') return []
         return [
           {
             source: 'bluesky',
@@ -116,7 +117,7 @@ export const stackexchange: Adapter = {
       filter: 'withbody',
       sort: 'creation',
       order: 'desc',
-      fromdate: String(Math.floor(since.getTime() / 300000) * 300),
+      fromdate: String(Math.floor(since.getTime() / 60000) * 60),
       pagesize: '16',
       closed: 'false',
     }
@@ -132,7 +133,7 @@ export const stackexchange: Adapter = {
         await (
           await remote(
             apiURL('https://api.stackexchange.com/2.3/search/advanced', params),
-            { next: { revalidate: 300 } },
+            { next: { revalidate: 60 } },
           )
         ).json(),
       )
@@ -142,6 +143,10 @@ export const stackexchange: Adapter = {
         const parsed = question.safeParse(x)
         if (!parsed.success) return []
         const p = parsed.data
+        const permalink = new URL(p.link)
+        if (permalink.hostname !== 'stackoverflow.com' || !/^\/questions\/\d+(?:\/[^/]+)?\/?$/.test(permalink.pathname)) return []
+        const created = new Date(p.creation_date * 1000)
+        if (!Number.isFinite(created.getTime())) return []
         return [
           {
             source: 'stackexchange',
@@ -149,7 +154,7 @@ export const stackexchange: Adapter = {
             body: p.body ?? '',
             author: p.owner?.display_name ?? '',
             url: p.link,
-            posted_at: new Date(p.creation_date * 1000).toISOString(),
+            posted_at: created.toISOString(),
           },
         ]
       }),

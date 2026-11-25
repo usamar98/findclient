@@ -5,14 +5,18 @@ import { SearchScope } from './search-scope'
 
 type Props = {
   filters: InboxFilters
+  clearHref: string
   spaces: { id: string; name: string }[]
   searches: { id: string; user_id: string; skill: string }[]
 }
 
-export function LeadFilters({ filters: f, spaces, searches }: Props) {
+export function LeadFilters({ filters: f, clearHref, spaces, searches }: Props) {
   return (
     <form action="/app/inbox" method="get" className="panel inbox-filters" aria-labelledby="lead-filters-title">
-      <h2 id="lead-filters-title">Filter leads</h2>
+      <div>
+        <h2 id="lead-filters-title">Filter saved leads</h2>
+        <p className="inbox-filter-help">These filters search your inbox. To find new posts, run a scan using the sources in a saved search.</p>
+      </div>
       <div className="inbox-filter-grid">
         <label>Search lead titles<input type="search" name="q" placeholder="e.g. Shopify redesign" defaultValue={f.q} maxLength={100} /></label>
         <SearchScope workspace={f.workspace} service={f.service} spaces={spaces} searches={searches} />
@@ -49,7 +53,7 @@ export function LeadFilters({ filters: f, spaces, searches }: Props) {
           <label>Minimum deal value (USD)<input type="number" name="value" min="0" max="21474836.47" step="0.01" placeholder="0.00" defaultValue={f.value || ''} /></label>
         </div>
       </details>
-      <div className="inbox-filter-actions"><Link href="/app/inbox">Clear filters</Link><button type="submit">Apply filters</button></div>
+      <div className="inbox-filter-actions"><Link href={clearHref}>Clear filters</Link><button type="submit">Apply filters</button></div>
     </form>
   )
 }

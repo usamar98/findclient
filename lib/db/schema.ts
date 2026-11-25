@@ -40,6 +40,7 @@ type Niche = Omit<NicheInput, 'portfolio_url'> & {
 }
 type Lead = LeadCrm & {
   rule_draft_capped?: boolean
+  score_method: 'ai' | 'local'
   id: string
   user_id: string
   niche_id: string
@@ -135,6 +136,7 @@ export type ScanJob = {
 export type ScanRun = { id: string; user_id: string; niche_id: string; service: string; started_at: string; scheduled_for: string | null; credit_limit: number | null }
 export type ScanSourceReceipt = {
   job_id: string; run_id: string; source: string; state: string; source_checked: boolean
+  local_scored: number
   found: number; scored: number; matched: number; spent: number; drafted: number; draft_skipped: number; retry_at: string | null
 }
 type Price = { sales: number; price: number; spots: number }
@@ -355,6 +357,7 @@ export type Database = {
         monthly_scan_usage: Rpc<NoArgs, { niche_id: string | null; kind: string; credits: number }[]>
         reserve_scan_score: Rpc<{ p_job: string; p_lease: string; p_key: string }, string>
         finalize_scan_score: Rpc<{ p_user: string; p_key: string; p_lead: Record<string, unknown> | null }, boolean>
+        finalize_local_score: Rpc<{ p_job: string; p_lease: string; p_key: string; p_lead: Record<string, unknown> | null }, 'matched' | 'unmatched' | 'skipped'>
         defer_source: Rpc<{ p_source: string; p_until: string }, undefined>
         refill_credits: Rpc<NoArgs, undefined>
         link_telegram: Rpc<{ p_code: string; p_chat: string }, boolean>

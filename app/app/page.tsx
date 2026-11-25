@@ -12,6 +12,7 @@ const dollars = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'U
 const shortDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
 const inboxKeys = new Set(['workspace', 'service', 'assigned', 'due', 'q', 'source', 'status', 'score', 'days', 'sort', 'page'])
 const operations = [
+  { name: 'Live research', href: '/app/research', detail: 'Search public posts by keyword and publication time.' },
   { name: 'Saved searches', href: '/app/settings#saved-searches', detail: 'Manage the services, communities and keywords you monitor.' },
   { name: 'Scans', href: '/app/scans', detail: 'Run a saved search, set a credit limit or review a scan receipt.' },
   { name: 'Automations', href: '/app/automations', detail: 'Manage assignment rules, reply drafts and proposal follow-ups.' },

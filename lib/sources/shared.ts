@@ -9,6 +9,8 @@ export type NormalizedPost = {
   author: string
   body: string
   posted_at: string
+  /** An indexed publication date without a reliable time of day. */
+  posted_precision?: 'day'
 }
 export interface Adapter {
   search(query: string, since: Date, watches?: Pick<NicheInput, 'hn_threads' | 'subreddits'>): Promise<NormalizedPost[]>
@@ -56,8 +58,9 @@ export function cleanPosts(posts: NormalizedPost[], since: Date) {
     } catch {
       continue
     }
-    if (url.protocol !== 'https:' || url.username || url.password) continue
-    url.hash = ''
+    if (url.protocol !== 'https:' || url.username || url.password || url.port) continue
+    if (!(post.source === 'forums' && url.hostname === 'wordpress.org' &&
+      /^#post-\d+$/.test(url.hash))) url.hash = ''
     for (const k of Array.from(url.searchParams.keys()))
       if (/^utm_|^(fbclid|gclid|ref_src)$/i.test(k)) url.searchParams.delete(k)
     const title = plain(post.title).slice(0, 350)

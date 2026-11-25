@@ -2,6 +2,7 @@ import OpenAI from 'openai'
 import { z } from 'zod'
 import type { ReplyContext } from './reply-context'
 import { evidenceFields, requestTypes } from './lead-intelligence'
+import { ScoringError } from './scan-scoring'
 const intent = z.object({
   score: z.number().int().min(0).max(100),
   reason: z.string().trim().min(1).max(1000),
@@ -26,9 +27,11 @@ export function parseIntent(raw: string): IntentScore {
 function positive(value: string | undefined, fallback?: number) {
   if (value === undefined || value === '') {
     if (fallback !== undefined) return fallback
-    throw new Error('Configure token prices for the selected AI model.')
+    throw new ScoringError('pricing', 'Configure token prices for the selected AI model.')
   }
-  return z.coerce.number().finite().positive().parse(value)
+  const price = z.coerce.number().finite().positive().safeParse(value)
+  if (!price.success) throw new ScoringError('pricing', 'Configure a positive rate and credit allowance.')
+  return price.data
 }
 export function costUpperBound(
   inputBytes: number,
@@ -51,7 +54,7 @@ async function json<T>(
 ): Promise<T> {
   const key = process.env.OPENAI_API_KEY
   if (!key)
-    throw new Error('AI is unavailable until the workspace has an OpenAI key.')
+    throw new ScoringError('missing_key', 'AI is unavailable until the workspace has an OpenAI key.')
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini'
   const known = model === 'gpt-4o-mini' || model === 'gpt-4o-mini-2024-07-18'
   const inputRate = positive(
@@ -77,7 +80,7 @@ async function json<T>(
       outputRate,
     ) > Math.min(cap, priceLimit)
   ) {
-    throw new Error(
+    throw new ScoringError('cost_guard',
       'The estimated model cost exceeds the configured allowance.',
     )
   }
@@ -94,8 +97,16 @@ async function json<T>(
   })
   const choice = completion.choices[0]
   if (!choice?.message.content || choice.finish_reason !== 'stop')
-    throw new Error('AI returned an incomplete result.')
-  return schema.parse(JSON.parse(choice.message.content))
+    throw new ScoringError('invalid_response', 'AI returned an incomplete result.')
+  let result
+  try {
+    result = JSON.parse(choice.message.content)
+  } catch {
+    throw new ScoringError('invalid_response', 'AI returned invalid JSON.')
+  }
+  const checked = schema.safeParse(result)
+  if (!checked.success) throw new ScoringError('invalid_response', 'AI returned incomplete or invalid fields.')
+  return checked.data
 }
 type PostText = { title: string; body: string }
 const clipPost = (post: PostText) => ({

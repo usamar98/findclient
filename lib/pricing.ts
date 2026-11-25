@@ -1,12 +1,13 @@
 import 'server-only'
 import { cache } from 'react'
 import { admin } from './db/admin'
+import { ScoringError } from './scan-scoring'
 export async function maximumModelCost() {
   const { data, error } = await admin()
     .from('product_config')
     .select('credits,price_cents')
     .like('product', 'topup%')
-  if (error || !data?.length) throw new Error('Credit pricing is unavailable.')
+  if (error || !data?.length) throw new ScoringError('pricing', 'Credit pricing is unavailable.')
   return (
     Math.min(...data.map((item) => item.price_cents / 100 / item.credits)) * 0.5
   )

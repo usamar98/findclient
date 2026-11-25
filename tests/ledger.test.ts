@@ -612,6 +612,72 @@ describe('Lead To Client Postgres ledger', { concurrency: false }, () => {
     } finally { await db.exec('reset role') }
   })
 
+  it('settles local assessments once, refunds them, and permits later model review of nonmatches', async () => {
+    const owner = await newUser(5)
+    const [{ id: niche }] = await query<{ id: string }>(
+      "insert into niches(user_id,skill,keywords,sources,active) values($1,'Software Engineer',array['developer'],array['hn'],false) returning id",
+      [owner],
+    )
+    const run = randomUUID()
+    await db.query('select start_manual_scan($1,$2,$3,2)', [owner, niche, run])
+    const [job] = await query<{ id: string; lease: string }>('select * from claim_run_scan_jobs($1,1)', [run])
+    const reservePost = async (key: string, id = job.id, lease = job.lease) =>
+      (await query<{ state: string }>('select reserve_scan_score($1,$2,$3) as state', [id, lease, key]))[0].state
+    const finalize = async (key: string, post: object | null, lease = job.lease) =>
+      (await query<{ state: string }>('select finalize_local_score($1,$2,$3,$4) as state', [job.id, lease, key, post]))[0].state
+    const post = {
+      niche_id: niche, source: 'hn', url: 'https://news.ycombinator.com/item?id=123', author: 'buyer',
+      posted_at: new Date().toISOString(), title: 'Hiring a developer', body: 'I need help with my app.',
+      intent_score: 85, intent_reason: 'Explicit hiring request', problem_summary: 'App development',
+    }
+    assert.equal(await reservePost('match'), 'reserved')
+    assert.equal(await balance(owner), 4)
+    assert.equal(await finalize('match', post, randomUUID()), 'skipped')
+    await assert.rejects(finalize('match', { ...post, source: 'forums' }), /source job/i)
+    assert.equal(await balance(owner), 4)
+    assert.equal(await finalize('match', post), 'matched')
+    assert.equal(await finalize('match', post), 'skipped')
+    assert.equal(await reservePost('match'), 'duplicate')
+    assert.equal(await reservePost('irrelevant'), 'reserved')
+    assert.equal(await finalize('irrelevant', null), 'unmatched')
+    assert.equal(await reservePost('irrelevant'), 'duplicate')
+    assert.equal(await balance(owner), 5)
+    assert.deepEqual(await query('select score_method from leads where niche_id=$1', [niche]), [{ score_method: 'local' }])
+    assert.deepEqual(await query('select scored,local_scored,matched,spent from scan_run_sources where run_id=$1', [run]),
+      [{ scored: 2, local_scored: 2, matched: 1, spent: 0 }])
+    assert.deepEqual(await query('select cost_credits,settled_at is not null as settled from usage_events where user_id=$1', [owner]),
+      [{ cost_credits: 0, settled: true }, { cost_credits: 0, settled: true }])
+    await db.query('update scan_jobs set done_at=now(),lease=null where id=$1', [job.id])
+    const nextRun = randomUUID()
+    await db.query('select start_manual_scan($1,$2,$3,2)', [owner,niche,nextRun])
+    const [nextJob] = await query<{ id: string; lease: string }>('select * from claim_run_scan_jobs($1,1)', [nextRun])
+    assert.equal(await reservePost('irrelevant', nextJob.id, nextJob.lease), 'reserved')
+    assert.equal(await reservePost('match', nextJob.id, nextJob.lease), 'duplicate')
+    await db.exec('set role authenticated')
+    try {
+      await assert.rejects(finalize('irrelevant', null), /permission denied/i)
+    } finally { await db.exec('reset role') }
+  })
+
+  it('resumes stored candidates through a provider cooldown while protecting new source fetches', async () => {
+    const owner = await newUser(5)
+    const [{ id: niche }] = await query<{ id: string }>(
+      "insert into niches(user_id,skill,keywords,sources) values($1,'Design',array['help'],array['reddit','forums']) returning id", [owner],
+    )
+    const run = randomUUID()
+    await db.query('select start_manual_scan($1,$2,$3,5)', [owner,niche,run])
+    await db.query("update scan_jobs set available_at=now(),candidates=case when source='reddit' then '[{}]'::jsonb end where run_id=$1", [run])
+    await db.query("select defer_source('exa',now()+interval '15 minutes')")
+    try {
+      assert.deepEqual(await query('select source from claim_run_scan_jobs($1,8)', [run]), [{ source: 'reddit' }])
+      await db.query("update scan_jobs set available_at=now(),lease=null where run_id=$1 and source='reddit'", [run])
+      const global = await query<{source:string}>('select source from claim_scan_jobs(100) where run_id=$1', [run])
+      assert.deepEqual(global, [{ source: 'reddit' }])
+    } finally {
+      await db.query("delete from source_backoffs where source='exa'")
+    }
+  })
+
   it('leaves completed pre-upgrade slots out of the receipt history', async () => {
     const owner=await newUser(3)
     const [niche]=await query<{id:string}>(

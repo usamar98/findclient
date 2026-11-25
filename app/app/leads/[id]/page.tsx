@@ -32,6 +32,7 @@ export default async function Detail({
         </a>
       </p>
       {lead.problem_summary && <p>{lead.problem_summary}</p>}
+      {lead.score_method === 'local' && <p>Intent was estimated from the wording of the original post using local rules. This assessment used zero scoring credits.</p>}
       <details className="panel">
         <summary>Read original request</summary>
         <p className="whitespace-pre-wrap">{lead.body}</p>

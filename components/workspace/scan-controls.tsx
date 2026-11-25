@@ -1,7 +1,16 @@
 'use client'
 import { useActionState, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { saveBudget, startScan } from '@/app/app/scans/actions'
+import { continueScan, saveBudget, startScan } from '@/app/app/scans/actions'
+
+export function ContinueScan({ id }: { id: string }) {
+  const [message, submit, pending] = useActionState(continueScan, '')
+  return <form action={submit}>
+    <input type="hidden" name="run" value={id} />
+    <button type="submit" disabled={pending}>{pending ? 'Checking…' : 'Continue this scan'}</button>
+    {message && <p role="status">{message}</p>}
+  </form>
+}
 
 export function ScanNowForm({ searches }: { searches: { id: string; skill: string; active: boolean }[] }) {
   const [message, submit, pending] = useActionState(startScan, '')

@@ -31,6 +31,21 @@ export async function startScan(_previous: string, form: FormData) {
   return data === request ? 'Scan requested. Progress appears in the receipts below.' : 'A scan is already in progress for this search.'
 }
 
+export async function continueScan(_previous: string, form: FormData) {
+  const { db, user } = await requireUser()
+  const id = z.uuid().safeParse(form.get('run'))
+  if (!id.success) return 'Invalid scan.'
+  const run = await db.from('scan_runs').select('id,started_at,credit_limit').eq('id', id.data).eq('user_id', user.id).maybeSingle()
+  if (run.error || !run.data || run.data.credit_limit === null) return 'This manual scan is unavailable.'
+  if (Date.now() - Date.parse(run.data.started_at) >= 6 * 3600000) return 'The retry window has ended. Start a new scan to check for current posts.'
+  if (!(await allowRequest('continue-manual:' + user.id, 4, 60))) return 'Please wait a minute before continuing again.'
+  after(async () => {
+    try { await runEngine(false, id.data) }
+    catch { console.error('Manual scan continuation failed', { run: id.data }) }
+  })
+  return 'Checking for work that is ready. This scan keeps its original credit limit.'
+}
+
 export async function saveBudget(_previous: string, form: FormData) {
   const { user } = await requireUser()
   const raw = form.get('niche')

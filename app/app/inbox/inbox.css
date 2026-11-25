@@ -1,5 +1,8 @@
 .workspace .inbox-filters { display: grid; gap: 1.15rem; }
 .workspace .inbox-filters h2, .workspace .inbox-results-heading h2 { margin: 0; }
+.inbox-filter-help { color: var(--cf-muted); margin: .35rem 0 0; }
+.inbox-empty { overflow-wrap: anywhere; }
+.inbox-empty-actions { display: flex; flex-wrap: wrap; gap: .45rem 1.25rem; margin-top: .75rem; }
 .inbox-filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: .8rem 1rem; }
 .workspace .inbox-filters label { margin: 0; font-size: .88rem; }
 .workspace .inbox-checks { min-width: 0; margin: 0; padding: 0; border: none; box-shadow: none; }

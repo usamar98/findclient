@@ -19,6 +19,10 @@
 }
 .cf-home [data-source='shopify'] { --source-color: light-dark(#5e8e3e, #a4d680); }
 .cf-home [data-source='forums'] { --source-color: var(--cf-muted); }
+.cf-home [data-source='weworkremotely'] { --source-color: light-dark(#ce3335, #ff8584); }
+.cf-home [data-source='remoteok'] { --source-color: light-dark(#dc403a, #ff8d86); }
+.cf-home [data-source='github'] { --source-color: light-dark(#171717, #fff); }
+.cf-home [data-source='mastodon'] { --source-color: light-dark(#563acc, #858afa); }
 .cf-discovery {
   position: relative;
   isolation: isolate;
@@ -73,7 +77,8 @@
   margin: 0 auto;
   text-wrap: balance;
 }
-.cf-hero-platform-line { display:grid; place-items:center; height:1.06em; }
+.cf-hero-platform-line, .cf-hero-suffix { display:grid; place-items:center; height:1.06em; }
+.cf-hero-suffix > span { white-space:nowrap; }
 .cf-hero-name { display:inline-block; color:var(--source-headline, var(--source-color)); white-space:nowrap; }
 .cf-hero-name-long { font-size:.78em; }
 @media(prefers-reduced-motion:no-preference) {
@@ -195,6 +200,7 @@
   .cf-source-card summary { min-height: 10.4rem; }
 }
 @media(max-width: 640px) {
+  .cf-hero-stage[data-live-research] .cf-hero-suffix > span { font-size:.78em; }
   .cf-home-section { width: calc(100% - 2rem); padding-block: 3rem; }
   .cf-home .cf-hero-copy h1 { font-size: clamp(2.65rem,10.2vw,3.65rem); max-width: 30rem; }
   .cf-home .cf-audience { font-size: .74rem; margin-bottom: .92rem; }
@@ -227,6 +233,7 @@
   .cf-home .cf-faq h2 { margin-bottom: 1rem; }
 }
 @media(max-width: 365px) {
+  .cf-hero-stage[data-live-research] .cf-hero-name-long { font-size:.67em; }
   .cf-source-cards { grid-template-columns: 1fr; }
   .cf-source-card summary { min-height: auto; }
 }

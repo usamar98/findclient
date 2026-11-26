@@ -15,7 +15,7 @@ export default async function Research({ searchParams }: { searchParams: Promise
   const initialWindow = typeof window === 'string' && Object.hasOwn(researchWindows, window) ? window as ResearchWindow : '15'
   return <div className="live-research">
     <div className="work-title-row"><h1>Live research</h1><Link href="/app/inbox">Lead inbox</Link></div>
-    <p>Find paid freelance jobs and people asking for help in public communities. Open a result to read the original post.</p>
+    <p>Search public communities by keyword, or <Link href="/app/jobs">browse freelance jobs from the last 24 hours</Link>.</p>
     <ResearchForm key={JSON.stringify([initialQuery, initialWindow, initialSources])} initialQuery={initialQuery} initialWindow={initialWindow} initialSources={initialSources} />
   </div>
 }

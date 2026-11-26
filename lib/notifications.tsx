@@ -6,6 +6,8 @@ import { siteOrigin } from './origin'
 import { Message } from '@/components/email/message'
 import { priorityLead, sendPriorityWebhook } from './priority-alerts'
 import { produceReply } from './produce-reply'
+import { deliverTelegramJob } from './job-alerts'
+import { sendTelegramText } from './send-telegram'
 type Notice = {
   id: string
   user_id: string
@@ -26,6 +28,7 @@ async function deliver(n: Notice) {
       .eq('id', n.user_id)
       .single()
   if (error) throw error
+  if (n.kind === 'telegram_job') return deliverTelegramJob(n.user_id, p.telegram_chat_id, n.payload)
   const base = siteOrigin()
   const isPriority = ['telegram','webhook','priority_email'].includes(n.kind)
   if (n.kind === 'priority_email' && !p.priority_email) return
@@ -76,21 +79,7 @@ async function deliver(n: Notice) {
         draftStatus = response.data ? 'Reply draft ready for review.' : 'Reply draft queued.'
       }
     }
-    const res = await fetch(
-      'https://api.telegram.org/bot' +
-        process.env.TELEGRAM_BOT_TOKEN +
-        '/sendMessage',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: p.telegram_chat_id,
-          text: [priority.title, priority.summary, draftStatus, priority.workspace_url + (draftStatus ? '#reply' : ''), priority.original_url].filter(Boolean).join('\n'),
-        }),
-        signal: AbortSignal.timeout(8000),
-      },
-    )
-    if (!res.ok) throw new Error('Telegram delivery failed')
+    await sendTelegramText(p.telegram_chat_id!, [priority.title, priority.summary, draftStatus, priority.workspace_url + (draftStatus ? '#reply' : ''), priority.original_url].filter(Boolean).join('\n'))
     return
   }
   let title: string,

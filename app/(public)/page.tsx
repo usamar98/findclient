@@ -7,6 +7,7 @@ import { DiscoveryHero, SourceExamples } from '@/components/marketing/home-disco
 import { PublicSearch } from '@/components/marketing/public-search'
 import { Offers } from '@/components/marketing/offers'
 import { JsonLd, FAQ } from '@/components/marketing/seo'
+import { TelegramJobCard } from '@/components/telegram-job-card'
 import './home.css'
 
 export const dynamic = 'force-dynamic'
@@ -42,11 +43,14 @@ export default function Home() {
         <div className="cf-paid-research">
           <h3>Where can I find paid freelance work?</h3>
           <div>
-            <p>Choose <strong>Paid freelance jobs</strong> in Live Research to find contracts on We Work Remotely and Remote OK, cash bounties on GitHub, and hiring posts on Mastodon. Search for a skill or leave the keywords empty to browse.</p>
-            <p>Each result links to the original post and shows its publication time and any listed pay. You can also see how long the search took overall and for each platform.</p>
+            <p>Browse <Link href="/app/jobs">jobs from the past 24 hours</Link> for contracts on We Work Remotely and Remote OK, cash bounties on GitHub, and hiring posts on Mastodon.</p>
+            <p>Each result links to the original post and shows its publication time and any listed pay. Check source coverage to see which platforms responded.</p>
             <Link href="/platforms">See all 12 sources and how post age is measured <span aria-hidden="true">↗</span></Link>
           </div>
         </div>
+        <TelegramJobCard>
+          <Link href="/app/settings#telegram-alerts">Connect your workspace</Link>
+        </TelegramJobCard>
       </section>
       <section className="cf-workflow-band" id="how-it-works">
         <div className="cf-home-section">

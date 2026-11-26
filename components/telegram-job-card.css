@@ -1,0 +1,39 @@
+.telegram-jobs-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(1.25rem, 4vw, 3.5rem);
+  border: 1px solid var(--cf-line);
+  border-radius: 1rem;
+  padding: clamp(1.2rem, 3.5vw, 2.5rem);
+  background: var(--cf-wash);
+}
+
+.telegram-jobs-copy h2 { margin: 0; line-height: 1.12; }
+.telegram-jobs-copy p { max-width: 60ch; margin: .8rem 0 1.1rem; color: var(--cf-muted); }
+.telegram-jobs-copy code { color: var(--cf-text); font-size: .94em; }
+.telegram-jobs-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1.2rem; }
+.telegram-jobs-actions .telegram-jobs-button {
+  display: inline-block;
+  border-radius: 999px;
+  padding: .6rem 1.1rem;
+  background: var(--cf-brand);
+  color: var(--cf-bg);
+  font-weight: 650;
+  text-decoration: none;
+}
+.telegram-jobs-card .telegram-jobs-code {
+  display: grid;
+  justify-items: center;
+  gap: .4rem;
+  color: var(--cf-muted);
+  font-size: .8rem;
+  text-align: center;
+  text-decoration: none;
+}
+.telegram-jobs-code img { display: block; width: 164px; height: 164px; border-radius: .4rem; background: white; }
+.telegram-jobs-card a:hover { text-decoration: underline; }
+@media (max-width: 580px) {
+  .telegram-jobs-card { grid-template-columns: 1fr; }
+  .telegram-jobs-card .telegram-jobs-code { justify-self: start; }
+}

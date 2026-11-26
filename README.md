@@ -28,7 +28,7 @@ The [environment template](.env.example) lists every application setting. The [f
 | Website audits | `PAGESPEED_API_KEY` | Optional Google PageSpeed Insights key for mobile Lighthouse metrics and rendered accessibility findings. Basic HTML audits run without a key. |
 | Checkout | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Required for purchases and signed fulfillment. |
 | Email | `RESEND_API_KEY`, `EMAIL_FROM` | Required for transactional messages and opted-in digests. |
-| Telegram | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET` | Required for account linking and private lead alerts. |
+| Telegram | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET` | Enables the bot, account linking, job search and opt-in alerts. Scheduled job delivery also uses `CRON_SECRET`. |
 | Scheduled jobs | `CRON_SECRET` | Authorizes Vercel jobs and IndexNow submission. |
 | Brand and contact | `FOUNDER_NAME`, `FOUNDER_URL`, `BRAND_X_URL`, `BRAND_GITHUB_URL`, `BRAND_PRODUCT_HUNT_URL`, `BRAND_LINKEDIN_URL`, `NEXT_PUBLIC_TWITTER_HANDLE`, `SUPPORT_EMAIL` | Add the real public identity, official profiles and monitored contact address for launch. |
 | Indexing | `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`, `INDEXNOW_KEY` | Use the verification tokens issued by Google and Bing when verifying via HTML. The site serves its public IndexNow ownership key at `/indexnow-key.txt`. Optionally override it with 8–128 letters, digits or hyphens. |
@@ -52,7 +52,7 @@ Then apply the [scan recovery SQL](docs/downloads/lead-to-client-scan-recovery.s
 
 Live research at `/app/research` defaults to the past 15 minutes on platforms that work without operator credentials. It searches for the service and relevant problem descriptions, shows the author's request alongside the original post, and lists topical discussions separately. Platform coverage reports how many fresh candidates were reviewed and whether a feed or search returned partial results. Results use the original publication time as of the displayed check. Users can opt to repeat a one- or 15-minute search of keyless sources once a minute while the tab is visible. Changing the search stops these checks. Indexed sources can lag behind publication. Research uses no scoring credits and does not add posts to the lead inbox.
 
-The **Paid freelance jobs** preset includes contracts from We Work Remotely and Remote OK, maintainer-offered cash bounties on open GitHub issues, and public Mastodon hiring posts. Leave keywords empty to browse all qualifying openings in the selected window. The results link back to the original platform, show published pay where available, and report total search time and elapsed time per source. The platform timers can overlap because independent platforms run in parallel. Board publication times and refresh intervals vary. We Work Remotely requests an hourly refresh of its RSS feed.
+The [24-hour jobs page](https://leadtoclient.app/app/jobs) includes contracts from We Work Remotely and Remote OK, maintainer-offered cash bounties on open GitHub issues, and public Mastodon hiring posts. It uses public sources that work without provider keys. Leave keywords empty to browse or filter by skill and platform. Each result links to the original listing and shows its publication time and listed pay when available. An employer-declared We Work Remotely contract can also appear with “Pay not listed.” Source coverage shows partial checks and outages. For shorter windows, select individual platforms in Live Research. Publication and refresh intervals vary. We Work Remotely requests an hourly refresh of its RSS feed.
 
 A signed-in user can submit 10 searches in 10 minutes and make 40 metered source requests per 24-hour window. The project-wide limit is 100 metered requests per 24-hour window. Adjust it with `LIVE_RESEARCH_DAILY_PROVIDER_LIMIT`, or set it to zero to use only unmetered sources. Upstream API charges and limits apply to the operator's credentials.
 
@@ -86,8 +86,16 @@ Each AI call must fit both `AI_MAX_USD_PER_CREDIT` and half the price of one cre
 - After deploying, add `STRIPE_SECRET_KEY` to the deployment's server environment. In Stripe Workbench create an HTTPS snapshot event destination at `https://leadtoclient.app/api/stripe/webhook` for your own account using API version `2025-08-27.basil` (the installed Stripe SDK version). Select `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired`, `invoice.paid`, `customer.subscription.updated`, and `customer.subscription.deleted`. Copy its signing secret into `STRIPE_WEBHOOK_SECRET` and redeploy. Keep test and live keys and endpoints in their respective environments.
 - Enable cancellation, payment method updates and invoice history in the Stripe customer portal. New checkouts use a one-time USD price from the database quote. For existing subscriptions, each paid invoice credits the account once, including renewals. The portal cancellation policy determines when the subscription ends. A failed renewal grants no credits.
 - Verify a sending domain in Resend and set `RESEND_API_KEY` and `EMAIL_FROM`. New accounts, paid purchases and low-credit threshold crossings enqueue emails. A daily digest includes up to five leads for opted-in users. The outbox retries failed deliveries and uses Resend idempotency keys.
-- Create a Telegram bot and set its token and username. Choose a strong webhook secret accepted by Telegram. Register the HTTPS URL `/api/telegram/webhook` with Bot API `setWebhook` and supply the same `secret_token`. Users click **Connect my Telegram account** in Settings and start the bot in a private chat. Each connection code expires after ten minutes and is consumed once.
+- Follow the Telegram setup below for private job searches, job watches and priority lead alerts.
 - Priority alerts use the configured intent threshold. Teams can connect Telegram or supported Slack, Zapier, Make and n8n Cloud webhook destinations in Settings. Resend handles optional priority email and scheduled follow-up reminders. External delivery is at least once.
+
+### Connect the Telegram bot
+
+1. In the production Supabase SQL Editor, run the [Telegram job watches migration](supabase/migrations/20261126180028_telegram_job_watches.sql) once on your existing Lead To Client database.
+2. Open [BotFather](https://t.me/BotFather), send `/newbot` if needed, and copy the bot’s token and username. In Vercel’s Production environment, set `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, and `TELEGRAM_WEBHOOK_SECRET`. Generate a webhook secret with `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`. Set `CRON_SECRET` for scheduled alerts if it's missing. Redeploy after saving the variables.
+3. To register the production webhook, make the same bot token and webhook secret available in your local shell or private `.env.local` file. From the project folder run `node --env-file-if-exists=.env.local scripts/register-telegram-webhook.mjs`. The script calls Telegram's [setWebhook method](https://core.telegram.org/bots/api#setwebhook) and verifies the registered URL.
+4. Open [Automations](https://leadtoclient.app/app/automations) while signed in and choose **Connect my Telegram account**. In the private Telegram chat tap **Start** to redeem the one-time link within ten minutes. The homepage and Automations QR codes both point to the [Telegram entry page](https://leadtoclient.app/telegram).
+5. Send `/jobs` for recent openings or `/search shopify` to filter them. Send `/watch shopify` for matching jobs published after you start watching, or `/watch` for all supported freelance openings. To change your watch, send a new one. Send `/unwatch` to stop these alerts. Disconnecting Telegram also removes the watch. Publication delays, provider availability and delivery retries affect when a job alert arrives.
 
 ## Vercel schedules
 
@@ -99,6 +107,7 @@ Set `CRON_SECRET` on Vercel Pro. Vercel sends it in an Authorization bearer head
 | `/api/cron/site-audits` | Every five minutes | Claim queued buyer website checks |
 | `/api/cron/continue-scan` | Every minute | Claim queued niche/source jobs, honor provider backoff and resume interrupted work |
 | `/api/cron/notifications` | Every minute | Deliver queued email and Telegram alerts |
+| `/api/cron/job-alerts` | Every ten minutes | Check the public job feeds for due Telegram watches and queue newly published matches |
 | `/api/cron/digest` | 08:00 daily | Queue each opted-in user’s top leads |
 | `/api/cron/maintenance` | Hourly at minute 15 | Apply due monthly refills, recover interrupted credits and reconcile expired checkout quotes |
 

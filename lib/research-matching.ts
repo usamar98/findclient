@@ -1,5 +1,5 @@
 import { closedRequest } from './lead-intelligence'
-import type { PaidProjectPost } from './research-catalog'
+import type { JobListing } from './research-catalog'
 import type { NormalizedPost } from './sources/shared'
 
 type Candidate = Pick<NormalizedPost, 'source' | 'url' | 'title' | 'body'> & { tags?: readonly string[] }
@@ -121,8 +121,8 @@ function literalTerms(text: string, plan: Plan) {
     plan.phrases.every(phrase => sequence.includes(' ' + phrase + ' '))
 }
 
-/** Job adapters verify engagement and pay. Only the user's service still needs matching. */
-export function matchPaidProject(plan: Plan, post: PaidProjectPost, browseAll: boolean): ResearchMatch | null {
+/** Job adapters establish the type of opening. Match the requested work against it. */
+export function matchJobListing(plan: Plan, post: JobListing, browseAll: boolean): ResearchMatch | null {
   if (browseAll) return { kind: 'hiring', excerpt: post.title }
   if (!plan.terms.length) return null
   const titleAndTags = plainEvidence([post.title, ...(post.tags ?? [])].join(' '))

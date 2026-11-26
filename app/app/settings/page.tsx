@@ -7,6 +7,7 @@ import { VoiceSettings } from '@/components/workspace/voice-settings'
 import { AlertSettings } from '@/components/workspace/alert-settings'
 import { removeNiche } from '../niche-actions'
 import { connectTelegram, disconnectTelegram, savePreferences } from './actions'
+import { telegramStartUrl } from '@/lib/telegram-entry'
 export default async function Settings() {
   const { db, user } = await requireUser(),
     [{ data: p, error }, { data: niches, error: nicheError }] =
@@ -97,7 +98,7 @@ export default async function Settings() {
           <form action={disconnectTelegram}>
             <button>Disconnect Telegram</button>
           </form>
-        ) : process.env.TELEGRAM_BOT_USERNAME ? (
+        ) : telegramStartUrl('jobs') ? (
           <form action={connectTelegram}>
             <button>Connect my Telegram account</button>
           </form>

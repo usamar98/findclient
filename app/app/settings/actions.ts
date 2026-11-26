@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireUser } from '@/lib/db/server'
 import { admin } from '@/lib/db/admin'
+import { telegramStartUrl } from '@/lib/telegram-entry'
 export async function savePreferences(f: FormData) {
   const { db, user } = await requireUser(),
     preferences = z
@@ -26,12 +27,10 @@ export async function savePreferences(f: FormData) {
   revalidatePath('/app/settings')
 }
 export async function connectTelegram() {
-  const { user } = await requireUser(),
-    bot = z
-      .string()
-      .regex(/^[A-Za-z0-9_]+$/)
-      .parse(process.env.TELEGRAM_BOT_USERNAME),
-    token = randomBytes(24).toString('hex')
+  const { user } = await requireUser()
+  const token = randomBytes(24).toString('hex')
+  const destination = telegramStartUrl(token)
+  if (!destination) throw new Error('Telegram connection is unavailable.')
   const { error } = await admin()
     .from('telegram_codes')
     .upsert(
@@ -43,7 +42,7 @@ export async function connectTelegram() {
       { onConflict: 'user_id' },
     )
   if (error) throw new Error('Could not create Telegram link')
-  redirect('https://t.me/' + bot + '?start=' + token)
+  redirect(destination)
 }
 export async function disconnectTelegram() {
   const { user } = await requireUser(),
@@ -59,4 +58,5 @@ export async function disconnectTelegram() {
     .eq('id', user.id)
   if (result.error) throw result.error
   revalidatePath('/app/settings')
+  revalidatePath('/app/automations')
 }

@@ -3,6 +3,7 @@ import { matchesSecret } from '@/lib/secrets'
 import { admin } from '@/lib/db/admin'
 import { runEngine } from '@/lib/engine'
 import { deliverNotifications } from '@/lib/notifications'
+import { queueTelegramJobAlerts } from '@/lib/job-alerts'
 import { reconcileQuotes } from '@/lib/checkout'
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -19,7 +20,7 @@ export async function GET(
   )
     return new Response('Unauthorized', { status: 401 })
   const name = z
-    .enum(['scan', 'continue-scan', 'notifications', 'digest', 'maintenance'])
+    .enum(['scan', 'continue-scan', 'notifications', 'job-alerts', 'digest', 'maintenance'])
     .safeParse((await params).job)
   if (!name.success) return new Response('Unknown job', { status: 404 })
   const db = admin()
@@ -35,6 +36,8 @@ export async function GET(
       headers: { 'Retry-After': '60' },
     })
   switch (name.data) {
+    case 'job-alerts':
+      return Response.json(await queueTelegramJobAlerts())
     case 'scan':
       return Response.json(await runEngine())
     case 'continue-scan':

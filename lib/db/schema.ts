@@ -120,6 +120,14 @@ type Notice = {
   sent_at: string | null
   attempts: number
 }
+export type TelegramJobWatch = {
+  id: string
+  user_id: string
+  chat_id: string
+  query: string
+  started_at: string
+  next_check_at: string
+}
 export type ScanJob = {
   id: string
   niche_id: string
@@ -238,6 +246,7 @@ export type Database = {
         'source' | 'retry_at'
       >
       notifications: Table<Notice, 'user_id' | 'kind' | 'event_key'>
+      telegram_job_watches: Table<TelegramJobWatch, 'user_id' | 'chat_id' | 'query'>
       telegram_codes: Table<
         { code: string; user_id: string; expires_at: string },
         'code' | 'user_id' | 'expires_at'
@@ -361,6 +370,8 @@ export type Database = {
         defer_source: Rpc<{ p_source: string; p_until: string }, undefined>
         refill_credits: Rpc<NoArgs, undefined>
         link_telegram: Rpc<{ p_code: string; p_chat: string }, boolean>
+        set_telegram_job_watch: Rpc<{ p_user: string; p_chat: string; p_query: string | null }, undefined>
+        claim_telegram_job_watches: Rpc<{ p_limit: number }, TelegramJobWatch[]>
         queue_digests: Rpc<NoArgs, undefined>
         claim_notifications: Rpc<{ p_limit: number }, Notice[]>
       }

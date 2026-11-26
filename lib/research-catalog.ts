@@ -14,11 +14,12 @@ export const researchSourceNotes: Partial<Record<ResearchSourceId, string>> = {
   mastodon: 'Original public hiring posts from selected tags visible on mastodon.social.',
 }
 
-export type PaidProjectPost = Omit<NormalizedPost, 'source' | 'posted_precision'> & {
+type JobDetails = Omit<NormalizedPost, 'source' | 'posted_precision'> & {
   source: PaidSourceId
-  engagement: 'paid_freelance'
-  compensation?: string
   posted_precision?: never
 }
-export type ResearchCandidate = NormalizedPost | PaidProjectPost
+export type PaidProjectPost = JobDetails & { engagement: 'paid_freelance'; compensation?: string }
+export type UnpricedContract = JobDetails & { engagement: 'contract_pay_unlisted'; compensation?: never }
+export type JobListing = PaidProjectPost | UnpricedContract
+export type ResearchCandidate = NormalizedPost | JobListing
 export type CandidateTime = Pick<ResearchCandidate, 'url' | 'posted_at'>

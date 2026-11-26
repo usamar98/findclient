@@ -7,7 +7,7 @@ export const platformGuideAnswer =
 export const platformAccessAnswer =
   'Nine Live Research sources work without API keys. These are Hacker News, Bluesky, Stack Overflow, Shopify Community, selected public forums and all four paid-work sources. Direct Reddit and X searches require configured platform credentials. Reddit and X can also use the Exa search index, which Indie Hackers requires. Indexed posts may appear later than posts from a direct feed.'
 export const platformBrowseAnswer =
-  'Choose the paid freelance jobs preset and leave Keywords empty to browse across all four paid-work sources. Add a skill to narrow the results. Searches that include community sources need a keyword. Live Research uses no scoring credits.'
+  'Open Jobs in the workspace to browse the past 24 hours across all four paid-work sources. Add a skill to narrow the results. For a shorter window, select the individual sources in Live Research. Searches that include community sources need a keyword. Neither view uses scoring credits.'
 export const platformFreshnessAnswer =
   'Choose “Past 15 minutes” to see matching posts published in the 15 minutes ending at the search’s “Checked” time. A post exactly 15 minutes old qualifies. Lead To Client shows both times in UTC and requires a precise publication timestamp. If a listing reaches a feed after that window closes, try “Past hour” or “Past 24 hours”.'
 export const platformTimingNote =

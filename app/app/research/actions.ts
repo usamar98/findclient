@@ -6,10 +6,8 @@ import { adapters, providerKey, ProviderBackoff } from '@/lib/sources'
 import { redditRecent, xRecent } from '@/lib/sources/research-social'
 import { FeedAccessRestricted, forumFeedKeys, shopifyFeedKeys, fetchForumResearchCandidates, fetchShopifyResearchCandidates } from '@/lib/sources/forum-feeds'
 import { searchKeylessNetwork } from '@/lib/sources/keyless-research'
-import { searchContractBoard } from '@/lib/sources/contract-boards'
-import { searchPublicProjects } from '@/lib/sources/public-projects'
-import { searchMastodonJobs } from '@/lib/sources/mastodon-jobs'
-import { isPaidSource, type CandidateTime, type PaidSourceId, type PaidProjectPost, type ResearchCandidate, type ResearchSourceId } from '@/lib/research-catalog'
+import { paidListings } from '@/lib/daily-jobs'
+import { isPaidSource, type ResearchCandidate, type ResearchSourceId } from '@/lib/research-catalog'
 import { researchInput, researchSnapshot, type ResearchState, type ResearchStatus } from '@/lib/live-research'
 
 function liveProvider(id: ResearchSourceId) {
@@ -18,14 +16,6 @@ function liveProvider(id: ResearchSourceId) {
   if (id === 'x' && process.env.X_BEARER_TOKEN) return 'x'
   if (id === 'reddit' && process.env.REDDIT_CLIENT_ID && process.env.REDDIT_CLIENT_SECRET && process.env.REDDIT_USER_AGENT) return 'reddit'
   return providerKey(id)
-}
-
-function paidListings(source: PaidSourceId, since: Date): Promise<{posts: PaidProjectPost[]; partial: boolean; retryAt?: Date; candidates?: CandidateTime[]}> {
-  switch (source) {
-    case 'github': return searchPublicProjects(source, since)
-    case 'mastodon': return searchMastodonJobs(since)
-    default: return searchContractBoard(source, since)
-  }
 }
 
 export async function findFreshPosts(_previous: ResearchState, form: FormData): Promise<ResearchState> {

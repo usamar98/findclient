@@ -150,6 +150,8 @@
 .cf-home .cf-paid-research h3 { font-size: clamp(1.35rem, 2.2vw, 1.8rem); line-height: 1.2; margin: 0; }
 .cf-home .cf-paid-research p { margin: 0 0 .7rem; color: var(--home-muted); line-height: 1.55; }
 .cf-paid-research a { font-size: .94rem; font-weight: 600; text-underline-offset: .2em; }
+.cf-home .telegram-jobs-card { margin-top: clamp(2rem, 4vw, 3.5rem); }
+.cf-home .telegram-jobs-copy h2 { font-size: clamp(1.6rem, 3vw, 2.55rem); letter-spacing: -.045em; }
 .cf-workflow-band { background: #151515; color: #fff; }
 .cf-workflow-band .cf-section-intro a { color: #fff; text-decoration-color: #777; font-size: .92rem; }
 .cf-home .cf-workflow-grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1rem; }

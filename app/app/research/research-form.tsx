@@ -1,6 +1,6 @@
 'use client'
 import { useActionState, useEffect, useRef, useState } from 'react'
-import { isPaidSource, keylessSources, paidSources, researchSourceLabels, researchSourceNotes, researchSources, researchWindows, type ResearchPost, type ResearchState, type ResearchStatus, type ResearchWindow } from '@/lib/live-research'
+import { isPaidSource, keylessSources, researchSourceLabels, researchSourceNotes, researchSources, researchWindows, type ResearchPost, type ResearchState, type ResearchStatus, type ResearchWindow } from '@/lib/live-research'
 import { findFreshPosts } from './actions'
 
 const messages: Record<Exclude<ResearchStatus, 'checked'>, string> = {
@@ -87,11 +87,6 @@ export function ResearchForm({ initialQuery, initialSources, initialWindow }: { 
           <input type="checkbox" name="source" value={id} checked={selected.includes(id)} onChange={e =>
             setSelected(e.target.checked ? [...selected, id] : selected.filter(s => s !== id))} />{researchSourceLabels[id]}
         </label>)}</div>
-        <div className="research-presets">
-          <button type="button" onClick={() => { setWatch(false); setSelected([...paidSources]) }}>Paid freelance jobs</button>
-          <button type="button" onClick={() => { setWatch(false); setSelected(keylessSources) }}>Select platforms with no key required</button>
-          <button type="button" onClick={() => { setWatch(false); setSelected(researchSources) }}>Select all platforms</button>
-        </div>
       </fieldset>
       {paidOnly && <p id="paid-search-hint">Leave keywords empty to browse all paid freelance jobs in this time window.</p>}
       <p>Post age uses the platform’s publication time. Feeds can take longer to show new listings. Live searches use no scoring credits.</p>

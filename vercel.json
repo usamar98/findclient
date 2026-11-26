@@ -4,6 +4,10 @@
   "installCommand": "npm ci --include=dev",
   "crons": [
     {
+      "path": "/api/cron/job-alerts",
+      "schedule": "*/10 * * * *"
+    },
+    {
       "path": "/api/cron/site-audits",
       "schedule": "*/5 * * * *"
     },

@@ -1,0 +1,21 @@
+.daily-jobs { max-width: 62rem; margin-inline: auto; }
+.daily-filter { display: flex; align-items: end; flex-wrap: wrap; gap: .8rem; }
+.workspace .daily-filter label { flex: 1 1 13rem; margin: 0; }
+.workspace .daily-filter input, .workspace .daily-filter select { width: 100%; }
+.daily-filter button { align-self: end; }
+.daily-result-heading, .daily-job-byline, .daily-pagination {
+  display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .35rem 1rem;
+}
+.daily-result-heading { margin-top: 2rem; }
+.daily-result-heading h2 { margin: 0; }
+.daily-result-heading > span, .daily-job-byline, .daily-coverage { color: var(--cf-muted); font-size: .88rem; }
+.daily-coverage { margin: .65rem 0 1rem; }
+.daily-coverage summary { cursor: pointer; }
+.daily-coverage ul { padding-inline-start: 1.25rem; }
+.daily-jobs .daily-job-list { list-style: none; padding: 0; margin: 0; }
+.daily-job-list li { border-block-start: 1px solid var(--cf-line); padding: 1.15rem 0; overflow-wrap: anywhere; }
+.daily-job-list h3 { margin: .35rem 0; font-size: 1.22rem; }
+.daily-job-list h3 a { color: var(--cf-text); }
+.daily-job-list p { margin: .35rem 0 0; }
+.daily-job-pay { font-size: .9rem; font-weight: 600; }
+.daily-pagination { justify-content: center; margin: 1rem 0; }

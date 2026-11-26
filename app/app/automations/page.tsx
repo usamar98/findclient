@@ -5,6 +5,8 @@ import { getWorkspacePeople } from '@/lib/workspace-access'
 import { sources } from '@/lib/niche'
 import { removeRule } from './actions'
 import { RuleForm, SequenceForm } from './forms'
+import { TelegramJobCard } from '@/components/telegram-job-card'
+import { connectTelegram } from '../settings/actions'
 import './workflows.css'
 
 export const metadata = { title: 'Automations | Lead To Client' }
@@ -23,15 +25,23 @@ export default async function AutomationsPage() {
     || (settings.error && !missingDatabaseResource(settings.error, 'table', 'proposal_workflow_settings'))) {
     throw new Error('Unable to load automations.')
   }
+  const telegramConnected = Boolean(profile.data.telegram_chat_id)
+  const telegramCard = <TelegramJobCard>
+    {telegramConnected ? <Link href="/app/settings#telegram-alerts">Manage connected account</Link> : (
+      <form action={connectTelegram}><button>Connect my Telegram account</button></form>
+    )}
+  </TelegramJobCard>
   if (rules.error || settings.error) return <section>
     <h1>Automations</h1>
+    {telegramCard}
     <p>Apply the workspace automations migration in Supabase to enable lead rules and proposal follow-ups.</p>
     <Link href="/app/inbox">Open the lead inbox</Link>
   </section>
   const searches = niches.data.map(n => ({ id: n.id, name: n.skill }))
-  const fields = { searches, people: members, telegram: Boolean(profile.data.telegram_chat_id) }
+  const fields = { searches, people: members, telegram: telegramConnected }
   return <div className="workflow-page">
     <h1>Automations</h1>
+    {telegramCard}
     <section className="panel"><h2>Lead rules</h2>
       <p>Choose which new leads to assign, draft a reply for, or send to Telegram.</p>
       {rules.data.map(rule => <details key={rule.id} className="workflow-rule">

@@ -1,5 +1,5 @@
-import { matchPaidProject, matchResearchPost, researchMatchPlan } from './research-matching'
-import { isPaidSource, researchSources, type CandidateTime, type ResearchCandidate, type ResearchSourceId } from './research-catalog'
+import { matchJobListing, matchResearchPost, researchMatchPlan } from './research-matching'
+import { isPaidSource, researchSources, type CandidateTime, type JobListing, type ResearchCandidate, type ResearchSourceId } from './research-catalog'
 export { isPaidSource, keylessSources, paidSources, researchSources, researchSourceLabels, researchSourceNotes } from './research-catalog'
 export type { ResearchSourceId } from './research-catalog'
 export const researchWindows = { '1': 'Past minute', '15': 'Past 15 minutes', '60': 'Past hour', '1440': 'Past 24 hours' } as const
@@ -24,7 +24,7 @@ export type ResearchSource = {
   checkedFeeds?: string[]; unavailableFeeds?: string[]
 }
 export type ResearchPost = Pick<ResearchCandidate, 'source' | 'title' | 'url' | 'posted_at' | 'author'> &
-  { kind: 'hiring' | 'help' | 'topic'; excerpt: string; engagement?: 'paid_freelance'; compensation?: string }
+  { kind: 'hiring' | 'help' | 'topic'; excerpt: string; engagement?: JobListing['engagement']; compensation?: string }
 export type ResearchResult = {
   query: string
   minutes: ResearchWindow
@@ -60,7 +60,7 @@ export function researchSnapshot(query: string, minutes: ResearchWindow, respons
         !isFresh(post) || seen.has(post.url)) continue
       seen.add(post.url)
       reviewed.add(post.url)
-      const match = 'engagement' in post ? matchPaidProject(plan, post, query === '') : matchResearchPost(plan, post)
+      const match = 'engagement' in post ? matchJobListing(plan, post, query === '') : matchResearchPost(plan, post)
       if (!match) continue
       count++
       if (match.kind !== 'topic') requests++

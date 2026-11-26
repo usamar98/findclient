@@ -1,6 +1,7 @@
 import { XMLParser } from 'fast-xml-parser'
 import { z } from 'zod'
-import type { PaidProjectPost } from '../research-catalog'
+import { closedRequest } from '../lead-intelligence'
+import type { PaidProjectPost, UnpricedContract } from '../research-catalog'
 import { bodyText, plain, remote } from './shared'
 
 type Board = 'weworkremotely' | 'remoteok'
@@ -53,16 +54,6 @@ function permalink(raw: string, board: Board, id?: string) {
   } catch { return }
 }
 
-function buildPost(source: Board, title: string, body: string, url: string | undefined, author: string, time: number, tags: string[], numericPay = false): PaidProjectPost | undefined {
-  if (!url || !title || !Number.isFinite(time)) return
-  const pay = advertisedPay(title + ' ' + body, numericPay)
-  if (!pay) return
-  return {
-    source, title: title.slice(0, 350), url, author: author.slice(0, 120), body: body.slice(0, 4500),
-    tags, posted_at: new Date(time).toISOString(), engagement: 'paid_freelance', ...pay,
-  }
-}
-
 export async function searchContractBoard(source: Board, since: Date) {
   const feed = feeds[source]
   const response = await remote(feed.url, { cache: 'force-cache', next: { revalidate: feed.revalidate }, headers: {
@@ -71,7 +62,20 @@ export async function searchContractBoard(source: Board, since: Date) {
   const text = await bodyText(response, 3_000_000)
   const now = Date.now()
   const posts = new Map<string, PaidProjectPost>()
+  const unpricedContracts = new Map<string, UnpricedContract>()
   const candidates = new Map<string, {url:string; posted_at:string}>()
+  function addListing(title: string, body: string, url: string, author: string, time: number, tags: string[], options: { numericPay?: boolean; employerContract?: boolean }) {
+    if (!title) return
+    const text = title + ' ' + body
+    const pay = advertisedPay(text, options.numericPay)
+    const details = { source, title: title.slice(0, 350), body: body.slice(0, 4500), url, author: author.slice(0, 120), tags, posted_at: new Date(time).toISOString() }
+    if (pay) {
+      posts.set(url, { ...details, engagement: 'paid_freelance', ...pay })
+    } else if (options.employerContract && author && !unpaid.test(text) && !closedRequest(text) &&
+        !/\b(?:uncompensated|unremunerated|volunteers? wanted|work for free|voluntary (?:position|role))\b|\b(?:pay|rate|salary|compensation|budget)\s*(?:is|of|:)?\s*[$£€]?\s*0\b/i.test(text)) {
+      unpricedContracts.set(url, { ...details, engagement: 'contract_pay_unlisted' })
+    }
+  }
   let total = 0, oldest = Infinity
   let invalid = false
   function inWindow(time: number) {
@@ -97,8 +101,8 @@ export async function searchContractBoard(source: Board, since: Date) {
       const colon = title.indexOf(': ')
       const company = colon > 0 ? title.slice(0, colon) : ''
       const role = colon > 0 ? title.slice(colon + 2) : title
-      const post = buildPost(source, role, plain(job.description), url, company, time, (job.skills ?? '').split(',').map(tag => tag.trim()).filter(Boolean))
-      if (post) posts.set(post.url, post)
+      addListing(role, plain(job.description), url, company, time, (job.skills ?? '').split(',').map(tag => tag.trim()).filter(Boolean),
+        { employerContract: job.type.trim().toLowerCase() === 'contract' })
     }
   } else {
     const rows = z.array(z.unknown()).parse(JSON.parse(text))
@@ -117,11 +121,15 @@ export async function searchContractBoard(source: Board, since: Date) {
       const tags = job.tags ?? []
       if (!hiringTerms(title, body, tags)) continue
       const pay = (job.salary_min ?? 0) > 0 || (job.salary_max ?? 0) > 0
-      const post = buildPost(source, title, body, url, plain(job.company), time, tags, pay)
-      if (post) posts.set(post.url, post)
+      addListing(title, body, url, plain(job.company), time, tags, { numericPay: pay })
     }
   }
   // Both publishers expose bounded latest listings. A full page that stops
   // inside the selected window may have additional listings outside the page.
-  return { posts: [...posts.values()].sort((a, b) => b.posted_at.localeCompare(a.posted_at)), candidates: [...candidates.values()], partial: invalid || (total >= 100 && oldest > since.getTime()) }
+  return {
+    posts: [...posts.values()].sort((a, b) => b.posted_at.localeCompare(a.posted_at)),
+    ...(unpricedContracts.size > 0 && { unpricedContracts: [...unpricedContracts.values()] }),
+    candidates: [...candidates.values()],
+    partial: invalid || (total >= 100 && oldest > since.getTime()),
+  }
 }

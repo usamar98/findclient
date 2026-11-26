@@ -37,6 +37,22 @@ test('We Work Remotely uses publisher time, contract type, pay evidence, expiry,
   ])
 })
 
+test('daily browsing separately exposes current employer-listed contracts with undisclosed pay', async t => {
+  t.mock.method(Date, 'now', () => now)
+  const text = 'We need a subject expert to review Brazilian films.'
+  t.mock.method(globalThis, 'fetch', async () => new Response(rss(
+    rssRow('reviewer', { text }), rssRow('expired', { text, expires: fresh }),
+    rssRow('permanent', { text, type: 'Full-Time' }), rssRow('freelance-tag-only', { text, type: 'Freelance' }),
+    rssRow('zero', { text: 'Pay: $0. Review films.' }), rssRow('found', { text: 'Thanks everyone, the role is filled.' }),
+    rssRow('no-pay', { text: 'An unpaid role to review films.' }), rssRow('missing-author', { text }).replace('Acme: ', ''),
+    rssRow('unpaid-equity', { text: 'This is an equity-only position.' }),
+  )))
+  const result = await searchContractBoard('weworkremotely', since)
+  assert.deepEqual(result.posts, [])
+  assert.deepEqual(result.unpricedContracts?.map(job => [job.url, job.engagement, job.compensation]),
+    [[wwr + 'reviewer', 'contract_pay_unlisted', undefined]])
+})
+
 test('Remote OK distinguishes contract hiring from contract-related permanent work and ignores feed generation time', async t => {
   t.mock.method(Date, 'now', () => now)
   t.mock.method(globalThis, 'fetch', async (url: string) => {

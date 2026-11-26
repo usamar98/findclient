@@ -66,7 +66,7 @@ export const infoPages = {
     sections: [
       [
         'November 26, 2026 · Four paid freelance sources join Live Research',
-        'Search We Work Remotely and Remote OK for paid contract work, GitHub for cash bounties and Mastodon for freelance hiring posts. Select Paid freelance jobs to browse all four without a keyword or a source API key. Results include a source link, a publication time and listed pay when available. The report shows how long the search and each platform check took.',
+        'Search We Work Remotely and Remote OK for paid contract work, GitHub for cash bounties and Mastodon for freelance hiring posts. Open Jobs to browse all four over the past 24 hours. Each listing includes a source link, publication time and listed pay when available.',
       ],
       [
         'November 24, 2026 · Lead qualification and agency workflow',

@@ -1,18 +1,34 @@
+import { platformGuideMarkdown } from '@/lib/platform-guide-markdown'
 import { getPost, posts } from '@/lib/posts'
 import { absolute } from '@/lib/seo'
+
 export function generateStaticParams() {
-  return posts().map((p) => ({ filename: p.slug + '.md' }))
+  return [{ filename: 'platforms.md' }, ...posts().map((p) => ({ filename: p.slug + '.md' }))]
 }
+
+function markdownResponse(body: string, canonicalPath: string) {
+  return new Response(body, {
+    headers: {
+      'Content-Type': 'text/markdown; charset=utf-8',
+      Link: '<' + absolute(canonicalPath) + '>; rel="canonical"',
+      'X-Robots-Tag': 'noindex, follow',
+    },
+  })
+}
+
 export async function GET(
   _: Request,
   { params }: { params: Promise<{ filename: string }> },
 ) {
   const { filename } = await params
+  if (filename === 'platforms.md') {
+    return markdownResponse(platformGuideMarkdown() + '\n', '/platforms')
+  }
   const post = filename.endsWith('.md')
     ? getPost(filename.slice(0, -3))
     : undefined
   if (!post) return new Response('Guide not found', { status: 404 })
-  return new Response(
+  return markdownResponse(
     '# ' +
       post.title +
       '\n\nBy ' +
@@ -23,12 +39,6 @@ export async function GET(
       post.quickAnswer +
       '\n\n' +
       post.body,
-    {
-      headers: {
-        'Content-Type': 'text/markdown; charset=utf-8',
-        Link: '<' + absolute('/blog/' + post.slug) + '>; rel="canonical"',
-        'X-Robots-Tag': 'noindex, follow',
-      },
-    },
+    '/blog/' + post.slug,
   )
 }

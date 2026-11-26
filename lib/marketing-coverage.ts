@@ -41,10 +41,10 @@ export const sourceCoverage = [
 ] as const
 
 export const coverageIntro =
-  'With Fast Discovery enabled, active searches with credits check Hacker News, Bluesky and Shopify Community every ten minutes. The other sources are searched hourly. Turning off Fast Discovery switches all sources to hourly checks.'
+  'With Fast Discovery enabled, active saved searches with credits check Hacker News, Bluesky and Shopify Community every ten minutes. Other selected community sources follow an hourly schedule. Turning off Fast Discovery switches saved searches to hourly checks.'
 
 export const freshnessAnswer =
-  'Each scan considers posts from the previous seven days. A post can appear minutes after publication if the source has already indexed it and the current search matches. Keyword rotation, provider delays and the time of the next scan affect when a lead reaches your inbox.'
+  'Scheduled scans consider posts from the previous seven days. A post can appear minutes after publication if the source has already indexed it and the current search matches. Keyword rotation, provider delays and the time of the next scan affect when a lead reaches your inbox.'
 
 export const buyerQualityMethod =
   'The buyer quality score gives 30 points for a hiring request, 25 for a budget signal, 20 for evidence of a business or website, 15 for urgency and up to 10 for verifiable account age. An explicitly unpaid request earns zero budget points. When the post gives too little evidence to classify it, the score can be unavailable.'

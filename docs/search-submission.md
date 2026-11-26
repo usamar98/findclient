@@ -11,7 +11,7 @@
 
 3. Check **Submitted sitemaps** for the exact URL, its status and its last read date. **Success** means Google could read the sitemap. The **Page indexing** report shows which URLs Google has indexed. [Google’s sitemap reporting guide](https://support.google.com/webmasters/answer/7451001)
 
-For an immediate check on an important page, paste its full URL into **URL Inspection**, select **Test live URL**, then **Request indexing** if appropriate. Start with [the homepage](https://leadtoclient.app/), [How it works](https://leadtoclient.app/how-it-works) and [the service directory](https://leadtoclient.app/find-clients). The sitemap covers the remaining pages. [Google’s recrawl instructions](https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl)
+If the sitemap is already submitted, Google can discover new public pages through that same URL. To check the new platform guide, inspect `https://leadtoclient.app/platforms` in **URL Inspection**, select **Test live URL**, then **Request indexing** if appropriate. [Platform guide](https://leadtoclient.app/platforms) · [Google’s recrawl instructions](https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl)
 
 ## 2. Import the site into Bing
 
@@ -21,13 +21,15 @@ For an immediate check on an important page, paste its full URL into **URL Inspe
 
 ## 3. Notify IndexNow participants
 
-The pack’s `indexnow.json` is a request body for IndexNow. Open the public key file and confirm it returns the same key as the JSON. From the extracted pack folder on Windows, run the command once for this release. An HTTP **200** acknowledges receipt. **202** means the URLs were received and key verification is pending. Future submissions should list only added, changed or deleted URLs. [Public key file](https://leadtoclient.app/indexnow-key.txt) · [IndexNow protocol](https://www.indexnow.org/documentation)
+The November 24 launch pack includes a sample `indexnow.json`. For a later release, update its `urlList` with the public URLs added, changed or deleted in that release. Include `https://leadtoclient.app/platforms` when notifying engines about the new platform guide. Check that the public key file matches the key in the JSON, then run the command from the folder containing your updated request. An HTTP **200** acknowledges receipt. **202** means the URLs were received and key verification is pending. [Public key file](https://leadtoclient.app/indexnow-key.txt) · [IndexNow protocol](https://www.indexnow.org/documentation)
 
 ```powershell
 curl.exe -i -X POST "https://api.indexnow.org/indexnow" -H "Content-Type: application/json; charset=utf-8" --data-binary "@indexnow.json"
 ```
 
 ## 4. AI search discovery
+
+The platform guide documents Live Research sources, paid-work filters and how post age is measured. Its Markdown edition and the AI reference files update with the website. Use the HTML guide for URL Inspection. [Platform guide](https://leadtoclient.app/platforms) · [Markdown edition](https://leadtoclient.app/guides/platforms.md) · [AI directory](https://leadtoclient.app/llms.txt) · [Full AI guide](https://leadtoclient.app/llms-full.txt)
 
 Google AI Overviews and AI Mode use Google Search eligibility. ChatGPT Search uses **OAI-SearchBot**, and Perplexity uses **PerplexityBot**. Keep the public pages readable without sign-in and allow these crawlers through the site's robots rules and hosting firewall. The reference files in the pack are for your records. These platforms discover the public website through crawling. [Google AI features](https://developers.google.com/search/docs/appearance/ai-features) · [OpenAI publisher guidance](https://help.openai.com/en/articles/12627856) · [Perplexity crawlers](https://docs.perplexity.ai/docs/resources/perplexity-crawlers)
 
@@ -37,7 +39,7 @@ Claude uses **Claude-SearchBot** for web search. Bing Webmaster Tools also has a
 
 For Yandex, add and verify `https://leadtoclient.app/` in Yandex Webmaster, open **Indexing → Sitemap files**, and enter the same live sitemap URL. The site also advertises it in `robots.txt`. [Yandex sitemap instructions](https://yandex.com/support/webmaster/en/indexing-options/sitemap)
 
-## Files in the pack
+## Files in the November 24 launch snapshot
 
 | File | Use |
 | --- | --- |

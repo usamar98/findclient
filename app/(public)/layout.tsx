@@ -10,6 +10,7 @@ const groups = [
     name: 'Explore',
     links: [
       ['How it works', '/how-it-works'],
+      ['Platforms', '/platforms'],
       ['Pricing', '/pricing'],
       ['Journal', '/blog'],
       ['Questions', '/faq'],

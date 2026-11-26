@@ -7,9 +7,11 @@ import {
   sourceCoverage,
   coverageIntro,
 } from './marketing-coverage'
-import { contentUpdated } from './public-pages'
+import { staticPageUpdated } from './public-pages'
 import { posts } from './posts'
 import { niches } from './niche-content'
+import { platformGuideRows } from './platform-guide'
+import { platformGuideMarkdown } from './platform-guide-markdown'
 
 function link(path: string, label: string, description: string) {
   return `- [${label}](${absolute(path)}): ${description}`
@@ -26,14 +28,19 @@ export function llmsDocument(full: boolean) {
     '',
     link('/', 'Lead To Client', 'Official product website.'),
     link(
+      '/platforms',
+      'Live Research platforms for freelance leads and paid work',
+      platformGuideRows.map((row) => row.name).join(', ') + '.',
+    ),
+    link(
       '/how-it-works',
       'How Lead To Client works',
       'From a public request to a shared inbox, proposal and recorded deal.',
     ),
     link(
       '/how-it-works#source-coverage',
-      'Search sources and scan intervals',
-      'Coverage, source methods and how quickly new posts can appear.',
+      'Saved search sources and scan intervals',
+      'Which sources feed the lead inbox and when scheduled scans run.',
     ),
     link(
       '/how-it-works#buyer-quality',
@@ -110,6 +117,11 @@ export function llmsDocument(full: boolean) {
       'Expanded plain-text guide',
       'Product questions, source coverage, service playbooks and journal articles.',
     ),
+    link(
+      '/guides/platforms.md',
+      'Platform guide in Markdown',
+      'Source access, paid-work filters, publication time and search runtime.',
+    ),
     link('/rss.xml', 'Journal RSS', 'Published guides in feed format.'),
     ...journal.map((post) =>
       link('/guides/' + post.slug + '.md', post.title, post.description),
@@ -119,9 +131,11 @@ export function llmsDocument(full: boolean) {
 
   lines.push(
     '',
+    platformGuideMarkdown('##'),
+    '',
     '## Product guide',
     '',
-    'Updated ' + contentUpdated + '.',
+    'Updated ' + staticPageUpdated('/how-it-works') + '.',
     '',
     'Source: ' + absolute('/how-it-works'),
     '',
@@ -130,7 +144,7 @@ export function llmsDocument(full: boolean) {
   for (const [question, answer] of infoPages['how-it-works'].sections) {
     lines.push('', '### ' + question, '', answer)
   }
-  lines.push('', '### Search sources and intervals', '', coverageIntro, '')
+  lines.push('', '### Scheduled scans for saved searches', '', coverageIntro, '')
   for (const row of sourceCoverage) {
     lines.push(`- ${row.sources}: ${row.method} [${row.reference}](${row.url})`)
   }

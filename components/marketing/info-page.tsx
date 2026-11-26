@@ -12,7 +12,7 @@ import {
   freshnessAnswer,
   sourceCoverage,
 } from '@/lib/marketing-coverage'
-import { contentUpdated } from '@/lib/public-pages'
+import { staticPageUpdated } from '@/lib/public-pages'
 import { Breadcrumbs, QuickAnswer, JsonLd, FAQ } from './seo'
 
 export function infoMetadata(slug: InfoSlug) {
@@ -22,6 +22,7 @@ export function infoMetadata(slug: InfoSlug) {
 export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
   const page = infoPages[slug]
   const path = '/' + slug
+  const updated = staticPageUpdated(path)
   const items =
     slug === 'faq'
       ? marketingFaq
@@ -62,7 +63,7 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
         )}
       </div>
       <p className="mk-meta">
-        Last updated <time dateTime={contentUpdated}>{contentUpdated}</time>
+        Last updated <time dateTime={updated}>{updated}</time>
       </p>
       {page.sections.length > 0 && (
         <div className="cf-info-sections">
@@ -75,13 +76,31 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
         </div>
       )}
       {slug === 'how-it-works' && (
+        <section id="live-research">
+          <h2>How do I find paid freelance jobs posted today?</h2>
+          <p>
+            In Live Research, choose <strong>Paid freelance jobs</strong> to
+            search We Work Remotely, Remote OK, GitHub paid bounties and Mastodon
+            hiring posts. Leave keywords empty to browse openings, or enter a
+            skill to narrow the results. Choose the past minute, 15 minutes, hour
+            or 24 hours. Each result links to the post and shows the time the
+            source published it.
+          </p>
+          <p>
+            A short window can be empty while a feed catches up or when nobody
+            has posted a matching request. Check the platform report to see
+            how many posts each source reviewed and how long it took.
+          </p>
+        </section>
+      )}
+      {slug === 'how-it-works' && (
         <section id="source-coverage">
-          <h2>Which platforms are searched, and how often?</h2>
+          <h2>How often do saved searches check each community?</h2>
           <p>{coverageIntro}</p>
           <div className="cf-coverage-table">
             <table>
               <caption>
-                Workspace source coverage with Fast Discovery on
+                Saved community searches with Fast Discovery on
               </caption>
               <thead>
                 <tr>
@@ -150,9 +169,15 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
       )}
       {items.length > 0 && <FAQ items={items} />}
       <div className="mk-answer-links">
+        {['faq', 'how-it-works', 'about', 'changelog'].includes(slug) && (
+          <>
+            <Link href="/platforms">Compare Live Research platforms</Link>
+            {' · '}
+          </>
+        )}
         {slug === 'faq' ? (
           <Link href="/how-it-works#source-coverage">
-            See source coverage and scan intervals
+            See saved search sources and scan intervals
           </Link>
         ) : (
           <Link href="/faq">Browse all product questions</Link>
@@ -177,7 +202,7 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
           url: absolute(path),
           description: page.description,
           inLanguage: 'en',
-          dateModified: contentUpdated,
+          dateModified: updated,
           isPartOf: { '@id': absolute('/#website') },
           ...(slug === 'about' && { mainEntity: organization }),
           ...(slug === 'how-it-works' && {
@@ -199,7 +224,7 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
             '@type': 'HowTo',
             name: page.title,
             description: page.answer,
-            dateModified: contentUpdated,
+            dateModified: updated,
             mainEntityOfPage: { '@id': absolute(path) + '#webpage' },
             step: page.sections.map(([name, text], i) => ({
               '@type': 'HowToStep',

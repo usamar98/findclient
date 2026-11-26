@@ -10,9 +10,9 @@ export const infoPages = {
   'how-it-works': {
     title: 'How Lead To Client finds freelance opportunities',
     description:
-      'See which communities Lead To Client searches, how often it checks them and how to qualify a lead, send a proposal and track won revenue.',
+      'Learn how to find recent paid freelance jobs with Live Research, monitor community requests in a saved search, qualify leads and track won revenue.',
     answer:
-      'Lead To Client finds public requests for freelance services and keeps each conversation in a shared agency inbox. Choose your service and sources, inspect the evidence behind a match, then decide whether to reply. If the conversation develops, one lead record follows it through a proposal, a follow-up and a won or lost deal.',
+      'Use Live Research to see who recently posted a freelance opening or asked for help. To build a shared inbox, save a search for your service and let Lead To Client score matching community posts. Your team can review the original request, draft a reply, send a proposal and track the outcome on the same lead.',
     sections: [
       [
         'How do I describe my niche?',
@@ -33,19 +33,19 @@ export const infoPages = {
     ],
   },
   faq: {
-    title: 'Lead To Client questions about leads, credits and replies',
+    title: 'Lead To Client FAQ on live searches, leads and credits',
     description:
-      'Answers on buying intent, lead sources, lifetime access, credit packs, Telegram alerts, replies and tracking client conversations.',
+      'Which platforms list paid freelance work? How fresh are the posts? Get answers on Live Research, saved leads, scoring credits, alerts and proposals.',
     answer:
-      'Lead To Client helps freelancers find recent public requests, judge whether they fit a service and prepare a reply. These answers cover how searches work, what credits pay for, when alerts arrive and how to approach a community respectfully. You choose which conversations deserve your time and attention.',
+      'Live Research lets you look for recent freelance openings and public requests without spending scoring credits. Saved searches monitor the communities you choose and bring qualifying leads into your shared inbox. Below you can check which platforms each search covers, how post age is measured and what it costs to score a lead or draft a reply.',
     sections: [],
   },
   about: {
     title: 'About Lead To Client and its editorial team',
     description:
-      'Learn who Lead To Client serves, how public requests become leads and how the editorial team develops its freelance guides.',
+      'Learn how Lead To Client helps freelancers and agencies find paid projects and community requests, evaluate leads and follow a conversation through to a sale.',
     answer:
-      'Lead To Client is a web app for freelancers and small agencies that find work in public communities. It connects the original request, evidence of buying intent, a website audit when a site is available, an editable reply and a proposal in one shared lead record. Teams use the same record to assign follow-ups and track won revenue.',
+      'Lead To Client helps freelancers and small agencies find public requests for their services and listings for paid project work. Live Research links to the original post. In the shared lead inbox, teams can review buying intent, check a linked website, prepare replies and proposals, assign follow-ups and track won revenue.',
     sections: [
       [
         'Why start with Shopify freelancers?',
@@ -60,10 +60,14 @@ export const infoPages = {
   changelog: {
     title: 'Lead To Client product changelog',
     description:
-      'Read dated release notes on Lead To Client’s freelance lead discovery, drafting, billing and public resources.',
+      'Read dated product updates, including new paid freelance sources in Live Research, search timing, lead qualification and agency workflows.',
     answer:
       'The Lead To Client changelog records changes that affect how freelancers find requests, review intent, draft responses and manage credits. Use the dated entries to check which workflows are available, then follow the product guides for instructions on configuring a niche or reviewing a potential client conversation.',
     sections: [
+      [
+        'November 26, 2026 · Four paid freelance sources join Live Research',
+        'Search We Work Remotely and Remote OK for paid contract work, GitHub for cash bounties and Mastodon for freelance hiring posts. Select Paid freelance jobs to browse all four without a keyword or a source API key. Results include a source link, a publication time and listed pay when available. The report shows how long the search and each platform check took.',
+      ],
       [
         'November 24, 2026 · Lead qualification and agency workflow',
         'The shared inbox now supports assignments, follow-up reminders, proposal tracking and won revenue. Leads include buyer evidence, a separate quality score and website checks where a site is available. Teams can draft in their own voice, publish a branded proposal and see when its link was opened.',

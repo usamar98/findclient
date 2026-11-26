@@ -130,7 +130,7 @@ These measurements used the optimized production build on localhost with a tempo
 
 ## Launch checklist
 
-For the verified Google property and other search platforms, use the [submission guide](docs/search-submission.md) and [downloadable launch files](docs/downloads/lead-to-client-search-pack-2026-11-24.zip). Google and Bing read the current sitemap at [leadtoclient.app/sitemap.xml](https://leadtoclient.app/sitemap.xml).
+The submission guide links to the current sitemap, platform coverage and AI reference files. The downloadable November 24 pack is a snapshot of the launch pages. [Submission guide](docs/search-submission.md) · [Live sitemap](https://leadtoclient.app/sitemap.xml) · [November 24 launch snapshot](docs/downloads/lead-to-client-search-pack-2026-11-24.zip)
 
 The November 24, 2026 rebrand was checked against a local production build. All 35 sitemap pages were reachable through links from the homepage and had canonical links, distinct titles and descriptions, and working social previews. The six Markdown guides linked to their canonical articles. The FAQ showed 30 answers matching its structured data. Mobile and desktop checks covered the new wordmark, navigation, theme control and service directory. These checks cover the application build. Production HTTPS, domain ownership verification and search-engine submission are tracked below.
 

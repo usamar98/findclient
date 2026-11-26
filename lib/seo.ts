@@ -5,9 +5,10 @@ const origin = canonicalOrigin
 const indexable = searchIndexingEnabled()
 export const siteConfig = {
   name: 'Lead To Client',
+  title: 'Find freelance leads and paid projects | Lead To Client',
   url: origin,
   description:
-    'Lead To Client helps freelancers and agencies find public requests for their services, qualify buyers, draft personal replies and track proposals and won revenue.',
+    'Find freelance leads across 12 sources. Browse community requests, We Work Remotely and Remote OK contracts, GitHub paid bounties and Mastodon hiring posts.',
   twitterHandle: process.env.NEXT_PUBLIC_TWITTER_HANDLE || undefined,
   defaultOgImage: '/opengraph-image',
   indexable,

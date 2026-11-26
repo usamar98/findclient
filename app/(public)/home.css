@@ -146,6 +146,10 @@
 .cf-example-body strong { font-size: .75rem; }
 .cf-home details.cf-search-live { border: 1px solid var(--cf-line); border-radius: .7rem; margin-top: 1rem; padding: .85rem 1.2rem; background: var(--cf-wash); }
 .cf-search-live summary { list-style: none; display: flex; justify-content: space-between; align-items: center; font-size: .92rem; }
+.cf-paid-research { display: grid; grid-template-columns: .8fr 1.2fr; gap: .8rem 3rem; margin-top: 2rem; }
+.cf-home .cf-paid-research h3 { font-size: clamp(1.35rem, 2.2vw, 1.8rem); line-height: 1.2; margin: 0; }
+.cf-home .cf-paid-research p { margin: 0 0 .7rem; color: var(--home-muted); line-height: 1.55; }
+.cf-paid-research a { font-size: .94rem; font-weight: 600; text-underline-offset: .2em; }
 .cf-workflow-band { background: #151515; color: #fff; }
 .cf-workflow-band .cf-section-intro a { color: #fff; text-decoration-color: #777; font-size: .92rem; }
 .cf-home .cf-workflow-grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1rem; }
@@ -228,7 +232,7 @@
   .cf-step-copy { padding: .9rem; }
   .cf-home .cf-step-copy h3 { font-size: 1.08rem; }
   .cf-home .cf-step-copy p { font-size: .82rem; }
-  .cf-proposal-story, .cf-workspace-preview { grid-template-columns: 1fr; }
+  .cf-proposal-story, .cf-workspace-preview, .cf-paid-research { grid-template-columns: 1fr; }
   .cf-home .cf-faq section { display: block; }
   .cf-home .cf-faq h2 { margin-bottom: 1rem; }
 }

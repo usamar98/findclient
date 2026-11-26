@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { LIFETIME_ENDS_AT } from '@/lib/offers'
 import { softwareApplication } from '@/lib/brand'
 import { getOffers, getPricing } from '@/lib/pricing'
@@ -27,6 +28,9 @@ export async function Offers({ full = false }: { full?: boolean }) {
     <section className={`cf-offers${full ? ' cf-offers-page' : ''}`} aria-labelledby="cf-plans-title">
       <div className="cf-plans-intro">
         <Title id="cf-plans-title">One payment for lifetime access</Title>
+        {full && (
+          <p>Live Research uses no scoring credits. Browse contracts on We Work Remotely and Remote OK, GitHub paid bounties and Mastodon hiring posts. <Link href="/platforms">See all 12 sources</Link>.</p>
+        )}
       </div>
       <LifetimeOffer
         price={lifetime.price}

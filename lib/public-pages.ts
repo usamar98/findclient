@@ -1,12 +1,16 @@
 import 'server-only'
 import { niches } from './niche-content'
 import { posts } from './posts'
+import { platformGuideUpdated } from './platform-guide'
 import { absolute, siteConfig } from './seo'
 export const contentUpdated = '2026-11-24'
+const updatedWithPlatformGuide = new Set(['/', '/platforms', '/about', '/faq', '/how-it-works', '/pricing', '/changelog'])
+export const staticPageUpdated = (path: string) => updatedWithPlatformGuide.has(path) ? platformGuideUpdated : contentUpdated
 export const staticPages = [
   ['/', 'Lead To Client'],
   ['/pricing', 'Pricing and credits'],
   ['/how-it-works', 'How Lead To Client works'],
+  ['/platforms', 'Freelance lead sources and paid job platforms'],
   ['/faq', 'Frequently asked questions'],
   ['/about', 'About Lead To Client'],
   ['/blog', 'Freelance guides'],
@@ -29,7 +33,7 @@ export function publicPages() {
     ...staticPages.map(([path, title]) => ({
       path,
       title,
-      updated: contentUpdated,
+      updated: staticPageUpdated(path),
     })),
     ...niches.map((n) => ({
       path: '/find-clients/' + n.slug,

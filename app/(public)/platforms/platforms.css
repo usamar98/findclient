@@ -1,0 +1,30 @@
+.platform-jump-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem 1.3rem;
+  margin-block: 1.5rem;
+}
+
+.mk-article .platform-directory {
+  list-style: none;
+  padding: 0;
+  margin: 1.25rem 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: .8rem;
+}
+
+.platform-directory li {
+  border: 1px solid var(--cf-line);
+  border-radius: .85rem;
+  padding: .95rem 1.1rem 1.15rem;
+  background: var(--cf-card);
+}
+
+.platform-directory li,
+.platform-jump-links ~ section h2[id] {
+  scroll-margin-top: 6rem;
+}
+
+.platform-directory li h3 { margin: .2rem 0 .5rem; }
+.platform-directory li a { font-size: .9rem; }

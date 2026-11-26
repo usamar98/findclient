@@ -9,6 +9,8 @@ import './workspace-theme.css'
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   applicationName: siteConfig.name,
+  title: siteConfig.name,
+  description: siteConfig.description,
 }
 
 const geist = localFont({

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { buildMetadata, absolute } from '@/lib/seo'
+import { buildMetadata, absolute, siteConfig } from '@/lib/seo'
 import { organization } from '@/lib/brand'
 import { marketingFaq } from '@/lib/marketing-faq'
 import { shopifySnapshot } from '@/lib/demo-snapshot'
@@ -13,8 +13,8 @@ export const dynamic = 'force-dynamic'
 
 export function generateMetadata() {
   return buildMetadata({
-    title: 'Lead To Client | Freelance leads from Reddit and communities',
-    description: 'Find freelance leads on Reddit, Hacker News and other communities. Check buyer intent, tailor your pitch with a website audit, and track branded proposals.',
+    title: siteConfig.title,
+    description: siteConfig.description,
     path: '/',
   })
 }
@@ -32,13 +32,21 @@ export default function Home() {
       <section className="cf-home-section cf-directory" id="try-search">
         <div className="cf-section-intro">
           <h2>Who is asking for help?</h2>
-          <p>Browse example requests across eight sources. Open a card to read the brief and a suggested first reply, or <Link href="/find-clients">explore guides for your service</Link>.</p>
+          <p>Browse example requests from eight community sources. Open a card to read the brief and a suggested first reply, or <Link href="/find-clients">explore guides for your service</Link>.</p>
         </div>
         <SourceExamples />
         <details className="cf-search-live">
           <summary>Search public discussions <span aria-hidden="true">↗</span></summary>
           <PublicSearch initial={shopifySnapshot} initialLabel="Saved Shopify Community discussions · 23 November 2026" />
         </details>
+        <div className="cf-paid-research">
+          <h3>Where can I find paid freelance work?</h3>
+          <div>
+            <p>Choose <strong>Paid freelance jobs</strong> in Live Research to find contracts on We Work Remotely and Remote OK, cash bounties on GitHub, and hiring posts on Mastodon. Search for a skill or leave the keywords empty to browse.</p>
+            <p>Each result links to the original post and shows its publication time and any listed pay. You can also see how long the search took overall and for each platform.</p>
+            <Link href="/platforms">See all 12 sources and how post age is measured <span aria-hidden="true">↗</span></Link>
+          </div>
+        </div>
       </section>
       <section className="cf-workflow-band" id="how-it-works">
         <div className="cf-home-section">
@@ -110,7 +118,8 @@ export default function Home() {
               '@type': 'WebPage',
               '@id': absolute('/#webpage'),
               url: absolute('/'),
-              name: 'Lead To Client | Freelance leads from Reddit and communities',
+              name: siteConfig.title,
+              description: siteConfig.description,
               isPartOf: { '@id': absolute('/#website') },
               mainEntity: { '@id': absolute('/#app') },
             },

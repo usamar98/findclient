@@ -18,7 +18,7 @@ export async function priorityLead(owner: string, id: string, minimum: number) {
   if (error) throw error
   if (
     !lead ||
-    lead.intent_score < minimum ||
+    lead.intent_score === null || lead.intent_score < minimum ||
     [
       'won',
       'lost',

@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { Suspense } from 'react'
+import { JobActions } from '@/components/workspace/job-actions'
 import { getDailyJobs } from '@/lib/daily-jobs'
 import { requireUser } from '@/lib/db/server'
+import { getJobTracking, jobTrackingProof } from '@/lib/job-tracking'
 import { dailyJobSources, isDailyJobSource, researchSourceLabels, type DailyJobSource } from '@/lib/research-catalog'
 import type { ResearchSource } from '@/lib/live-research'
 import './jobs.css'
@@ -38,6 +40,7 @@ async function Results({ filters }: { filters: Filters }) {
   const pages = Math.max(1, Math.ceil(jobs.length / perPage))
   const page = Math.min(filters.page, pages)
   const visible = jobs.slice((page - 1) * perPage, page * perPage)
+  const tracking = await getJobTracking(visible)
   const checked = sources.filter(row => row.status === 'checked' && !row.unavailableFeeds?.length).length
 
   return <>
@@ -69,6 +72,7 @@ async function Results({ filters }: { filters: Filters }) {
             {job.compensation && <p className="daily-job-pay">Listed pay · {job.compensation}</p>}
             {job.engagement === 'contract_pay_unlisted' && <p className="daily-job-pay">Contract · Pay not listed</p>}
             {job.excerpt && job.excerpt !== job.title && <p>{job.excerpt}</p>}
+            <JobActions job={job} proof={jobTrackingProof(job)} initialTracking={tracking[job.url]} />
           </article>
         </li>)}
       </ul>
@@ -100,7 +104,7 @@ export default async function Jobs({ searchParams }: {
   }
   return <div className="daily-jobs">
     <div className="work-title-row"><h1>Jobs from the last 24 hours</h1></div>
-    <p>Browse freelance contracts, cash bounties and hiring posts, newest first. Compare when the author posted an opening with when Lead To Client first found it.</p>
+    <p>Browse freelance contracts, cash bounties and hiring posts, newest first. Apply on the original listing, then mark the job as applied to track your follow-up.</p>
     <form className="panel daily-filter" action="/app/jobs">
       <label>Search jobs<input type="search" name="q" placeholder="Skill or job title" maxLength={100} defaultValue={filters.query} /></label>
       <label>Platform<select name="source" defaultValue={filters.source ?? ''}>

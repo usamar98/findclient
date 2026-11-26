@@ -19,6 +19,10 @@ test('preserves legacy filter URLs and repeated selections through pagination', 
   assert.equal(inboxHref(empty), '/app/inbox')
   assert.equal(advancedFiltersActive(empty), false)
   assert.equal(advancedFiltersActive(filters), true)
+  const applications = parseInboxFilters({ source: 'github', application: 'applied', due: 'yes' })
+  assert.equal(advancedFiltersActive(applications), true)
+  assert.equal(inboxHref(applications), '/app/inbox?application=applied&due=yes&source=github')
+  assert.equal(parseInboxFilters({ application: 'unknown' }).application, undefined)
 })
 
 test('query combines platform sets, pipeline filters, UTC ranges and deal values before counting and paging', async () => {
@@ -58,4 +62,25 @@ test('query combines platform sets, pipeline filters, UTC ranges and deal values
   assert.equal(queries[1].has('source'), false)
   assert.equal(queries[1].has('status'), false)
   assert.equal(queries[1].has('buyer_quality_score'), false)
+  await queryInbox(db, actor, parseInboxFilters({ application: 'applied', source: 'remoteok' }), now)
+  assert.equal(queries[2].get('applied_at'), 'not.is.null')
+  assert.equal(queries[2].get('source'), 'in.(remoteok)')
+})
+
+test('inbox remains readable while the applications migration is pending', async () => {
+  const queries: URLSearchParams[] = []
+  const db = createClient<Database>('https://inbox.test', 'public-key', {
+    global: { fetch: async (input) => {
+      const params = new URL(input.toString()).searchParams
+      queries.push(params)
+      if (params.get('select')?.includes('applied_at')) return Response.json(
+        { code: '42703', message: 'column leads.applied_at does not exist' }, { status: 400 },
+      )
+      return Response.json([], { headers: { 'Content-Range': '*/0' } })
+    } },
+  })
+  const response = await queryInbox(db, 'actor', parseInboxFilters({ application: 'applied' }))
+  assert.equal(response.error, null)
+  assert.equal(queries.length, 2)
+  assert.equal(queries[1].get('id'), 'is.null')
 })

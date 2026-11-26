@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { sources, stageNames, statuses } from '@/lib/niche'
-import { advancedFiltersActive, sourceIds, type InboxFilters } from '@/lib/inbox-filters'
+import { stageNames, statuses } from '@/lib/niche'
+import { researchSourceLabels, researchSources } from '@/lib/research-catalog'
+import { advancedFiltersActive, type InboxFilters } from '@/lib/inbox-filters'
 import { SearchScope } from './search-scope'
 
 type Props = {
@@ -15,7 +16,7 @@ export function LeadFilters({ filters: f, clearHref, spaces, searches }: Props) 
     <form action="/app/inbox" method="get" className="panel inbox-filters" aria-labelledby="lead-filters-title">
       <div>
         <h2 id="lead-filters-title">Filter saved leads</h2>
-        <p className="inbox-filter-help">These filters search your inbox. To find new posts, run a scan using the sources in a saved search.</p>
+        <p className="inbox-filter-help">Filter jobs you saved and leads found by your scans.</p>
       </div>
       <div className="inbox-filter-grid">
         <label>Search lead titles<input type="search" name="q" placeholder="e.g. Shopify redesign" defaultValue={f.q} maxLength={100} /></label>
@@ -32,7 +33,7 @@ export function LeadFilters({ filters: f, clearHref, spaces, searches }: Props) 
       </div>
       <fieldset className="inbox-checks">
         <legend>Sources <span>Choose any · all are included when empty</span></legend>
-        <div>{sourceIds.map(id => <label key={id}><input type="checkbox" name="source" value={id} defaultChecked={f.source.includes(id)} />{sources[id]}</label>)}</div>
+        <div>{researchSources.map(id => <label key={id}><input type="checkbox" name="source" value={id} defaultChecked={f.source.includes(id)} />{researchSourceLabels[id]}</label>)}</div>
       </fieldset>
       <details className="inbox-advanced" open={advancedFiltersActive(f)}>
         <summary>Advanced filters</summary>
@@ -41,6 +42,9 @@ export function LeadFilters({ filters: f, clearHref, spaces, searches }: Props) 
           <div>{statuses.map(stage => <label key={stage}><input type="checkbox" name="status" value={stage} defaultChecked={f.status.includes(stage)} />{stageNames[stage]}</label>)}</div>
         </fieldset>
         <div className="inbox-filter-grid">
+          <label>Application<select name="application" defaultValue={f.application ?? ''}>
+            <option value="">All leads</option><option value="applied">Applied jobs only</option>
+          </select></label>
           <label>Assigned to<select name="assigned" defaultValue={f.assigned ?? ''}>
             <option value="">Anyone</option><option value="me">Me</option><option value="unassigned">Unassigned</option>
           </select></label>

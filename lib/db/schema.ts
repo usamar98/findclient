@@ -9,6 +9,7 @@ import type { WorkflowTables, WorkflowFunctions } from '@/lib/workflow-schema'
 import type { SiteReport } from '@/lib/site-audit/analyze'
 import type { WorkspaceResult } from '@/lib/workspace-results'
 import type { NormalizedPost } from '@/lib/sources/shared'
+import type { TrackableJob } from '@/lib/job-tracking-model'
 export type Product =
   'lifetime' | 'agency' | 'monthly' | 'topup9' | 'topup19' | 'topup29'
 type Plan = 'free' | 'lifetime' | 'agency' | 'monthly'
@@ -40,17 +41,18 @@ type Niche = Omit<NicheInput, 'portfolio_url'> & {
 }
 type Lead = LeadCrm & {
   rule_draft_capped?: boolean
-  score_method: 'ai' | 'local'
+  score_method: 'ai' | 'local' | 'manual'
+  applied_at: string | null
   id: string
   user_id: string
-  niche_id: string
+  niche_id: string | null
   source: string
   url: string
   author: string | null
   title: string
   body: string
   posted_at: string
-  intent_score: number
+  intent_score: number | null
   intent_reason: string
   problem_summary: string
   budget_signal: string | null
@@ -276,6 +278,9 @@ export type Database = {
     CompositeTypes: Record<never, never>
     Functions: WorkflowFunctions & AgencyFunctions &
       ProposalFunctions & {
+        get_job_tracking: Rpc<{ p_urls: string[] }, { id: string; url: string; applied_at: string | null }[]>
+        track_inbox_job: Rpc<{ p_owner: string; p_job: TrackableJob; p_applied: boolean }, { id: string; applied_at: string | null }[]>
+        mark_inbox_job_applied: Rpc<{ p_actor: string; p_lead: string }, string | null>
         save_alert_settings: Rpc<
           {
             p_user: string

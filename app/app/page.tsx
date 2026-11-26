@@ -3,14 +3,15 @@ import { redirect } from 'next/navigation'
 import { LatestScanReceipt } from '@/components/workspace/latest-scan-receipt'
 import { admin } from '@/lib/db/admin'
 import { requireUser } from '@/lib/db/server'
-import { sources, stageNames } from '@/lib/niche'
+import { stageNames } from '@/lib/niche'
+import { researchSourceLabels, type ResearchSourceId } from '@/lib/research-catalog'
 import './dashboard.css'
 
 export const metadata = { title: 'Dashboard | Lead To Client' }
 
 const dollars = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 const shortDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
-const inboxKeys = new Set(['workspace', 'service', 'assigned', 'due', 'q', 'source', 'status', 'score', 'days', 'sort', 'page'])
+const inboxKeys = new Set(['workspace', 'service', 'assigned', 'application', 'due', 'q', 'source', 'status', 'score', 'days', 'sort', 'page'])
 const operations = [
   { name: '24-hour jobs', href: '/app/jobs', detail: 'Browse freelance contracts, cash bounties and hiring posts published in the last 24 hours.' },
   { name: 'Live research', href: '/app/research', detail: 'Search public posts by keyword and publication time.' },
@@ -27,7 +28,7 @@ type DashboardLead = {
   source: string
   user_id: string
   status: keyof typeof stageNames
-  intent_score: number
+  intent_score: number | null
   follow_up_on: string | null
 }
 
@@ -62,12 +63,12 @@ function LeadQueue({ leads, due, today, owners }: {
             <li key={lead.id}>
               <Link href={'/app/leads/' + lead.id}>
                 <span className="dashboard-lead-meta">
-                  {sources[lead.source as keyof typeof sources] ?? lead.source}
+                  {researchSourceLabels[lead.source as ResearchSourceId] ?? lead.source}
                   {owners.size > 1 && ' · ' + (owners.get(lead.user_id) ?? 'Shared workspace')}
                 </span>
                 <strong>{lead.title}</strong>
                 <span className="dashboard-lead-detail">
-                  {due ? followUpLabel(lead, today) : 'Intent ' + lead.intent_score + '/100'}
+                  {due || lead.intent_score === null ? followUpLabel(lead, today) : 'Intent ' + lead.intent_score + '/100'}
                 </span>
               </Link>
             </li>

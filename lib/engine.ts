@@ -243,6 +243,7 @@ export async function runEngine(enqueue = true, runId?: string) {
         .from('leads')
         .select('id,title,body,url,posted_at')
         .is('buyer_intelligence', null)
+        .not('intent_score', 'is', null)
         .order('created_at', { ascending: false })
         .limit(25),
     ])

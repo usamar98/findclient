@@ -6,7 +6,7 @@ import { LeadPipeline } from '@/components/workspace/lead-pipeline'
 import { ProposalActions } from '@/components/workspace/proposal-actions'
 import { SiteAudit } from '@/components/workspace/site-audit'
 import { posterWebsite } from '@/lib/site-audit/target'
-import { sources } from '@/lib/niche'
+import { researchSourceLabels, type ResearchSourceId } from '@/lib/research-catalog'
 export const maxDuration = 100
 export default async function Detail({
   params,
@@ -20,15 +20,16 @@ export default async function Detail({
     db.from('lead_site_audits').select('*').eq('lead_id', id).maybeSingle(),
   ])
   if (audit.error || drafts.error) throw new Error('Unable to load lead details.')
+  const scored = lead.intent_score !== null
   return (
     <>
       <Link href="/app/inbox">Lead inbox</Link>
       <h1>{lead.title}</h1>
       <p>
-        {sources[lead.source as keyof typeof sources] ?? lead.source} · {lead.author || 'Unknown author'} ·{' '}
+        {researchSourceLabels[lead.source as ResearchSourceId] ?? lead.source} · {lead.author || 'Unknown author'} ·{' '}
         {lead.posted_at.slice(0, 10)} ·{' '}
         <a href={lead.url} target="_blank" rel="noopener noreferrer">
-          Open original post
+          {lead.score_method === 'manual' ? 'Apply on original listing ↗' : 'Open original post'}
         </a>
       </p>
       {lead.problem_summary && <p>{lead.problem_summary}</p>}
@@ -43,11 +44,12 @@ export default async function Detail({
         )}
       </details>
       <nav className="lead-sections" aria-label="Lead sections">
-        {['Evidence','Website','Pipeline','Proposal','Reply'].map(label => <a key={label} href={'#' + label.toLowerCase()}>{label}</a>)}
+        {(scored ? ['Evidence','Website','Pipeline','Proposal','Reply'] : ['Pipeline','Website','Proposal','Reply']).map(label => <a key={label} href={'#' + label.toLowerCase()}>{label}</a>)}
       </nav>
-      <div id="evidence" className="lead-section"><LeadIntelligence lead={lead} /></div>
+      {scored && <div id="evidence" className="lead-section"><LeadIntelligence lead={lead} /></div>}
+      {!scored && <div id="pipeline" className="lead-section"><LeadPipeline lead={lead} /></div>}
       <div id="website" className="lead-section"><SiteAudit id={id} audit={audit.data} suggested={posterWebsite(lead.title, lead.body, lead.url)} /></div>
-      <div id="pipeline" className="lead-section"><LeadPipeline lead={lead} /></div>
+      {scored && <div id="pipeline" className="lead-section"><LeadPipeline lead={lead} /></div>}
       <div id="proposal" className="lead-section"><ProposalActions leadId={id} /></div>
       <div id="reply" className="lead-section">
         {lead.rule_draft_capped && <p className="meta">The automatic reply was skipped because this scan reached its credit limit.</p>}

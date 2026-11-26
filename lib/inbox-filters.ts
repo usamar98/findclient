@@ -1,14 +1,15 @@
 import { z } from 'zod'
-import { sources, statuses } from './niche'
+import { statuses } from './niche'
+import { researchSources } from './research-catalog'
 
 export type InboxParams = Record<string, string | string[] | undefined>
 export const inboxPageSize = 20
-export const sourceIds = Object.keys(sources) as (keyof typeof sources)[]
 
 const choices = z.object({
   workspace: z.uuid().optional().catch(undefined),
   service: z.uuid().optional().catch(undefined),
   assigned: z.enum(['me', 'unassigned']).optional().catch(undefined),
+  application: z.literal('applied').optional().catch(undefined),
   due: z.enum(['yes', 'next7', 'none']).optional().catch(undefined),
   q: z.string().trim().max(100).catch(''),
   score: z.coerce.number().int().min(0).max(100).catch(0),
@@ -30,7 +31,7 @@ export function parseInboxFilters(params: InboxParams) {
   ]))
   return {
     ...choices.parse(singles),
-    source: selected(params.source, sourceIds),
+    source: selected(params.source, researchSources),
     status: selected(params.status, statuses),
   }
 }
@@ -39,7 +40,7 @@ export type InboxFilters = ReturnType<typeof parseInboxFilters>
 
 export function inboxHref(filters: InboxFilters, page = filters.page) {
   const params = new URLSearchParams()
-  for (const key of ['workspace', 'service', 'assigned', 'due', 'q', 'days'] as const) {
+  for (const key of ['workspace', 'service', 'assigned', 'application', 'due', 'q', 'days'] as const) {
     if (filters[key]) params.set(key, filters[key])
   }
   for (const key of ['score', 'quality', 'value'] as const) {
@@ -54,5 +55,5 @@ export function inboxHref(filters: InboxFilters, page = filters.page) {
 }
 
 export function advancedFiltersActive(filters: InboxFilters) {
-  return Boolean(filters.assigned || filters.due || filters.status.length || filters.score || filters.quality || filters.value)
+  return Boolean(filters.assigned || filters.application || filters.due || filters.status.length || filters.score || filters.quality || filters.value)
 }

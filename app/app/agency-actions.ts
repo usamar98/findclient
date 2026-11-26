@@ -44,6 +44,17 @@ export async function removeMember(form: FormData) {
   revalidatePath('/app', 'layout')
 }
 
+export async function markLeadApplied(id: string) {
+  const { user } = await requireLeadAccess(id)
+  const { data, error } = await admin().rpc('mark_inbox_job_applied', { p_actor: user.id, p_lead: id })
+  if (error || !data) return 'Could not mark this job as applied. Please try again.'
+  revalidatePath('/app/leads/' + id)
+  revalidatePath('/app/inbox')
+  revalidatePath('/app/jobs')
+  revalidatePath('/app/research')
+  return 'Application recorded.'
+}
+
 export async function savePipeline(id: string, _previous: string, form: FormData) {
   const { db } = await requireLeadAccess(id)
   const result = z.object({

@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import { inviteMember, savePipeline } from '@/app/app/agency-actions'
+import { inviteMember, markLeadApplied, savePipeline } from '@/app/app/agency-actions'
 import { stageNames, statuses } from '@/lib/niche'
 import type { LeadCrm, WorkspacePerson } from '@/lib/workspace-types'
 
@@ -10,6 +10,14 @@ export function TeamInviteForm() {
   return <form action={action}>
     <label>Teammate email<input name="email" type="email" autoComplete="off" required maxLength={254} /></label>
     <button disabled={busy}>{busy ? 'Inviting…' : 'Invite teammate'}</button>
+    {message && <p role="status">{message}</p>}
+  </form>
+}
+
+export function MarkAppliedForm({ leadId }: { leadId: string }) {
+  const [message, action, busy] = useActionState(markLeadApplied.bind(null, leadId), '')
+  return <form action={action}>
+    <button disabled={busy}>{busy ? 'Recording…' : 'Mark as applied'}</button>
     {message && <p role="status">{message}</p>}
   </form>
 }

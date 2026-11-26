@@ -1,5 +1,7 @@
 'use client'
 import { useActionState, useEffect, useRef, useState } from 'react'
+import { JobActions } from '@/components/workspace/job-actions'
+import type { JobTracking } from '@/lib/job-tracking-model'
 import { isPaidSource, keylessSources, researchSourceLabels, researchSourceNotes, researchSources, researchWindows, type ResearchPost, type ResearchState, type ResearchStatus, type ResearchWindow } from '@/lib/live-research'
 import { findFreshPosts } from './actions'
 
@@ -32,14 +34,14 @@ function submitSearch(_previous: ResearchState, form: FormData) {
   return findFreshPosts({}, form)
 }
 
-function PostCard({ post, checkedAt }: { post: ResearchPost; checkedAt: string }) {
+function PostCard({ post, checkedAt, tracking, proof }: { post: ResearchPost; checkedAt: string; tracking?: JobTracking; proof?: string }) {
   const age = Math.floor((Date.parse(checkedAt) - Date.parse(post.posted_at)) / 60000)
   const ageLabel = age < 1 ? 'Under 1 minute' : age < 60 ? age + (age === 1 ? ' minute' : ' minutes') : Math.floor(age / 60) + (age < 120 ? ' hour' : ' hours')
   const kind = { hiring: 'Hiring request', help: 'Help request', topic: 'Discussion' }[post.kind]
   const board = researchSourceLabels[post.source]
   return <article className="panel research-post">
     <p>{post.engagement === 'paid_freelance'
-      ? <><strong className="research-paid">Paid freelance job</strong> · <a href={post.url} target="_blank" rel="noopener noreferrer">View on {board}</a></>
+      ? <><strong className="research-paid">Paid freelance job</strong> · {board}</>
       : <>{kind} · {board}</>}{post.author && <> · {post.author}</>}</p>
     <h3><a href={post.url} target="_blank" rel="noopener noreferrer">{post.title}<span aria-hidden="true"> ↗</span></a></h3>
     {post.engagement === 'paid_freelance' && post.compensation && <p className="research-pay">Listed pay · {post.compensation}</p>}
@@ -50,6 +52,7 @@ function PostCard({ post, checkedAt }: { post: ResearchPost; checkedAt: string }
       ? <time dateTime={post.first_found_at}>First found {timestamp.format(new Date(post.first_found_at))} UTC</time>
       : <small>First found time unavailable</small>)}
     {post.source === 'stackexchange' && <small><a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a></small>}
+    {post.kind === 'hiring' && proof && <JobActions job={post} proof={proof} initialTracking={tracking} />}
   </article>
 }
 
@@ -59,7 +62,7 @@ export function ResearchForm({ initialQuery, initialSources, initialWindow }: { 
   const [minutes, setMinutes] = useState<ResearchWindow>(initialWindow)
   const [watch, setWatch] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
-  const [state, submit, pending] = useActionState<ResearchState, FormData>(submitSearch, {})
+  const [state, submit, pending] = useActionState<Awaited<ReturnType<typeof findFreshPosts>>, FormData>(submitSearch, {})
   const paidOnly = selected.length > 0 && selected.every(isPaidSource)
   const snapshot = state.result
   const result = snapshot && snapshot.query === q.trim() && snapshot.minutes === minutes &&
@@ -125,7 +128,8 @@ export function ResearchForm({ initialQuery, initialSources, initialWindow }: { 
         : paidOnly ? 'The responding platforms returned no matching paid freelance openings published in this window.'
         : reviewed ? 'The fresh posts reviewed contained no matching request for help or hiring.'
         : 'The responding sources returned no candidate posts published in this window.'}</p></div>}
-      {requests.map(post => <PostCard key={post.url} post={post} checkedAt={result.checkedAt} />)}
+      {requests.map(post => <PostCard key={post.url} post={post} checkedAt={result.checkedAt}
+        tracking={state.tracking?.[post.url]} proof={state.proofs?.[post.url]} />)}
       {!!discussions.length && <details className="research-discussions">
         <summary>Related discussions ({discussions.length})</summary>
         {discussions.map(post => <PostCard key={post.url} post={post} checkedAt={result.checkedAt} />)}

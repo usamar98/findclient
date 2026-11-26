@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { admin } from '@/lib/db/admin'
 import { missingDatabaseResource } from '@/lib/db/missing-resource'
 import { requireUser } from '@/lib/db/server'
-import { sources } from '@/lib/niche'
+import { researchSourceLabels, type ResearchSourceId } from '@/lib/research-catalog'
 import './results.css'
 
 export const metadata = { title: 'Results | Lead To Client' }
@@ -79,7 +79,7 @@ export default async function Results({ searchParams }: {
             </tr></thead>
             <tbody>{results.map(row => {
               const label = group === 'platform'
-                ? sources[row.group_id as keyof typeof sources] ?? row.group_id
+                ? researchSourceLabels[row.group_id as ResearchSourceId] ?? row.group_id
                 : row.search_name
               const filter = new URLSearchParams(workspaceQuery)
               if (row.group_id) filter.set(group === 'platform' ? 'source' : 'service', row.group_id)

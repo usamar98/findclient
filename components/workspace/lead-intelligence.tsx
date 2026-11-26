@@ -15,7 +15,7 @@ type Lead = {
   posted_at: string
   created_at: string
   intent_reason: string
-  intent_score: number
+  intent_score: number | null
   buyer_intelligence: unknown
   match_feedback: string | null
 }
@@ -27,6 +27,7 @@ const displayTime = (iso: string) =>
   }).format(new Date(iso)) + ' UTC'
 
 export function LeadIntelligence({ lead }: { lead: Lead }) {
+  if (lead.intent_score === null) return null
   const stored = buyerSchema.safeParse(lead.buyer_intelligence)
   const info = stored.success ? stored.data : assessBuyer(lead)
   const days = info.account_created_at

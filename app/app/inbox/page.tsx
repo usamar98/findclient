@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { requireUser } from '@/lib/db/server'
 import { admin } from '@/lib/db/admin'
-import { sources, stageNames } from '@/lib/niche'
+import { stageNames } from '@/lib/niche'
+import { researchSourceLabels, type ResearchSourceId } from '@/lib/research-catalog'
 import { inboxHref, inboxPageSize, parseInboxFilters, type InboxParams } from '@/lib/inbox-filters'
 import { queryInbox } from '@/lib/inbox-query'
 import { LeadFilters } from './filters'
@@ -67,20 +68,27 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<In
         <h2 id="inbox-results-heading">{count} {active && hasSavedLeads ? 'matching ' : ''}{count === 1 ? 'lead' : 'leads'}</h2>
         {count > inboxPageSize && <p>Showing {offset + 1}–{Math.min(count, offset + inboxPageSize)} of {count}</p>}
       </div>
-      {result.data.map(lead => <article key={lead.id} className="inbox-lead">
-        <div className="inbox-lead-meta"><strong>{sources[lead.source as keyof typeof sources] ?? lead.source}</strong>
-          <span>{stageNames[lead.status]}</span>
-          <time dateTime={lead.posted_at}>{postedDate.format(new Date(lead.posted_at))}</time>
-        </div>
-        <h3><Link href={'/app/leads/' + lead.id}>{lead.title}</Link></h3>
-        <p>{lead.problem_summary}</p>
-        <div className="inbox-lead-facts"><span>Intent {lead.intent_score}/100</span>
-          {lead.buyer_quality_score !== null && <span>Buyer quality {lead.buyer_quality_score}/100</span>}
-          <span>{lead.assignee_id === user.id ? 'Assigned to you' : lead.assignee_id ? 'Assigned' : 'Unassigned'}</span>
-          {lead.deal_value_cents > 0 && <span>Deal {currency.format(lead.deal_value_cents / 100)}</span>}
-          {lead.follow_up_on && <span>Follow up <time dateTime={lead.follow_up_on}>{lead.follow_up_on}</time></span>}
-        </div>
-      </article>)}
+      {result.data.map(lead => {
+        const appliedAt = 'applied_at' in lead && typeof lead.applied_at === 'string' ? lead.applied_at : null
+        const canFollowUp = (appliedAt || lead.status === 'saved') && !['won', 'lost', 'ignored'].includes(lead.status)
+        return <article key={lead.id} className="inbox-lead">
+          <div className="inbox-lead-meta"><strong>{researchSourceLabels[lead.source as ResearchSourceId] ?? lead.source}</strong>
+            <span>{stageNames[lead.status]}</span>
+            <time dateTime={lead.posted_at}>{postedDate.format(new Date(lead.posted_at))}</time>
+          </div>
+          <h3><Link href={'/app/leads/' + lead.id}>{lead.title}</Link></h3>
+          <p>{lead.problem_summary}</p>
+          <div className="inbox-lead-facts">
+            {appliedAt && <span>Applied <time dateTime={appliedAt}>{postedDate.format(new Date(appliedAt))}</time></span>}
+            {lead.intent_score !== null && <span>Intent {lead.intent_score}/100</span>}
+            {lead.buyer_quality_score !== null && <span>Buyer quality {lead.buyer_quality_score}/100</span>}
+            <span>{lead.assignee_id === user.id ? 'Assigned to you' : lead.assignee_id ? 'Assigned' : 'Unassigned'}</span>
+            {lead.deal_value_cents > 0 && <span>Deal {currency.format(lead.deal_value_cents / 100)}</span>}
+            {lead.follow_up_on && <span>Follow up <time dateTime={lead.follow_up_on}>{lead.follow_up_on}</time></span>}
+            {canFollowUp && <Link href={'/app/leads/' + lead.id + '#pipeline'}>{lead.follow_up_on ? 'Edit follow-up' : 'Set follow-up'}</Link>}
+          </div>
+        </article>
+      })}
       {!count && <div className="panel inbox-empty">
         {hasSavedLeads ? <>
           <h3>No saved leads match these filters</h3>
@@ -93,6 +101,7 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<In
           </div>
         </> : <>
           <h3>No saved leads yet</h3>
+          {!shared && <p><Link href="/app/jobs">Browse 24-hour Jobs</Link> and select <strong>Save to inbox</strong> on an opening you want to track.</p>}
           {shared ? <p>Ask the workspace owner to check their saved searches and scan receipts.</p>
             : !ownSearches.length ? <p><Link href="/app/onboarding">Create a saved search</Link> to choose your service and sources, then run a scan.</p>
             : !ownSearches.some(search => search.active) ? <p><Link href="/app/settings#saved-searches">Activate a saved search</Link> to start scanning for new leads.</p>

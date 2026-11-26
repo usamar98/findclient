@@ -6,19 +6,34 @@ const sortColumns = {
   newest: 'posted_at', score: 'intent_score', buyer: 'buyer_quality_score', value: 'deal_value_cents', followup: 'follow_up_on',
 } as const
 
-export function queryInbox(db: SupabaseClient<Database>, userId: string, filters: InboxFilters, now = new Date()) {
+const leadColumns = 'id,source,title,posted_at,intent_score,buyer_quality_score,problem_summary,status,assignee_id,deal_value_cents,follow_up_on'
+const applicationColumns = `${leadColumns},applied_at` as const
+
+export async function queryInbox(db: SupabaseClient<Database>, userId: string, filters: InboxFilters, now = new Date()) {
+  const result = await fetchRows(db, userId, filters, now, true)
+  // Preserve the existing inbox during the interval between deployment and the database migration.
+  if (result.error && ['42703', 'PGRST204'].includes(result.error.code) && /\bapplied_at\b/.test(result.error.message)) {
+    return fetchRows(db, userId, filters, now, false)
+  }
+  return result
+}
+
+function fetchRows(db: SupabaseClient<Database>, userId: string, filters: InboxFilters, now: Date, withApplications: boolean) {
   const today = now.toISOString().slice(0, 10)
   const day = 86400000
   const offset = (filters.page - 1) * inboxPageSize
-  let query = db.from('leads').select(
-    'id,source,title,posted_at,intent_score,buyer_quality_score,problem_summary,status,assignee_id,deal_value_cents,follow_up_on',
-    { count: 'exact' },
-  )
+  const leads = db.from('leads')
+  let query = withApplications
+    ? leads.select(applicationColumns, { count: 'exact' })
+    : leads.select(leadColumns, { count: 'exact' })
   if (filters.workspace) query = query.eq('user_id', filters.workspace)
   if (filters.service) query = query.eq('niche_id', filters.service)
   if (filters.q) query = query.ilike('title', '%' + filters.q.replace(/[\\%_]/g, '\\$&') + '%')
   if (filters.source.length) query = query.in('source', filters.source)
   if (filters.status.length) query = query.in('status', filters.status)
+  if (filters.application) {
+    query = withApplications ? query.not('applied_at', 'is', null) : query.is('id', null)
+  }
   if (filters.score) query = query.gte('intent_score', filters.score)
   if (filters.quality) query = query.gte('buyer_quality_score', filters.quality)
   if (filters.value) query = query.gte('deal_value_cents', Math.round(filters.value * 100))

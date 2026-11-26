@@ -24,7 +24,9 @@ export async function produceReply({ db, lead, authorId, ownerId, requestId, ton
   const service = admin()
   const [{ data: niche }, { data: profile }, { data: audit }] =
     await Promise.all([
-      db.from('niches').select('pitch_style').eq('id', lead.niche_id).single(),
+      lead.niche_id
+        ? db.from('niches').select('pitch_style').eq('id', lead.niche_id).single()
+        : { data: null },
       db
         .from('profiles')
         .select('branding,voice_examples,learn_from_edits')

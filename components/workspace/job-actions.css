@@ -1,0 +1,16 @@
+.job-actions { margin-block-start: 1rem; padding-block-start: .85rem; border-block-start: 1px solid var(--cf-line); }
+.job-action-row { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .6rem; }
+.workspace .job-action-row a, .workspace .job-action-row button, .job-applied {
+  display: inline-flex; align-items: center; justify-content: center; gap: .35rem;
+  border: 1px solid transparent; border-radius: 2rem; min-height: 2.5rem; padding: .4rem .9rem;
+  font-size: .87rem; font-weight: 600; line-height: 1.25; text-decoration: none;
+}
+.workspace .job-action-row .job-apply { background: var(--cf-brand); color: var(--cf-bg); }
+.workspace .job-action-row button, .workspace .job-action-row .job-follow-up {
+  background: var(--cf-card); color: var(--cf-text); border-color: var(--cf-line);
+}
+.workspace .job-action-row .job-mark, .job-applied { padding-inline: .5rem; border-color: transparent; }
+.workspace .job-action-row button:enabled:hover, .workspace .job-action-row .job-follow-up:hover { background: var(--cf-wash); }
+.workspace .job-action-row .job-apply:hover { text-decoration: underline; }
+.job-applied { color: var(--cf-muted); }
+.workspace .job-actions [role="alert"] { margin: .5rem 0 0; font-size: .87rem; color: var(--cf-text); }

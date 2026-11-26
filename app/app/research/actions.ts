@@ -7,6 +7,8 @@ import { redditRecent, xRecent } from '@/lib/sources/research-social'
 import { FeedAccessRestricted, forumFeedKeys, shopifyFeedKeys, fetchForumResearchCandidates, fetchShopifyResearchCandidates } from '@/lib/sources/forum-feeds'
 import { searchKeylessNetwork } from '@/lib/sources/keyless-research'
 import { paidListings } from '@/lib/daily-jobs'
+import { getJobTracking, jobTrackingProof } from '@/lib/job-tracking'
+import type { JobTracking } from '@/lib/job-tracking-model'
 import { readSharedHiringFeed, stampJobDiscoveries } from '@/lib/shared-hiring-feed'
 import { isPaidSource, type ResearchCandidate, type ResearchSourceId } from '@/lib/research-catalog'
 import { combineHiringReads, researchInput, researchSnapshot, type ResearchState, type ResearchStatus, type SourceRead } from '@/lib/live-research'
@@ -19,7 +21,10 @@ function liveProvider(id: ResearchSourceId) {
   return providerKey(id)
 }
 
-export async function findFreshPosts(_previous: ResearchState, form: FormData): Promise<ResearchState> {
+export async function findFreshPosts(_previous: ResearchState, form: FormData): Promise<ResearchState & {
+  tracking?: Record<string, JobTracking>
+  proofs?: Record<string, string>
+}> {
   const started = performance.now()
   const { user } = await requireUser()
   const input = researchInput(form)
@@ -102,5 +107,8 @@ export async function findFreshPosts(_previous: ResearchState, form: FormData): 
   const ordered = batches.flat().sort((a, b) => input.sources.indexOf(a.source) - input.sources.indexOf(b.source))
   const result = researchSnapshot(q, minutes, ordered)
   result.durationMs = Math.round(performance.now() - started)
-  return { result }
+  const jobs = result.posts.filter(post => post.kind === 'hiring')
+  const tracking = await getJobTracking(jobs)
+  const proofs = Object.fromEntries(jobs.map(job => [job.url, jobTrackingProof(job)]))
+  return { result, tracking, proofs }
 }

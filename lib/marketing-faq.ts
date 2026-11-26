@@ -126,7 +126,7 @@ const entries = [
   ],
   [
     'Where can I look for paid freelance work without entering a keyword?',
-    'Open Jobs in your workspace to see freelance work published in the past 24 hours. We Work Remotely contracts without published compensation are marked “Pay not listed.” Remote OK shows contract listings with evidence of pay. GitHub results are open, unassigned issues where a maintainer offers a cash bounty. Mastodon results are original paid hiring posts from selected tags visible on mastodon.social. Open the original listing to confirm availability and check the terms.',
+    'Open Jobs in your workspace to see freelance work published in the past 24 hours. Browse hiring requests on Hacker News, Bluesky and Mastodon, contracts from We Work Remotely and Remote OK, and paid GitHub bounties. The posted time comes from the original listing. First found shows when Lead To Client recorded that job for the first time. Linked Telegram accounts can search the same openings with /jobs.',
   ],
 ]
 

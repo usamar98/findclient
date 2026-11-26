@@ -43,8 +43,8 @@ export default function Home() {
         <div className="cf-paid-research">
           <h3>Where can I find paid freelance work?</h3>
           <div>
-            <p>Browse <Link href="/app/jobs">jobs from the past 24 hours</Link> for contracts on We Work Remotely and Remote OK, cash bounties on GitHub, and hiring posts on Mastodon.</p>
-            <p>Each result links to the original post and shows its publication time and any listed pay. Check source coverage to see which platforms responded.</p>
+            <p>Browse <Link href="/app/jobs">jobs from the past 24 hours</Link> for freelance requests on Hacker News, Bluesky and Mastodon, contracts on We Work Remotely and Remote OK, and cash bounties on GitHub.</p>
+            <p>See when a job was posted and when Lead To Client first found it. Open the original listing to check the terms and apply.</p>
             <Link href="/platforms">See all 12 sources and how post age is measured <span aria-hidden="true">↗</span></Link>
           </div>
         </div>

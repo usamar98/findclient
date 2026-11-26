@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { researchSourceLabels, type ResearchResult } from './live-research'
+import { jobTimestamps } from './job-timestamps'
 
 const updateSchema = z.object({
   update_id: z.number().int().nonnegative(),
@@ -76,13 +77,12 @@ function formatJobs(result: ResearchResult, site: string): BotReply {
   for (const post of result.posts.slice(0, 5)) {
     const url = URL.canParse(post.url) ? new URL(post.url) : null
     if (!url || url.protocol !== 'https:' || url.username || url.password) continue
-    const date = new Date(post.posted_at).toISOString().slice(0, 16).replace('T', ' ')
     const source = researchSourceLabels[post.source]
     const n = buttons.length + 1
     const pay = post.engagement === 'contract_pay_unlisted'
       ? 'Contract · Pay not listed'
       : post.compensation && 'Listed pay · ' + shortText(post.compensation, 70)
-    lines.push([n + '. ' + shortText(post.title, 160), source + ' · ' + date + ' UTC', pay].filter(Boolean).join('\n'))
+    lines.push([n + '. ' + shortText(post.title, 160), source, jobTimestamps(post.posted_at, post.first_found_at), pay].filter(Boolean).join('\n'))
     buttons.push({ text: n + ' · Open on ' + source, url: url.href })
   }
   const checked = result.sources.filter(source => source.status === 'checked').length

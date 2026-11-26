@@ -7,8 +7,9 @@ import { redditRecent, xRecent } from '@/lib/sources/research-social'
 import { FeedAccessRestricted, forumFeedKeys, shopifyFeedKeys, fetchForumResearchCandidates, fetchShopifyResearchCandidates } from '@/lib/sources/forum-feeds'
 import { searchKeylessNetwork } from '@/lib/sources/keyless-research'
 import { paidListings } from '@/lib/daily-jobs'
+import { readSharedHiringFeed, stampJobDiscoveries } from '@/lib/shared-hiring-feed'
 import { isPaidSource, type ResearchCandidate, type ResearchSourceId } from '@/lib/research-catalog'
-import { researchInput, researchSnapshot, type ResearchState, type ResearchStatus } from '@/lib/live-research'
+import { combineHiringReads, researchInput, researchSnapshot, type ResearchState, type ResearchStatus, type SourceRead } from '@/lib/live-research'
 
 function liveProvider(id: ResearchSourceId) {
   if (isPaidSource(id)) return id
@@ -35,7 +36,10 @@ export async function findFreshPosts(_previous: ResearchState, form: FormData): 
   if (gates.error) return { error: 'Source availability could not be checked. Please try again.' }
   const cooldowns = new Map(gates.data.map(gate => [gate.source, Date.parse(gate.retry_at)]))
   const since = new Date(Date.now() - Number(minutes) * 60_000)
-  async function check(source: ResearchSourceId) {
+  const hiringSources = input.sources.filter(id => id === 'hn' || id === 'bluesky')
+  const shared = hiringSources.length ? readSharedHiringFeed(hiringSources, since).catch(() =>
+    hiringSources.map(source => ({ source, status: 'unavailable' as const, indexed: false as const, posts: [], partial: true }))) : Promise.resolve([])
+  async function check(source: ResearchSourceId): Promise<SourceRead> {
     const provider = liveProvider(source)
     const indexed = provider === 'exa'
     const report = (status: ResearchStatus, posts: ResearchCandidate[] = []) => ({ source, indexed, status, posts })
@@ -56,7 +60,8 @@ export async function findFreshPosts(_previous: ResearchState, form: FormData): 
       if (isPaidSource(source)) {
         const listings = await paidListings(source, since)
         if (listings.retryAt) await db.rpc('defer_source', { p_source: provider, p_until: listings.retryAt.toISOString() })
-        return { ...report('checked', listings.posts), partial: listings.partial, candidates: listings.candidates }
+        const posts = await stampJobDiscoveries(listings.posts)
+        return { ...report('checked', posts), partial: listings.partial, candidates: listings.candidates }
       }
       if (source === 'forums' || source === 'shopify') {
         const feeds = source === 'forums' ? await fetchForumResearchCandidates(since, cooldowns) : await fetchShopifyResearchCandidates(since, cooldowns)
@@ -85,7 +90,11 @@ export async function findFreshPosts(_previous: ResearchState, form: FormData): 
     const results = []
     for (const id of input.sources.filter(id => liveProvider(id) === provider)) {
       const sourceStarted = performance.now()
-      const response = await check(id)
+      let response = await check(id)
+      if (id === 'hn' || id === 'bluesky') {
+        const hiring = (await shared).find(row => row.source === id)
+        if (hiring) response = combineHiringReads(response, hiring)
+      }
       results.push({ ...response, durationMs: Math.round(performance.now() - sourceStarted) })
     }
     return results

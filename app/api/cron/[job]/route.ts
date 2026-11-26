@@ -4,6 +4,7 @@ import { admin } from '@/lib/db/admin'
 import { runEngine } from '@/lib/engine'
 import { deliverNotifications } from '@/lib/notifications'
 import { queueTelegramJobAlerts } from '@/lib/job-alerts'
+import { pruneHiringHistory, refreshSharedHiringFeed } from '@/lib/shared-hiring-feed'
 import { reconcileQuotes } from '@/lib/checkout'
 export const maxDuration = 300
 export const dynamic = 'force-dynamic'
@@ -20,7 +21,7 @@ export async function GET(
   )
     return new Response('Unauthorized', { status: 401 })
   const name = z
-    .enum(['scan', 'continue-scan', 'notifications', 'job-alerts', 'digest', 'maintenance'])
+    .enum(['scan', 'continue-scan', 'notifications', 'job-alerts', 'hiring-feed', 'digest', 'maintenance'])
     .safeParse((await params).job)
   if (!name.success) return new Response('Unknown job', { status: 404 })
   const db = admin()
@@ -36,6 +37,8 @@ export async function GET(
       headers: { 'Retry-After': '60' },
     })
   switch (name.data) {
+    case 'hiring-feed':
+      return Response.json(await refreshSharedHiringFeed())
     case 'job-alerts':
       return Response.json(await queueTelegramJobAlerts())
     case 'scan':
@@ -53,6 +56,7 @@ export async function GET(
       const { error } = await db.rpc('refill_credits')
       if (error) throw error
       await reconcileQuotes()
+      await pruneHiringHistory()
       return Response.json({ ok: true })
     }
   }

@@ -29,7 +29,7 @@ export async function Offers({ full = false }: { full?: boolean }) {
       <div className="cf-plans-intro">
         <Title id="cf-plans-title">One payment for lifetime access</Title>
         {full && (
-          <p>Live Research uses no scoring credits. Browse contracts on We Work Remotely and Remote OK, GitHub paid bounties and Mastodon hiring posts. <Link href="/platforms">See all 12 sources</Link>.</p>
+          <p>Live Research uses no scoring credits. Browse hiring requests on Hacker News, Bluesky and Mastodon, remote contracts and GitHub paid bounties. <Link href="/platforms">See all 12 sources</Link>.</p>
         )}
       </div>
       <LifetimeOffer

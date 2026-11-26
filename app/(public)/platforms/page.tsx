@@ -53,13 +53,13 @@ export default function Platforms() {
     <section aria-labelledby="freshness">
       <h2 id="freshness">What does the 15-minute filter show?</h2>
       <p>{platformFreshnessAnswer}</p>
-      <p>For a check at 10:20 UTC, a post published at 10:13 is seven minutes old. A post published at 10:04 is already outside that window, even if it first appeared in the feed at 10:19.</p>
+      <p>For a check at 10:20 UTC, a post published at 10:13 is seven minutes old. A job posted at 10:04 and first found at 10:19 falls outside the 15-minute window. It can still appear in the 24-hour Jobs feed.</p>
       <p>Open <Link href="/app/jobs">24-hour jobs</Link> to browse freelance openings. We Work Remotely contracts without published compensation are marked “Pay not listed.” Community results in Live Research can also include people asking for advice.</p>
     </section>
     <section aria-labelledby="one-minute-recheck">
       <h2 id="one-minute-recheck">When does the 1-minute recheck run?</h2>
       <p>{platformWatchAnswer}</p>
-      <p>All four paid-work sources support this recheck in Live Research. Selecting Reddit, X or Indie Hackers makes rechecks manual. For ongoing inbox alerts, <Link href="/how-it-works#source-coverage">see the separate saved search schedule</Link>.</p>
+      <p>All six Jobs sources support this recheck in Live Research. Selecting Reddit, X or Indie Hackers makes rechecks manual. For ongoing inbox alerts, <Link href="/how-it-works#source-coverage">see the separate saved search schedule</Link>.</p>
     </section>
     <section aria-labelledby="source-freshness">
       <h2 id="source-freshness">How fresh is each freelance lead source?</h2>

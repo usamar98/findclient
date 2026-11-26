@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { researchInput, researchSnapshot } from '../lib/live-research'
+import { combineHiringReads, researchInput, researchSnapshot, type SourceRead } from '../lib/live-research'
 import { redditRecent, xRecent } from '../lib/sources/research-social'
 import { keylessSources, paidSources, type PaidProjectPost } from '../lib/research-catalog'
 import type { NormalizedPost } from '../lib/sources/shared'
@@ -85,6 +85,35 @@ test('a short Shopify search counts the fresh posts it reviewed and distinguishe
   assert.deepEqual(result.sources.map(source => [source.reviewed, source.count, source.requests, source.partial]), [[4, 3, 2, true]])
   assert.equal(result.posts[2].excerpt, help.title)
   assert.deepEqual(researchSnapshot('Shopify Developer', '1', inputs, checkedAt).posts.map(post => post.posted_at), [hiring.posted_at])
+})
+
+test('shared hiring hits keep their first discovery time across live searches and fall out by publication age', () => {
+  const job: PaidProjectPost = {
+    source: 'hn', url: 'https://news.ycombinator.com/item?id=42', title: 'Freelance Webflow designer',
+    body: 'We need a designer to build a Webflow page.', author: 'buyer', engagement: 'paid_freelance',
+    posted_at: '2026-11-26T09:00:00Z', first_found_at: '2026-11-26T09:07:30Z', compensation: '$900',
+  }
+  const copy: NormalizedPost = { source: 'hn', title: job.title, body: job.body, url: job.url, author: job.author, posted_at: job.posted_at }
+  const help = { ...copy, url: 'https://news.ycombinator.com/item?id=43', title: 'Can anyone help fix my Webflow form?', body: '' }
+  const direct: SourceRead = { source: 'hn', status: 'checked', indexed: false, posts: [copy, help] }
+  const feed: SourceRead = { ...direct, posts: [job], lastCheckedAt: '2026-11-26T09:10:00Z' }
+  const merged = combineHiringReads(direct, feed)
+  for (const time of ['09:11:00', '09:15:00']) {
+    const results = researchSnapshot('Webflow', '15', [merged], new Date('2026-11-26T' + time + 'Z'))
+    assert.equal(results.posts.filter(row => row.url === job.url).length, 1)
+    assert.deepEqual(results.posts.map(row => [row.kind, row.first_found_at]), [['hiring', job.first_found_at], ['help', undefined]])
+    assert.equal(results.sources[0].reviewed, 2)
+    assert.equal(results.sources[0].lastCheckedAt, feed.lastCheckedAt)
+  }
+  assert.equal(researchSnapshot('Webflow', '15', [merged], new Date('2026-11-26T09:15:01Z')).posts.length, 0)
+
+  const denied = { ...direct, status: 'access' as const, posts: [] }
+  const saved = combineHiringReads(denied, { ...feed, status: 'cooldown' })
+  assert.equal(saved.partial, true)
+  assert.deepEqual(saved.checkedFeeds, ['Saved hiring posts'])
+  assert.deepEqual(saved.unavailableFeeds, ['Community search', 'Shared hiring feed refresh'])
+  assert.equal(researchSnapshot('Webflow', '15', [saved], new Date('2026-11-26T09:12:00Z')).posts.length, 1)
+  assert.notEqual(combineHiringReads(denied, { ...feed, status: 'unavailable', posts: [] }).status, 'checked')
 })
 
 test('official social searches retain author and source ID with the original publication timestamp', async t => {

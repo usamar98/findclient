@@ -5,6 +5,16 @@ process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://database.example.test'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-only'
 
 const calls: string[] = []
+const now = Date.now()
+const foundAt = new Date(now - 4_000).toISOString()
+const postedAt = new Date(now - 60_000).toISOString()
+const shares = [
+  { source: 'hn', url: 'https://news.ycombinator.com/item?id=1234', posted_at: postedAt, first_found_at: foundAt,
+    listing: { title: 'Hire a Shopify developer', body: 'Our studio is hiring a Shopify developer for a contract.', author: 'studio', engagement: 'contract_pay_unlisted' } },
+  { source: 'bluesky', url: 'https://bsky.app/profile/did:plc:studio/post/abc', posted_at: postedAt, first_found_at: foundAt,
+    listing: { title: 'Need a Shopify designer', body: 'We have a $500 budget for a Shopify designer.', author: 'buyer.bsky.social', engagement: 'paid_freelance', compensation: '$500' } },
+]
+let communityStatus = 'checked'
 const jobs = [['Webflow designer', 1, 'Pay is $80 per hour.'], ['Python engineer', 2, 'Review an existing codebase.'], ['Previous day', 25, 'Pay is $80 per hour.']] as const
 const rows = jobs.map(([title, hours, body]) => {
   const date = new Date(Date.now() - hours * 3_600_000).toUTCString()
@@ -12,12 +22,25 @@ const rows = jobs.map(([title, hours, body]) => {
     '<pubDate>' + date + '</pubDate><link>https://weworkremotely.com/remote-jobs/' + title.replace(' ', '-') + '</link></item>'
 })
 
-globalThis.fetch = async (input) => {
-  const url = new URL(input instanceof Request ? input.url : input)
+globalThis.fetch = async (input, init) => {
+  const request = new Request(input, init)
+  const url = new URL(request.url)
   calls.push(url.hostname)
   if (url.hostname === 'database.example.test') {
-    assert.equal(url.pathname, '/rest/v1/source_backoffs')
-    return Response.json([{ source: 'github', retry_at: new Date(Date.now() + 60_000).toISOString() }])
+    switch (url.pathname) {
+      case '/rest/v1/source_backoffs':
+        return Response.json([{ source: 'github', retry_at: new Date(Date.now() + 60_000).toISOString() }])
+      case '/rest/v1/rpc/record_job_discoveries': {
+        const { p_jobs } = await request.json() as { p_jobs: { source: string; url: string }[] }
+        return Response.json(p_jobs.map(({ source, url }) => ({ source, url, first_found_at: foundAt })))
+      }
+      case '/rest/v1/rpc/claim_shared_hiring_sources': return Response.json([])
+      case '/rest/v1/shared_hiring_sources': return Response.json(shares.map(job => ({
+        source: job.source, status: communityStatus, partial: false, last_checked_at: foundAt, last_success_at: foundAt,
+      })))
+      case '/rest/v1/shared_hiring_jobs': return Response.json(shares.filter(job => url.searchParams.get('source') === 'eq.' + job.source))
+      default: assert.fail('Unexpected database request ' + url.pathname)
+    }
   }
   if (url.hostname === 'weworkremotely.com') return new Response('<rss><channel><title>We Work Remotely</title>' + rows.join('') + '</channel></rss>')
   return new Response('', { status: 403 })
@@ -26,10 +49,14 @@ globalThis.fetch = async (input) => {
 async function verify() {
   const search = await loadDailyJobFeed()
   const checked = [...calls].sort()
-  assert.deepEqual(checked, ['database.example.test', 'mastodon.social', 'remoteok.com', 'weworkremotely.com'])
+  assert.deepEqual(checked.filter(host => host !== 'database.example.test'), ['mastodon.social', 'remoteok.com', 'weworkremotely.com'])
   const browse = search()
-  assert.deepEqual(browse.posts.map(job => job.title), ['Webflow designer', 'Python engineer'])
-  assert.deepEqual(browse.posts.map(job => job.engagement), ['paid_freelance', 'contract_pay_unlisted'])
+  assert.equal(browse.sources.length, 6)
+  assert.deepEqual(browse.posts.filter(job => job.source === 'weworkremotely').map(job => job.title), ['Webflow designer', 'Python engineer'])
+  assert.deepEqual(browse.posts.filter(job => job.source === 'weworkremotely').map(job => job.engagement), ['paid_freelance', 'contract_pay_unlisted'])
+  assert.ok(browse.posts.every(job => job.first_found_at === foundAt))
+  assert.deepEqual(search('Shopify').posts.map(job => job.source).sort(), ['bluesky', 'hn'])
+  assert.ok(search('Shopify').posts.every(job => Date.parse(job.posted_at) === Date.parse(postedAt)))
   assert.equal(browse.sources.find(row => row.source === 'github')?.status, 'cooldown')
   assert.deepEqual(search('Webflow').posts.map(job => job.title), ['Webflow designer'])
   assert.deepEqual(search('Python').posts.map(job => job.title), ['Python engineer'])
@@ -38,7 +65,16 @@ async function verify() {
   calls.length = 0
   const single = await getDailyJobs('', 'weworkremotely')
   assert.deepEqual(single.sources.map(row => row.source), ['weworkremotely'])
-  assert.deepEqual(calls, ['database.example.test', 'weworkremotely.com'])
+  assert.deepEqual(calls.filter(host => host !== 'database.example.test'), ['weworkremotely.com'])
+
+  calls.length = 0
+  communityStatus = 'cooldown'
+  const cached = await getDailyJobs('Shopify', 'hn')
+  assert.deepEqual(cached.sources.map(row => row.source), ['hn'])
+  assert.equal(cached.sources[0].partial, true)
+  assert.deepEqual(cached.posts.map(job => job.url), [shares[0].url])
+  assert.equal(cached.posts[0].first_found_at, foundAt)
+  assert.ok(calls.every(host => host === 'database.example.test'))
 }
 
 verify().catch(error => { console.error(error); process.exitCode = 1 })

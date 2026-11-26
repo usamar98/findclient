@@ -65,6 +65,10 @@ export const infoPages = {
       'The Lead To Client changelog records changes that affect how freelancers find requests, review intent, draft responses and manage credits. Use the dated entries to check which workflows are available, then follow the product guides for instructions on configuring a niche or reviewing a potential client conversation.',
     sections: [
       [
+        'November 26, 2026 · Hacker News and Bluesky hiring feed',
+        'Freelance hiring posts from Hacker News and Bluesky now appear in Live Research, 24-hour Jobs and Telegram watches. Each job shows its source publication time and when Lead To Client first saved it.',
+      ],
+      [
         'November 26, 2026 · Four paid freelance sources join Live Research',
         'Search We Work Remotely and Remote OK for paid contract work, GitHub for cash bounties and Mastodon for freelance hiring posts. Open Jobs to browse all four over the past 24 hours. Each listing includes a source link, publication time and listed pay when available.',
       ],

@@ -6,6 +6,11 @@ export { isPaidSource, paidSources, type PaidSourceId } from './paid-sources'
 export const researchSourceLabels = { ...sources, ...paidSourceLabels }
 export type ResearchSourceId = keyof typeof researchSourceLabels
 export const researchSources = Object.keys(researchSourceLabels) as ResearchSourceId[]
+export type DailyJobSource = PaidSourceId | 'hn' | 'bluesky'
+export const dailyJobSources: DailyJobSource[] = [...paidSources, 'hn', 'bluesky']
+export function isDailyJobSource(source: string): source is DailyJobSource {
+  return source === 'hn' || source === 'bluesky' || Object.hasOwn(paidSourceLabels, source)
+}
 export const keylessSources: ResearchSourceId[] = ['hn', 'bluesky', 'stackexchange', 'shopify', 'forums', ...paidSources]
 export const researchSourceNotes: Partial<Record<ResearchSourceId, string>> = {
   weworkremotely: 'We Work Remotely specifies an hourly feed refresh.',
@@ -15,7 +20,8 @@ export const researchSourceNotes: Partial<Record<ResearchSourceId, string>> = {
 }
 
 type JobDetails = Omit<NormalizedPost, 'source' | 'posted_precision'> & {
-  source: PaidSourceId
+  source: DailyJobSource
+  first_found_at?: string
   posted_precision?: never
 }
 export type PaidProjectPost = JobDetails & { engagement: 'paid_freelance'; compensation?: string }

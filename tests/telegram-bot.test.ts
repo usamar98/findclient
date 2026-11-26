@@ -13,7 +13,7 @@ const result: ResearchResult = {
   sources: [{ source: 'github', status: 'checked', count: 1, requests: 1, reviewed: 1, indexed: false }],
   posts: [{
     source: 'github', kind: 'hiring', engagement: 'paid_freelance', author: 'shopco', title: 'Implement <payments> & tests',
-    url: 'https://github.com/shopco/shop/issues/42', posted_at: '2026-11-26T04:00:00-02:00', excerpt: '', compensation: '$250',
+    url: 'https://github.com/shopco/shop/issues/42', posted_at: '2026-11-26T04:00:00-02:00', first_found_at: '2026-11-26T06:00:40Z', excerpt: '', compensation: '$250',
   }],
 }
 type Actions = Parameters<typeof telegramReply>[1]
@@ -67,7 +67,7 @@ test('jobs, plain keywords and /search share a bounded response with original jo
       return { ...result, query: q, posts: Array.from({ length: 7 }, () => result.posts[0]) }
     } })
     assert.match(response.text, /past 24 hours/)
-    assert.match(response.text, /2026-11-26 06:00 UTC/)
+    assert.match(response.text, /Posted 2026-11-26 06:00:00 UTC\nFirst found 2026-11-26 06:00:40 UTC/)
     assert.match(response.text, /Listed pay · \$250/)
     assert.ok(response.buttons)
     assert.equal(response.buttons.length, 6)
@@ -102,10 +102,20 @@ test('Telegram identifies employer-listed contracts without a published rate', a
     }],
   }) })
   assert.match(response.text, /Paid gigs and employer-listed contracts from the past 24 hours/)
-  assert.match(response.text, /Listed pay · \$250\n\n2\. Contract web designer\nWe Work Remotely[^\n]*\nContract · Pay not listed/)
+  assert.match(response.text, /2\. Contract web designer\nWe Work Remotely\nPosted [^\n]+\nFirst found [^\n]+\nContract · Pay not listed/)
   for (const cmd of ['/help', '/alerts', '/watch', '/watch Shopify']) {
     assert.match((await reply(cmd)).text, /paid gigs and employer-listed contracts/i)
   }
+})
+
+test('shared Hacker News and Bluesky job search links include independent posting and discovery times', async () => {
+  const hn = { ...result.posts[0], source: 'hn' as const, url: 'https://news.ycombinator.com/item?id=42' }
+  const bluesky = { ...result.posts[0], source: 'bluesky' as const, url: 'https://bsky.app/profile/buyer.bsky.social/post/test' }
+  const response = await reply('/search payments', { search: async () => ({ ...result, posts: [hn, bluesky] }) })
+  for (const source of ['Hacker News', 'Bluesky']) {
+    assert.ok(response.text.includes(source + '\nPosted 2026-11-26 06:00:00 UTC\nFirst found 2026-11-26 06:00:40 UTC'))
+  }
+  assert.deepEqual(response.buttons?.slice(0, 2).map(button => button.url), [hn.url, bluesky.url])
 })
 
 test('watch and unwatch change only the linked owner with the requested keyword; failure is visible', async () => {

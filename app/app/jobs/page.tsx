@@ -2,19 +2,18 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { getDailyJobs } from '@/lib/daily-jobs'
 import { requireUser } from '@/lib/db/server'
-import { isPaidSource, paidSourceLabels, paidSources, type PaidSourceId } from '@/lib/paid-sources'
-import { researchSourceLabels } from '@/lib/research-catalog'
+import { dailyJobSources, isDailyJobSource, researchSourceLabels, type DailyJobSource } from '@/lib/research-catalog'
 import type { ResearchSource } from '@/lib/live-research'
 import './jobs.css'
 
 export const metadata = { title: '24-hour jobs | Lead To Client' }
-export const maxDuration = 30
+export const maxDuration = 60
 
 const perPage = 24
 const postedTime = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'UTC', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  timeZone: 'UTC', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
 })
-type Filters = { query: string; source?: PaidSourceId; page: number }
+type Filters = { query: string; source?: DailyJobSource; page: number }
 
 function jobsUrl(filters: Filters, page = 1) {
   const params = new URLSearchParams()
@@ -29,6 +28,7 @@ function coverageLabel(source: ResearchSource) {
   if (source.status === 'access') return 'Access restricted'
   if (source.status !== 'checked') return 'Unavailable'
   const count = source.count === 1 ? '1 match' : source.count + ' matches'
+  if (source.unavailableFeeds?.length) return count + ' saved · Refresh unavailable'
   return source.partial ? count + ' · Partial coverage' : count
 }
 
@@ -38,7 +38,7 @@ async function Results({ filters }: { filters: Filters }) {
   const pages = Math.max(1, Math.ceil(jobs.length / perPage))
   const page = Math.min(filters.page, pages)
   const visible = jobs.slice((page - 1) * perPage, page * perPage)
-  const checked = sources.filter(row => row.status === 'checked').length
+  const checked = sources.filter(row => row.status === 'checked' && !row.unavailableFeeds?.length).length
 
   return <>
     <div className="daily-result-heading">
@@ -49,6 +49,7 @@ async function Results({ filters }: { filters: Filters }) {
       <summary>Source coverage · {checked} of {sources.length} responded</summary>
       <ul>{sources.map(row => <li key={row.source}>
         <strong>{researchSourceLabels[row.source]}</strong> · {coverageLabel(row)}
+        {row.lastCheckedAt && <> · Last source check <time dateTime={row.lastCheckedAt}>{postedTime.format(new Date(row.lastCheckedAt))} UTC</time></>}
       </li>)}</ul>
     </details>
     {visible.length ? (
@@ -57,9 +58,14 @@ async function Results({ filters }: { filters: Filters }) {
           <article>
             <div className="daily-job-byline">
               <span>{researchSourceLabels[job.source]}{job.author && ' · ' + job.author}</span>
-              <time dateTime={job.posted_at}>{postedTime.format(new Date(job.posted_at))} UTC</time>
             </div>
             <h3><a href={job.url} target="_blank" rel="noopener noreferrer">{job.title}<span aria-hidden="true"> ↗</span></a></h3>
+            <div className="daily-job-times">
+              <span>Posted <time dateTime={job.posted_at}>{postedTime.format(new Date(job.posted_at))} UTC</time></span>
+              {job.first_found_at
+                ? <span>First found <time dateTime={job.first_found_at}>{postedTime.format(new Date(job.first_found_at))} UTC</time></span>
+                : <span>First found time unavailable</span>}
+            </div>
             {job.compensation && <p className="daily-job-pay">Listed pay · {job.compensation}</p>}
             {job.engagement === 'contract_pay_unlisted' && <p className="daily-job-pay">Contract · Pay not listed</p>}
             {job.excerpt && job.excerpt !== job.title && <p>{job.excerpt}</p>}
@@ -89,17 +95,17 @@ export default async function Jobs({ searchParams }: {
   const { q, source, page } = await searchParams
   const filters: Filters = {
     query: typeof q === 'string' ? q.trim().slice(0, 100) : '',
-    source: typeof source === 'string' && isPaidSource(source) ? source : undefined,
+    source: typeof source === 'string' && isDailyJobSource(source) ? source : undefined,
     page: typeof page === 'string' && /^\d{1,6}$/.test(page) ? Math.max(1, Number(page)) : 1,
   }
   return <div className="daily-jobs">
     <div className="work-title-row"><h1>Jobs from the last 24 hours</h1></div>
-    <p>Browse freelance contracts, cash bounties and hiring posts, newest first. Each opening links to its original listing and shows the advertised pay when available.</p>
+    <p>Browse freelance contracts, cash bounties and hiring posts, newest first. Compare when the author posted an opening with when Lead To Client first found it.</p>
     <form className="panel daily-filter" action="/app/jobs">
       <label>Search jobs<input type="search" name="q" placeholder="Skill or job title" maxLength={100} defaultValue={filters.query} /></label>
       <label>Platform<select name="source" defaultValue={filters.source ?? ''}>
         <option value="">All platforms</option>
-        {paidSources.map(id => <option key={id} value={id}>{paidSourceLabels[id]}</option>)}
+        {dailyJobSources.map(id => <option key={id} value={id}>{researchSourceLabels[id]}</option>)}
       </select></label>
       <button type="submit">Search jobs</button>
     </form>

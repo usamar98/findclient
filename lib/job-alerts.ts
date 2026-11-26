@@ -3,7 +3,8 @@ import { createHash } from 'node:crypto'
 import { z } from 'zod'
 import { admin } from './db/admin'
 import { loadDailyJobFeed } from './daily-jobs'
-import { paidSourceLabels, paidSources } from './paid-sources'
+import { dailyJobSources, researchSourceLabels } from './research-catalog'
+import { jobTimestamps } from './job-timestamps'
 import { missingDatabaseResource } from './db/missing-resource'
 import { sendTelegramText } from './send-telegram'
 
@@ -30,7 +31,7 @@ export async function queueTelegramJobAlerts() {
       user_id: watch.user_id,
       kind: 'telegram_job',
       event_key: 'telegram-job:' + watch.id + ':' + createHash('sha256').update(post.url).digest('hex'),
-      payload: { watch_id: watch.id, title: post.title, url: post.url, source: post.source, posted_at: post.posted_at,
+      payload: { watch_id: watch.id, title: post.title, url: post.url, source: post.source, posted_at: post.posted_at, first_found_at: post.first_found_at,
         engagement: post.engagement, compensation: post.compensation },
     }))
     if (!notices.length) continue
@@ -42,8 +43,9 @@ export async function queueTelegramJobAlerts() {
 }
 
 const alertJob = z.object({
-  watch_id: z.uuid(), title: z.string(), source: z.enum(paidSources),
+  watch_id: z.uuid(), title: z.string(), source: z.enum(dailyJobSources),
   url: z.url({ protocol: /^https$/ }), posted_at: z.iso.datetime({ offset: true }),
+  first_found_at: z.iso.datetime({ offset: true }).optional(),
   engagement: z.enum(['paid_freelance', 'contract_pay_unlisted']).optional(), compensation: z.string().optional(),
 })
 
@@ -52,12 +54,18 @@ export async function deliverTelegramJob(userId: string, chatId: string | null, 
   const job = alertJob.parse(payload)
   const age = Date.now() - Date.parse(job.posted_at)
   if (age < 0 || age > 86_400_000) return
-  const { data, error } = await admin().from('telegram_job_watches').select('id')
+  const db = admin()
+  const { data, error } = await db.from('telegram_job_watches').select('id')
     .eq('user_id', userId).eq('id', job.watch_id).eq('chat_id', chatId).maybeSingle()
   if (error) throw error
   if (!data) return
+  if (job.source === 'hn' || job.source === 'bluesky') {
+    const active = await db.from('shared_hiring_jobs').select('url')
+      .eq('source', job.source).eq('url', job.url).not('listing', 'is', null).limit(1).maybeSingle()
+    if (active.error) throw active.error
+    if (!active.data) return
+  }
   const title = job.title.replace(/[\p{Cc}\p{Cf}]+/gu, ' ').trim().slice(0, 250)
-  const when = new Date(job.posted_at).toISOString().slice(0, 16).replace('T', ' ')
   const pay = job.engagement === 'contract_pay_unlisted' ? 'Contract · Pay not listed' : job.compensation
-  await sendTelegramText(chatId, [title, paidSourceLabels[job.source] + ' · ' + when + ' UTC', pay, job.url].filter(Boolean).join('\n'))
+  await sendTelegramText(chatId, [title, researchSourceLabels[job.source], jobTimestamps(job.posted_at, job.first_found_at), pay, job.url].filter(Boolean).join('\n'))
 }

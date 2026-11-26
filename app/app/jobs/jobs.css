@@ -16,6 +16,7 @@
 .daily-job-list li { border-block-start: 1px solid var(--cf-line); padding: 1.15rem 0; overflow-wrap: anywhere; }
 .daily-job-list h3 { margin: .35rem 0; font-size: 1.22rem; }
 .daily-job-list h3 a { color: var(--cf-text); }
+.daily-job-times { display: flex; flex-wrap: wrap; gap: .2rem 1.25rem; color: var(--cf-muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
 .daily-job-list p { margin: .35rem 0 0; }
 .daily-job-pay { font-size: .9rem; font-weight: 600; }
 .daily-pagination { justify-content: center; margin: 1rem 0; }

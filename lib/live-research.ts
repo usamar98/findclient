@@ -21,10 +21,10 @@ export function researchInput(form: FormData) {
 export type ResearchStatus = 'checked' | 'unconfigured' | 'cooldown' | 'unavailable' | 'limit' | 'access'
 export type ResearchSource = {
   source: ResearchSourceId; status: ResearchStatus; count: number; requests: number; reviewed: number; indexed: boolean; partial?: boolean; durationMs?: number
-  checkedFeeds?: string[]; unavailableFeeds?: string[]
+  checkedFeeds?: string[]; unavailableFeeds?: string[]; lastCheckedAt?: string
 }
 export type ResearchPost = Pick<ResearchCandidate, 'source' | 'title' | 'url' | 'posted_at' | 'author'> &
-  { kind: 'hiring' | 'help' | 'topic'; excerpt: string; engagement?: JobListing['engagement']; compensation?: string }
+  { kind: 'hiring' | 'help' | 'topic'; excerpt: string; engagement?: JobListing['engagement']; compensation?: string; first_found_at?: string }
 export type ResearchResult = {
   query: string
   minutes: ResearchWindow
@@ -35,10 +35,28 @@ export type ResearchResult = {
 }
 export type ResearchState = { error?: string; result?: ResearchResult }
 
-export function researchSnapshot(query: string, minutes: ResearchWindow, responses: {
+export type SourceRead = {
   source: ResearchSourceId; status: ResearchStatus; indexed: boolean; posts: ResearchCandidate[]
-  checkedFeeds?: string[]; unavailableFeeds?: string[]; partial?: boolean; durationMs?: number; candidates?: CandidateTime[]
-}[], checkedAt = new Date()): ResearchResult {
+  checkedFeeds?: string[]; unavailableFeeds?: string[]; partial?: boolean; durationMs?: number; candidates?: CandidateTime[]; lastCheckedAt?: string
+}
+
+/** Keep the job record first when a post also appears in the live community search. */
+export function combineHiringReads(live: SourceRead, hiring: SourceRead): SourceRead {
+  const liveOk = live.status === 'checked'
+  const feedOk = hiring.status === 'checked'
+  const hasSaved = hiring.posts.length > 0
+  return {
+    ...live,
+    status: liveOk || feedOk || hasSaved ? 'checked' : live.status,
+    posts: [...hiring.posts, ...live.posts],
+    partial: Boolean(live.partial || hiring.partial || !liveOk || !feedOk),
+    checkedFeeds: [...(liveOk ? ['Community search'] : []), ...(feedOk ? ['Shared hiring feed'] : hasSaved ? ['Saved hiring posts'] : [])],
+    unavailableFeeds: [...(liveOk ? [] : ['Community search']), ...(feedOk ? [] : ['Shared hiring feed refresh'])],
+    lastCheckedAt: hiring.lastCheckedAt,
+  }
+}
+
+export function researchSnapshot(query: string, minutes: ResearchWindow, responses: SourceRead[], checkedAt = new Date()): ResearchResult {
   const end = checkedAt.getTime()
   const cutoff = end - Number(minutes) * 60_000
   function isFresh(candidate: CandidateTime) {
@@ -58,17 +76,17 @@ export function researchSnapshot(query: string, minutes: ResearchWindow, respons
     for (const post of response.posts) {
       if (response.status !== 'checked' || post.source !== response.source || post.posted_precision === 'day' ||
         !isFresh(post) || seen.has(post.url)) continue
-      seen.add(post.url)
       reviewed.add(post.url)
       const match = 'engagement' in post ? matchJobListing(plan, post, query === '') : matchResearchPost(plan, post)
       if (!match) continue
+      seen.add(post.url)
       count++
       if (match.kind !== 'topic') requests++
       posts.push({ source: post.source, title: post.title, url: post.url, author: post.author, posted_at: post.posted_at, ...match,
-        ...('engagement' in post && { engagement: post.engagement, compensation: post.compensation }) })
+        ...('engagement' in post && { engagement: post.engagement, compensation: post.compensation, first_found_at: post.first_found_at }) })
     }
     return { source: response.source, status: response.status, indexed: response.indexed, count, reviewed: reviewed.size, requests, partial: response.partial,
-      checkedFeeds: response.checkedFeeds, unavailableFeeds: response.unavailableFeeds, durationMs: response.durationMs }
+      checkedFeeds: response.checkedFeeds, unavailableFeeds: response.unavailableFeeds, durationMs: response.durationMs, lastCheckedAt: response.lastCheckedAt }
   })
   posts.sort((a, b) => Date.parse(b.posted_at) - Date.parse(a.posted_at) || a.url.localeCompare(b.url))
   return { query, minutes, checkedAt: checkedAt.toISOString(), sources: summaries, posts }

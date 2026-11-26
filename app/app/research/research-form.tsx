@@ -43,8 +43,12 @@ function PostCard({ post, checkedAt }: { post: ResearchPost; checkedAt: string }
       : <>{kind} · {board}</>}{post.author && <> · {post.author}</>}</p>
     <h3><a href={post.url} target="_blank" rel="noopener noreferrer">{post.title}<span aria-hidden="true"> ↗</span></a></h3>
     {post.engagement === 'paid_freelance' && post.compensation && <p className="research-pay">Listed pay · {post.compensation}</p>}
+    {post.engagement === 'contract_pay_unlisted' && <p className="research-pay">Contract · Pay not listed</p>}
     {post.excerpt && post.excerpt !== post.title && <blockquote>{post.excerpt}</blockquote>}
-    <time dateTime={post.posted_at}>{timestamp.format(new Date(post.posted_at))} UTC · {ageLabel} old when checked</time>
+    <time dateTime={post.posted_at}>Posted {timestamp.format(new Date(post.posted_at))} UTC · {ageLabel} old when checked</time>
+    {post.engagement && (post.first_found_at
+      ? <time dateTime={post.first_found_at}>First found {timestamp.format(new Date(post.first_found_at))} UTC</time>
+      : <small>First found time unavailable</small>)}
     {post.source === 'stackexchange' && <small><a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a></small>}
   </article>
 }
@@ -89,7 +93,7 @@ export function ResearchForm({ initialQuery, initialSources, initialWindow }: { 
         </label>)}</div>
       </fieldset>
       {paidOnly && <p id="paid-search-hint">Leave keywords empty to browse all paid freelance jobs in this time window.</p>}
-      <p>Post age uses the platform’s publication time. Feeds can take longer to show new listings. Live searches use no scoring credits.</p>
+      <p>Post age uses the platform’s publication time. First found shows when Lead To Client first recorded a job. Live searches use no scoring credits.</p>
       <div className="research-submit">
         <button disabled={!selected.length || pending} type="submit">{pending ? 'Checking platforms…' : 'Search posts'}</button>
         {pending && <RunningTimer />}
@@ -111,6 +115,7 @@ export function ResearchForm({ initialQuery, initialSources, initialWindow }: { 
           {source.partial && <> · Partial coverage</>}
           {!!source.checkedFeeds?.length && <> · Checked {source.checkedFeeds.join(', ')}</>}
           {!!source.unavailableFeeds?.length && <> · Unavailable: {source.unavailableFeeds.join(', ')}</>}
+          {source.lastCheckedAt && <small className="research-coverage-note">Hiring feed last checked <time dateTime={source.lastCheckedAt}>{timestamp.format(new Date(source.lastCheckedAt))} UTC</time></small>}
           {researchSourceNotes[source.source] && <small className="research-coverage-note">{researchSourceNotes[source.source]}</small>}
         </li>)}
         </ul>

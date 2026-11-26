@@ -3,30 +3,30 @@ import { researchSourceLabels, researchSources, type ResearchSourceId } from './
 export const platformGuideUpdated = '2026-11-26'
 
 export const platformGuideAnswer =
-  'Lead To Client searches 12 public sources in Live Research. Eight cover community conversations. For paid freelance work, choose We Work Remotely, Remote OK, GitHub paid bounties or Mastodon hiring posts. Each result links to the original post so you can check the request before replying.'
+  'Lead To Client searches 12 public sources in Live Research. The 24-hour Jobs feed covers freelance hiring posts from Hacker News, Bluesky and Mastodon, contracts from We Work Remotely and Remote OK, and paid GitHub bounties. Each result links to the original post so you can check the request before replying.'
 export const platformAccessAnswer =
   'Nine Live Research sources work without API keys. These are Hacker News, Bluesky, Stack Overflow, Shopify Community, selected public forums and all four paid-work sources. Direct Reddit and X searches require configured platform credentials. Reddit and X can also use the Exa search index, which Indie Hackers requires. Indexed posts may appear later than posts from a direct feed.'
 export const platformBrowseAnswer =
-  'Open Jobs in the workspace to browse the past 24 hours across all four paid-work sources. Add a skill to narrow the results. For a shorter window, select the individual sources in Live Research. Searches that include community sources need a keyword. Neither view uses scoring credits.'
+  'Open Jobs in the workspace to browse openings published in the past 24 hours across six sources. Add a skill to narrow the results. For a shorter window, select the individual sources in Live Research. Searches that include community sources need a keyword. A linked Telegram account can search the same jobs with /jobs or watch a skill with /watch. Jobs and Live Research use no scoring credits.'
 export const platformFreshnessAnswer =
   'Choose “Past 15 minutes” to see matching posts published in the 15 minutes ending at the search’s “Checked” time. A post exactly 15 minutes old qualifies. Lead To Client shows both times in UTC and requires a precise publication timestamp. If a listing reaches a feed after that window closes, try “Past hour” or “Past 24 hours”.'
 export const platformTimingNote =
   'The intervals below are Lead To Client’s cache settings. After an interval elapses, a search can refresh the saved response. A publisher may release a listing later, a search index may take time to pick it up, or a source may limit requests. The time from publication to discovery can therefore be longer.'
 export const platformRuntimeAnswer =
-  'The results show the time the search was checked, the total search runtime and the response time for each selected source. These durations measure how long the search took. Use the publication time on the result to see how old the post is.'
+  'Posted is the source’s publication time. First found is when Lead To Client first recorded the job. The first discovery time stays the same on later searches. Live Research also shows when the search ran and how long each platform check took.'
 export const platformWatchAnswer =
   'To enable the 1-minute recheck, choose “Past minute” or “Past 15 minutes” and select only sources that work without API keys. Run the search. Once at least one source completes its check, turn on “Check again every minute while this tab is visible”. The next check can start 60 seconds after the previous one finishes. A hidden tab skips checks, and changing the search settings turns the recheck off.'
 
 type SourceDescription = { detail: string; freshness: string; reference: string; url: string }
 const descriptions: Record<ResearchSourceId, SourceDescription> = {
   hn: {
-    detail: 'Searches public Hacker News stories, job posts and comments. In short windows it can check recent items directly, including a new comment on an older thread.',
+    detail: 'Searches public stories, job posts and comments. Qualifying freelance hiring requests, including employer comments on Who is hiring? threads, also appear in 24-hour Jobs and Telegram. A comment uses its own publication time.',
     freshness: 'Age starts when the story, job or comment was created. For short windows the app samples the newest items with a 10-second cache and also checks Algolia search with a 20-second cache. The index can lag.',
     reference: 'Hacker News API',
     url: 'https://github.com/HackerNews/API',
   },
   bluesky: {
-    detail: 'Looks for recent public posts that match your service or hiring terms, using Bluesky’s latest-post search.',
+    detail: 'Searches recent public posts that match your service. The shared hiring feed also checks for explicit requests for freelance work and makes qualifying posts searchable in 24-hour Jobs and Telegram.',
     freshness: 'Age uses the post’s creation time. The app searches newest first with a 20-second cache. A post can appear once Bluesky’s public search indexes it.',
     reference: 'Bluesky post search',
     url: 'https://docs.bsky.app/docs/api/app-bsky-feed-search-posts',

@@ -79,11 +79,12 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
         <section id="live-research">
           <h2>How do I find paid freelance jobs posted today?</h2>
           <p>
-            Open <Link href="/app/jobs">24-hour jobs</Link> to browse We Work
-            Remotely, Remote OK, GitHub paid bounties and Mastodon hiring posts.
+            Open <Link href="/app/jobs">24-hour jobs</Link> for hiring posts on
+            Hacker News, Bluesky and Mastodon, contracts from We Work Remotely and
+            Remote OK, and paid GitHub bounties.
             Enter a skill to narrow the results. For the past minute, 15 minutes
             or hour, select the sources individually in Live Research. Each
-            result links to the post and shows when the source published it.
+            job links to its original post and shows when it was published and first found.
           </p>
           <p>
             A short window can be empty while a feed catches up or when nobody

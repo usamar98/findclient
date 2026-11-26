@@ -128,6 +128,23 @@ export type TelegramJobWatch = {
   started_at: string
   next_check_at: string
 }
+type HiringSource = 'hn' | 'bluesky'
+type HiringStatus = 'checked' | 'cooldown' | 'access' | 'unavailable'
+export type HiringListing = {
+  title: string; body: string; author: string; tags?: string[]
+  engagement: 'paid_freelance' | 'contract_pay_unlisted'; compensation?: string
+}
+export type HiringObservation = {
+  source: string; source_key: string; url: string; posted_at: string; listing?: HiringListing
+}
+type HiringJobRow = {
+  source: string; source_key: string; url: string; posted_at: string
+  first_found_at: string; listing: HiringListing | null
+}
+type HiringSourceState = {
+  source: HiringSource; status: HiringStatus; partial: boolean; last_checked_at: string | null
+  last_success_at: string | null; next_check_at: string; lease_id: string | null; lease_until: string | null
+}
 export type ScanJob = {
   id: string
   niche_id: string
@@ -246,6 +263,8 @@ export type Database = {
         'source' | 'retry_at'
       >
       notifications: Table<Notice, 'user_id' | 'kind' | 'event_key'>
+      shared_hiring_jobs: Table<HiringJobRow, 'source' | 'source_key' | 'url' | 'posted_at'>
+      shared_hiring_sources: Table<HiringSourceState, 'source'>
       telegram_job_watches: Table<TelegramJobWatch, 'user_id' | 'chat_id' | 'query'>
       telegram_codes: Table<
         { code: string; user_id: string; expires_at: string },
@@ -370,6 +389,13 @@ export type Database = {
         defer_source: Rpc<{ p_source: string; p_until: string }, undefined>
         refill_credits: Rpc<NoArgs, undefined>
         link_telegram: Rpc<{ p_code: string; p_chat: string }, boolean>
+        record_job_discoveries: Rpc<{ p_jobs: HiringObservation[] },
+          { source: string; url: string; first_found_at: string }[]>
+        claim_shared_hiring_sources: Rpc<{ p_sources: HiringSource[] }, { source: HiringSource; lease_id: string }[]>
+        complete_shared_hiring_source: Rpc<{
+          p_source: HiringSource; p_lease: string; p_status: HiringStatus; p_partial: boolean
+          p_retry_at: string | null; p_jobs: HiringObservation[]; p_withdrawn?: string[]
+        }, boolean>
         set_telegram_job_watch: Rpc<{ p_user: string; p_chat: string; p_query: string | null }, undefined>
         claim_telegram_job_watches: Rpc<{ p_limit: number }, TelegramJobWatch[]>
         queue_digests: Rpc<NoArgs, undefined>

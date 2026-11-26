@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { researchSources } from '@/lib/live-research'
+import { keylessSources, researchSources } from '@/lib/live-research'
 import { ResearchForm } from './research-form'
 import './research.css'
 
@@ -12,7 +12,7 @@ export default async function Research({ searchParams }: { searchParams: Promise
   const selected = researchSources.filter(id => requested.includes(id))
   return <div className="live-research">
     <div className="work-title-row"><h1>Live research</h1><Link href="/app/inbox">Lead inbox</Link></div>
-    <p>Search recent public posts by their original publication time. Open a post to read the conversation before reaching out.</p>
-    <ResearchForm initialQuery={typeof q === 'string' ? q.slice(0, 100) : ''} initialSources={selected.length ? selected : researchSources} />
+    <p>Find people asking for your service in public posts. Each result links to the author’s original request or discussion.</p>
+    <ResearchForm initialQuery={typeof q === 'string' ? q.slice(0, 100) : ''} initialSources={selected.length ? selected : keylessSources} />
   </div>
 }

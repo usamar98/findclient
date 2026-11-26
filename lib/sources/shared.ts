@@ -9,6 +9,8 @@ export type NormalizedPost = {
   author: string
   body: string
   posted_at: string
+  /** Tags supplied by the source for this post, when available. */
+  tags?: string[]
   /** An indexed publication date without a reliable time of day. */
   posted_precision?: 'day'
 }

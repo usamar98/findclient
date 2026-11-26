@@ -34,6 +34,26 @@ test('research keeps precise publication times inside the window at response tim
   assert.equal(result.sources[1].status, 'unavailable')
 })
 
+test('a short Shopify search counts the fresh posts it reviewed and distinguishes hiring, help and general discussion', () => {
+  const checkedAt = new Date('2026-11-26T03:51:30Z')
+  function candidate(id: number, title: string, postedAt: string): NormalizedPost {
+    return { source: 'shopify', title, body: '', author: 'merchant', url: `https://community.shopify.com/t/store/${id}`, posted_at: postedAt }
+  }
+  const hiring = candidate(1, 'Looking for a Shopify developer to redesign our storefront', '2026-11-26T03:51:00Z')
+  const help = candidate(2, 'How can I fix our checkout after changing the theme?', '2026-11-26T03:36:30Z')
+  const discussion = candidate(3, 'My notes from the Shopify developer conference', '2026-11-26T03:45:20Z')
+  const unrelated = candidate(4, 'Weekend reading list', '2026-11-26T03:47:20Z')
+  const posts = [help, hiring, hiring, discussion, unrelated,
+    { ...help, url: help.url + '/2', posted_at: '2026-11-26T03:36:29Z' },
+    { ...hiring, url: hiring.url + '/2', posted_precision: 'day' as const }]
+  const inputs = [{ source: 'shopify' as const, indexed: false, status: 'checked' as const, partial: true, posts }]
+  const result = researchSnapshot('Shopify Developer', '15', inputs, checkedAt)
+  assert.deepEqual(result.posts.map(post => [post.kind, post.url]), [['hiring', hiring.url], ['topic', discussion.url], ['help', help.url]])
+  assert.deepEqual(result.sources.map(source => [source.reviewed, source.count, source.requests, source.partial]), [[4, 3, 2, true]])
+  assert.equal(result.posts[2].excerpt, help.title)
+  assert.deepEqual(researchSnapshot('Shopify Developer', '1', inputs, checkedAt).posts.map(post => post.posted_at), [hiring.posted_at])
+})
+
 test('official social searches retain author and source ID with the original publication timestamp', async t => {
   const since = new Date('2025-08-01T12:00:00Z')
   const published = '2025-08-01T12:00:32Z'

@@ -1,4 +1,5 @@
 import { closedRequest } from './lead-intelligence'
+import type { PaidProjectPost } from './research-catalog'
 import type { NormalizedPost } from './sources/shared'
 
 type Candidate = Pick<NormalizedPost, 'source' | 'url' | 'title' | 'body'> & { tags?: readonly string[] }
@@ -118,6 +119,21 @@ function literalTerms(text: string, plan: Plan) {
   const sequence = ' ' + tokens.join(' ') + ' '
   return plan.terms.length > 0 && plan.terms.every(term => available.has(term)) &&
     plan.phrases.every(phrase => sequence.includes(' ' + phrase + ' '))
+}
+
+/** Job adapters verify engagement and pay. Only the user's service still needs matching. */
+export function matchPaidProject(plan: Plan, post: PaidProjectPost, browseAll: boolean): ResearchMatch | null {
+  if (browseAll) return { kind: 'hiring', excerpt: post.title }
+  if (!plan.terms.length) return null
+  const titleAndTags = plainEvidence([post.title, ...(post.tags ?? [])].join(' '))
+  const matches = (text: string) => literalTerms(text, plan) ||
+    Boolean(plan.service?.subject.test(text) && plan.service.work.test(text))
+  if (matches(titleAndTags)) return { kind: 'hiring', excerpt: post.title }
+  for (let offset = 0; offset < post.body.length; offset += 200) {
+    const passage = post.body.slice(offset, offset + 260)
+    if (matches(titleAndTags + ' ' + plainEvidence(passage))) return { kind: 'hiring', excerpt: passage.trim() }
+  }
+  return null
 }
 
 /** Match the request against a nearby passage, keeping exact source text as evidence. */

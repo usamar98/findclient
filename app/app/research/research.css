@@ -10,8 +10,14 @@
 .workspace .research-platforms input { width: 1rem; margin: 0; }
 .research-platforms label:has(:checked) { background: var(--cf-wash); }
 .research-form button { justify-self: start; }
+.research-submit { display: flex; align-items: center; flex-wrap: wrap; gap: .8rem; }
+.research-runtime { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.research-submit .research-runtime { font-size: .87rem; color: var(--cf-muted); }
+.research-paid { color: var(--cf-text); }
+.research-post .research-pay { margin: .5rem 0; color: var(--cf-text); }
 .research-form p, .research-sources, .research-post time { font-size: .87rem; color: var(--cf-muted); }
 .research-sources { padding-inline-start: 1.25rem; margin-block: 1rem; }
+.research-coverage-note { display: block; margin: .15rem 0 .45rem; font-size: inherit; }
 .research-presets { display: flex; flex-wrap: wrap; gap: .4rem 1rem; margin-top: .5rem; }
 .workspace .research-presets button { padding: .35rem 0; background: transparent; color: var(--cf-text); text-decoration: underline; border: 0; font: inherit; font-size: .85rem; }
 .workspace .research-watch { display: inline-flex; width: fit-content; align-items: center; gap: .5rem; margin: .2rem 0 .8rem; }

@@ -106,6 +106,26 @@ export function respectStackQuota(data: {
     ),
   )
 }
+export async function bodyText(response: Response, byteLimit: number) {
+  const reader = response.body?.getReader()
+  if (!reader) throw new Error('Empty feed response.')
+  const decoder = new TextDecoder()
+  let size = 0
+  let text = ''
+  try {
+    while (true) {
+      const chunk = await reader.read()
+      if (chunk.done) return text + decoder.decode()
+      size += chunk.value.byteLength
+      if (size > byteLimit) {
+        await reader.cancel()
+        throw new Error('Feed response exceeds the size limit.')
+      }
+      text += decoder.decode(chunk.value, { stream: true })
+    }
+  } finally { reader.releaseLock() }
+}
+
 export async function remote(url: string | URL, options: RequestInit = {}) {
   const response = await fetch(url, {
     redirect: 'error',

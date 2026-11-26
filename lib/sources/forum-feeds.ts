@@ -2,7 +2,7 @@ import robotsParser from 'robots-parser'
 import { XMLParser } from 'fast-xml-parser'
 import { Parser } from 'htmlparser2'
 import { z } from 'zod'
-import { cleanPosts, ProviderBackoff, remote, type Adapter, type NormalizedPost } from './shared'
+import { bodyText, cleanPosts, ProviderBackoff, remote, type Adapter, type NormalizedPost } from './shared'
 
 type PublishedFeed = {
   url: string
@@ -39,26 +39,6 @@ const xmlParser = new XMLParser({
   processEntities: false,
   isArray: (_name, path) => path === 'rss.channel.item',
 })
-
-async function bodyText(response: Response, byteLimit: number) {
-  const reader = response.body?.getReader()
-  if (!reader) throw new Error('Empty feed response.')
-  const decoder = new TextDecoder()
-  let size = 0
-  let text = ''
-  try {
-    while (true) {
-      const chunk = await reader.read()
-      if (chunk.done) return text + decoder.decode()
-      size += chunk.value.byteLength
-      if (size > byteLimit) {
-        await reader.cancel()
-        throw new Error('Feed response exceeds the size limit.')
-      }
-      text += decoder.decode(chunk.value, { stream: true })
-    }
-  } finally { reader.releaseLock() }
-}
 
 const headers = { 'User-Agent': 'LeadToClient/1.0 (community RSS reader)' }
 const agents = ['LeadToClient', 'Clientfind']

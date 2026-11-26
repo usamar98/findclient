@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { researchInput, researchSnapshot } from '../lib/live-research'
 import { redditRecent, xRecent } from '../lib/sources/research-social'
+import { keylessSources, paidSources, type PaidProjectPost } from '../lib/research-catalog'
 import type { NormalizedPost } from '../lib/sources/shared'
 
 test('research validates every platform and preserves a one-minute time window', () => {
@@ -32,6 +33,38 @@ test('research keeps precise publication times inside the window at response tim
   assert.deepEqual(result.posts.map(p => p.url), [posts[1].url, posts[0].url])
   assert.equal(result.sources[0].count, 2)
   assert.equal(result.sources[1].status, 'unavailable')
+})
+
+test('browsing all openings accepts an empty query only for verified paid sources', () => {
+  const form = new FormData()
+  form.set('window', '1')
+  form.set('q', ' ')
+  for (const source of paidSources) form.append('source', source)
+  assert.ok(paidSources.every(source => keylessSources.includes(source)))
+  assert.deepEqual(researchInput(form), { q: '', minutes: '1', sources: paidSources })
+  form.set('q', 'x')
+  assert.equal(researchInput(form), null)
+  form.set('q', '')
+  form.append('source', 'bluesky')
+  assert.equal(researchInput(form), null)
+})
+
+test('paid listings preserve price, service relevance, per-source runtime and exact publication window', () => {
+  const now = new Date('2026-11-26T06:00:00Z')
+  const post: PaidProjectPost = { source: 'weworkremotely', title: 'Contract WordPress developer', body: 'Build a storefront.',
+    author: 'Client', url: 'https://weworkremotely.com/remote-jobs/a', engagement: 'paid_freelance',
+    compensation: '$50/hour', posted_at: '2026-11-26T05:59:00Z' }
+  const unrelated = { ...post, title: 'Freelance illustrator', url: post.url + 'b', posted_at: '2026-11-26T05:59:50Z' }
+  const expired = { ...post, url: post.url + 'c', posted_at: '2026-11-26T05:58:59Z' }
+  const salaryUndisclosed = { url: post.url + 'd', posted_at: '2026-11-26T05:59:15Z' }
+  const source = [{ source: post.source, status: 'checked' as const, indexed: false, durationMs: 82,
+    posts: [post, unrelated, expired], candidates: [post, expired, salaryUndisclosed, salaryUndisclosed] }]
+  const result = researchSnapshot('WordPress developer', '1', source, now)
+  assert.deepEqual(result.posts.map(p => [p.url, p.kind, p.engagement, p.compensation]), [[post.url, 'hiring', 'paid_freelance', '$50/hour']])
+  assert.equal(result.sources[0].durationMs, 82)
+  assert.equal(result.sources[0].reviewed, 3)
+  assert.deepEqual(researchSnapshot('', '1', source, now).posts.map(p => p.url), [unrelated.url, post.url])
+  assert.equal(researchSnapshot('WordPress developer London', '1', source, now).posts.length, 0)
 })
 
 test('a short Shopify search counts the fresh posts it reviewed and distinguishes hiring, help and general discussion', () => {

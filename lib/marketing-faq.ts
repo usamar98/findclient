@@ -1,5 +1,6 @@
 import { coverageIntro, freshnessAnswer } from './marketing-coverage'
 import { lifetimeLastDay } from './offers'
+import { platformFreshnessAnswer, platformGuideRows, platformTimingNote, platformWatchAnswer } from './platform-guide'
 
 const entries = [
   [
@@ -127,17 +128,28 @@ const entries = [
     'Where can I look for paid freelance work without entering a keyword?',
     'Choose Paid freelance jobs in Live Research and leave Keywords blank. We Work Remotely and Remote OK show contract listings with evidence of pay. GitHub results are open, unassigned issues where a maintainer offers a cash bounty. Mastodon results are original paid hiring posts from selected tags visible on mastodon.social. Open the listing to confirm the work is still available and check its terms.',
   ],
-  [
-    'Can I find a freelance request posted in the last minute or 15 minutes?',
-    'Yes, when a selected platform exposes a matching request with a precise publication time in that window. Live Research also offers the past hour and past 24 hours. Post age uses the platform’s publication timestamp. Feed delays, indexing and posting volume can leave a short window empty. The report shows when the search ran, how long each source took and which sources responded.',
-  ],
-  [
-    'Can Live Research check again automatically?',
-    'After a 1-minute or 15-minute search using only sources that require no API key, enable the one-minute recheck if at least one source responded. It reruns the search while the tab is visible. Changing the search settings turns it off. Use a saved community search for scheduled checks and inbox alerts.',
-  ],
 ]
 
-export const marketingFaq = entries.map(([question, answer]) => ({
+export const productFaq = entries.map(([question, answer]) => ({
   question,
   answer,
 }))
+
+export const liveResearchTimingFaq = [
+  {
+    question: 'How does the 15-minute filter find fresh freelance leads?',
+    answer: platformFreshnessAnswer,
+  },
+  {
+    question: 'How do I enable the 1-minute recheck in Live Research?',
+    answer: platformWatchAnswer,
+  },
+  {
+    question: 'How fresh are freelance leads from each source?',
+    answer: [platformTimingNote, ...platformGuideRows.map(row => row.name + '. ' + row.freshness)].join(' '),
+    introduction: platformTimingNote,
+    sources: platformGuideRows,
+  },
+]
+
+export const marketingFaq = [...productFaq, ...liveResearchTimingFaq]

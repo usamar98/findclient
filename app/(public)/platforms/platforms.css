@@ -28,3 +28,13 @@
 
 .platform-directory li h3 { margin: .2rem 0 .5rem; }
 .platform-directory li a { font-size: .9rem; }
+
+.platform-freshness-table th,
+.platform-freshness-table td {
+  border-bottom: 1px solid var(--cf-line);
+  padding: .8rem .5rem;
+  vertical-align: top;
+}
+
+.platform-freshness-table th:first-child { width: 26%; padding-left: 0; }
+.platform-freshness-table td { line-height: 1.55; }

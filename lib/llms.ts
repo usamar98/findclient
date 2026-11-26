@@ -33,6 +33,11 @@ export function llmsDocument(full: boolean) {
       platformGuideRows.map((row) => row.name).join(', ') + '.',
     ),
     link(
+      '/platforms#source-freshness',
+      'How fresh are freelance leads on each platform?',
+      'Source timestamps, feed delays, the 15-minute filter and the optional one-minute recheck.',
+    ),
+    link(
       '/how-it-works',
       'How Lead To Client works',
       'From a public request to a shared inbox, proposal and recorded deal.',

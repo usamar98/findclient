@@ -9,71 +9,85 @@ export const platformAccessAnswer =
 export const platformBrowseAnswer =
   'Choose the paid freelance jobs preset and leave Keywords empty to browse across all four paid-work sources. Add a skill to narrow the results. Searches that include community sources need a keyword. Live Research uses no scoring credits.'
 export const platformFreshnessAnswer =
-  'Live Research offers windows of one minute, 15 minutes, one hour and 24 hours. It checks the publication time supplied by the source and requires a precise timestamp. Feed updates, indexing delays and the number of people posting affect each result. A short window can return zero matches.'
+  'Choose “Past 15 minutes” to see matching posts published in the 15 minutes ending at the search’s “Checked” time. A post exactly 15 minutes old qualifies. Lead To Client shows both times in UTC and requires a precise publication timestamp. If a listing reaches a feed after that window closes, try “Past hour” or “Past 24 hours”.'
+export const platformTimingNote =
+  'The intervals below are Lead To Client’s cache settings. After an interval elapses, a search can refresh the saved response. A publisher may release a listing later, a search index may take time to pick it up, or a source may limit requests. The time from publication to discovery can therefore be longer.'
 export const platformRuntimeAnswer =
   'The results show the time the search was checked, the total search runtime and the response time for each selected source. These durations measure how long the search took. Use the publication time on the result to see how old the post is.'
 export const platformWatchAnswer =
-  'After at least one selected source responds, a one-minute or 15-minute Live Research window using only keyless sources can recheck every minute while the tab is visible. Saved searches run separately and can send scored community leads to your inbox. The four paid-work sources are available through Live Research.'
+  'To enable the 1-minute recheck, choose “Past minute” or “Past 15 minutes” and select only sources that work without API keys. Run the search. Once at least one source completes its check, turn on “Check again every minute while this tab is visible”. The next check can start 60 seconds after the previous one finishes. A hidden tab skips checks, and changing the search settings turns the recheck off.'
 
-type SourceDescription = { detail: string; reference: string; url: string }
+type SourceDescription = { detail: string; freshness: string; reference: string; url: string }
 const descriptions: Record<ResearchSourceId, SourceDescription> = {
   hn: {
     detail: 'Searches public Hacker News stories, job posts and comments. In short windows it can check recent items directly, including a new comment on an older thread.',
+    freshness: 'Age starts when the story, job or comment was created. For short windows the app samples the newest items with a 10-second cache and also checks Algolia search with a 20-second cache. The index can lag.',
     reference: 'Hacker News API',
     url: 'https://github.com/HackerNews/API',
   },
   bluesky: {
     detail: 'Looks for recent public posts that match your service or hiring terms, using Bluesky’s latest-post search.',
+    freshness: 'Age uses the post’s creation time. The app searches newest first with a 20-second cache. A post can appear once Bluesky’s public search indexes it.',
     reference: 'Bluesky post search',
     url: 'https://docs.bsky.app/docs/api/app-bsky-feed-search-posts',
   },
   stackexchange: {
     detail: 'Finds open Stack Overflow questions by their creation time. Read the question to see whether the author wants technical advice or paid help.',
+    freshness: 'Age starts when the question was asked. Short searches check the newest questions with a 60-second cache. Stack Exchange can require a longer pause when it limits requests.',
     reference: 'Stack Exchange questions API',
     url: 'https://api.stackexchange.com/docs/questions',
   },
   shopify: {
     detail: 'Checks merchant and developer community feeds for topics and replies. A new reply can qualify on its own publication time and link directly to that reply.',
+    freshness: 'Age uses the RSS publication time of the topic or individual reply. Each community feed has a cache interval of at least 60 seconds. A longer delay requested by the publisher takes precedence.',
     reference: 'Shopify Community posts feed',
     url: 'https://community.shopify.com/posts.rss',
   },
   reddit: {
     detail: 'Finds recent public Reddit threads through configured Reddit access or the Exa index. Open the subreddit thread to read the original request and its community rules.',
+    freshness: 'With direct access, each search requests the newest matching threads without caching the response and uses Reddit’s thread creation time. With Exa, visibility depends on indexing and a precise publication time. Neither route has a verified delivery interval.',
     reference: 'Reddit search API',
     url: 'https://www.reddit.com/dev/api/#GET_search',
   },
   indiehackers: {
     detail: 'Searches public Indie Hackers discussions through Exa. A discussion must reach the index and have a precise publication time to appear in a short-window search.',
+    freshness: 'Age uses the publication time reported by Exa. The index has no verified delay for new Indie Hackers posts. A result with only a calendar date is excluded.',
     reference: 'Exa search documentation',
     url: 'https://docs.exa.ai/reference/search',
   },
   x: {
     detail: 'Searches recent public posts through configured X API access or the Exa index. Direct results use the post’s creation time.',
+    freshness: 'With direct access, each search requests recent posts without caching the response and uses X’s post creation time. With Exa, posts appear after indexing if they have a precise publication time. Neither route has a verified delivery interval.',
     reference: 'X post search',
     url: 'https://docs.x.com/x-api/posts/search/introduction',
   },
   forums: {
     detail: 'Checks selected Bubble, WordPress support and Webflow forums for requests. Results link to the original discussion or reply.',
+    freshness: 'Age uses the publication time of the individual feed entry. Bubble, WordPress and Webflow feeds each have a cache interval of at least 60 seconds, subject to their crawl delays. WordPress thread activity is checked against dated posts or replies.',
     reference: 'WordPress support forums feed',
     url: 'https://wordpress.org/support/forums/feed/',
   },
   weworkremotely: {
-    detail: 'Looks for freelance and contract listings with evidence of pay. We Work Remotely specifies an hourly feed refresh, so a new listing can miss a 15-minute search.',
+    detail: 'Looks for freelance and contract listings with evidence of pay in the public jobs feed.',
+    freshness: 'Age uses the RSS listing’s publication time. The feed asks readers to cache it for 60 minutes, and the app uses that interval. A listing can be older than 15 minutes when it first appears in a search.',
     reference: 'We Work Remotely job feed',
     url: 'https://weworkremotely.com/remote-jobs.rss',
   },
   remoteok: {
-    detail: 'Looks for freelance and contract listings with evidence of pay in the listing text or salary data. Age uses the board’s listing date. Employers can renew a listing.',
+    detail: 'Looks for freelance and contract listings with evidence of pay in the listing text or salary data.',
+    freshness: 'The app uses a 60-second cache for the public jobs feed. Age uses the board’s listing timestamp. Employers can renew listings, so the role itself may be older.',
     reference: 'Remote OK listing FAQ',
     url: 'https://remoteok.com/faq',
   },
   github: {
-    detail: 'Looks for open, unassigned issues where a repository owner, member or collaborator offers a specific cash amount for a deliverable. Age is measured from issue creation.',
+    detail: 'Looks for open, unassigned issues where a repository owner, member or collaborator offers a specific cash amount for a deliverable.',
+    freshness: 'Age starts when the issue was opened. New comments or edits keep the original timestamp. The app uses a 60-second cache for issue search, and GitHub’s search index can lag.',
     reference: 'GitHub issue search',
     url: 'https://docs.github.com/en/rest/search/search#search-issues-and-pull-requests',
   },
   mastodon: {
     detail: 'Looks for original public posts from people offering paid freelance work in selected hiring tags visible on mastodon.social. Coverage includes accounts that allow indexing.',
+    freshness: 'Age starts when the original status was published. The app uses a 30-second cache for hiring-tag timelines on mastodon.social. Posts from another server must reach that timeline before a search can find them.',
     reference: 'Mastodon hashtag timelines',
     url: 'https://docs.joinmastodon.org/methods/timelines/#tag',
   },

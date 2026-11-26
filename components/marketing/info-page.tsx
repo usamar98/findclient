@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { infoPages, type InfoSlug } from '@/lib/marketing-pages'
 import { absolute, buildMetadata } from '@/lib/seo'
 import { brandProfiles, organization } from '@/lib/brand'
-import { marketingFaq } from '@/lib/marketing-faq'
+import { liveResearchTimingFaq, marketingFaq, productFaq } from '@/lib/marketing-faq'
 import {
   buyerQualityExample,
   buyerQualityMethod,
@@ -25,7 +25,7 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
   const updated = staticPageUpdated(path)
   const items =
     slug === 'faq'
-      ? marketingFaq
+      ? productFaq
       : slug === 'how-it-works'
         ? [marketingFaq[8], marketingFaq[12]]
         : []
@@ -167,6 +167,27 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
           )}
         </section>
       )}
+      {slug === 'faq' && (
+        <section id="source-freshness" aria-labelledby="fresh-leads-heading">
+          <h2 id="fresh-leads-heading">Finding fresh freelance leads</h2>
+          {liveResearchTimingFaq.map(({ question, answer, introduction, sources }) => (
+            <details key={question}>
+              <summary>{question}</summary>
+              {sources ? (
+                <>
+                  <p>{introduction}</p>
+                  <ul>
+                    {sources.map(row => (
+                      <li key={row.id}><strong>{row.name}.</strong> {row.freshness}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : <p>{answer}</p>}
+            </details>
+          ))}
+          <p><Link href="/platforms#source-freshness">Compare source timing and see the publisher references</Link></p>
+        </section>
+      )}
       {items.length > 0 && <FAQ items={items} />}
       <div className="mk-answer-links">
         {['faq', 'how-it-works', 'about', 'changelog'].includes(slug) && (
@@ -209,7 +230,7 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
             about: { '@id': absolute('/#app') },
           }),
           ...(slug === 'faq' && {
-            mainEntity: items.map(({ question, answer }) => ({
+            mainEntity: marketingFaq.map(({ question, answer }) => ({
               '@type': 'Question',
               name: question,
               acceptedAnswer: { '@type': 'Answer', text: answer },

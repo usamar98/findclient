@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Breadcrumbs, JsonLd, QuickAnswer } from '@/components/marketing/seo'
 import {
   platformAccessAnswer, platformBrowseAnswer, platformFreshnessAnswer, platformGuideAnswer,
-  platformGuideRows, platformGuideUpdated, platformRuntimeAnswer, platformWatchAnswer,
+  platformGuideRows, platformGuideUpdated, platformRuntimeAnswer, platformTimingNote, platformWatchAnswer,
 } from '@/lib/platform-guide'
 import { isPaidSource } from '@/lib/paid-sources'
 import { absolute, buildMetadata } from '@/lib/seo'
@@ -11,8 +11,8 @@ import './platforms.css'
 
 const path = '/platforms'
 const markdown = '/guides/platforms.md'
-const title = 'Freelance lead sources and paid job platforms | Lead To Client'
-const description = 'Compare 12 freelance lead sources, from Reddit and Shopify Community to contract job boards, GitHub bounties and Mastodon hiring posts. See what each search covers.'
+const title = 'Fresh freelance leads by platform: post age and rechecks | Lead To Client'
+const description = 'Compare freshness across 12 freelance lead sources. See how the 15-minute post filter and optional 1-minute recheck work for job boards, bounties and communities.'
 const baseMetadata = buildMetadata({ path, title, description })
 export const metadata: Metadata = {
   ...baseMetadata,
@@ -40,14 +40,42 @@ function SourceList({ rows }: { rows: typeof platformGuideRows }) {
 export default function Platforms() {
   return <main className="mk-article">
     <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'Platforms', href: path }]} />
-    <h1>Where to find freelance leads and paid projects</h1>
+    <h1>Where to find fresh freelance leads and paid projects</h1>
     <QuickAnswer>{platformGuideAnswer}</QuickAnswer>
     <p className="mk-meta">Updated <time dateTime={platformGuideUpdated}>{updatedLabel}</time> · <a href={markdown}>Markdown edition</a></p>
     <nav aria-label="Platform guide sections" className="platform-jump-links">
+      <a href="#freshness">15-minute filter</a>
+      <a href="#one-minute-recheck">1-minute recheck</a>
+      <a href="#source-freshness">Freshness by source</a>
       <a href="#paid-freelance-jobs">Paid freelance jobs</a>
       <a href="#community-sources">Community sources</a>
-      <a href="#freshness">Post age and search timing</a>
     </nav>
+    <section aria-labelledby="freshness">
+      <h2 id="freshness">What does the 15-minute filter show?</h2>
+      <p>{platformFreshnessAnswer}</p>
+      <p>For a check at 10:20 UTC, a post published at 10:13 is seven minutes old. A post published at 10:04 is already outside that window, even if it first appeared in the feed at 10:19.</p>
+      <p>Choose <strong>Paid freelance jobs</strong> to look for paid work. Community results can also include people asking for advice.</p>
+    </section>
+    <section aria-labelledby="one-minute-recheck">
+      <h2 id="one-minute-recheck">When does the 1-minute recheck run?</h2>
+      <p>{platformWatchAnswer}</p>
+      <p>The paid freelance jobs preset is eligible. Selecting Reddit, X or Indie Hackers makes rechecks manual. For ongoing inbox alerts, <Link href="/how-it-works#source-coverage">see the separate saved search schedule</Link>.</p>
+    </section>
+    <section aria-labelledby="source-freshness">
+      <h2 id="source-freshness">How fresh is each freelance lead source?</h2>
+      <p>{platformTimingNote}</p>
+      <table className="platform-freshness-table" aria-labelledby="source-freshness">
+        <thead><tr><th scope="col">Source</th><th scope="col">How we check it and measure post age</th></tr></thead>
+        <tbody>{directory.map(row => (
+          <tr key={row.id}>
+            <th scope="row"><a href={'#' + row.id}>{row.name}</a></th>
+            <td>{row.freshness}</td>
+          </tr>
+        ))}</tbody>
+      </table>
+      <h3>How can I verify the age of an individual lead?</h3>
+      <p>{platformRuntimeAnswer} Open <strong>Platform coverage</strong> to see which sources responded. Follow a result’s original link to confirm its timestamp and whether the work is still available.</p>
+    </section>
     <section aria-labelledby="paid-freelance-jobs">
       <h2 id="paid-freelance-jobs">Which platforms list paid freelance work?</h2>
       <p>{platformBrowseAnswer}</p>
@@ -63,27 +91,17 @@ export default function Platforms() {
       <h2>Which sources work without an API key?</h2>
       <p>{platformAccessAnswer}</p>
     </section>
-    <section aria-labelledby="freshness">
-      <h2 id="freshness">Can I find a post from the last 15 minutes?</h2>
-      <p>{platformFreshnessAnswer}</p>
-      <p>For example, at 10:10 UTC a post published at 10:04 UTC is six minutes old. It qualifies for the 15-minute window if the source has made it available and it matches your search.</p>
-      <h3>How do I read the search runtime?</h3>
-      <p>{platformRuntimeAnswer}</p>
-    </section>
-    <section>
-      <h2>Which searches can run automatically?</h2>
-      <p>{platformWatchAnswer}</p>
-      <p><Link href="/how-it-works">How saved searches and alerts work</Link> · <Link href="/faq">More questions about finding leads</Link></p>
-    </section>
+    <p><Link href="/faq#source-freshness">Read the fresh lead search FAQ</Link></p>
     <JsonLd data={{
       '@context': 'https://schema.org', '@type': 'CollectionPage', '@id': absolute(path + '#page'),
-      url: absolute(path), name: 'Freelance lead sources and paid job platforms', description,
+      url: absolute(path), name: 'Where to find fresh freelance leads and paid projects', description,
       inLanguage: 'en', dateModified: platformGuideUpdated, isPartOf: { '@id': absolute('/#website') },
       about: { '@id': absolute('/#app') }, publisher: { '@id': absolute('/#organization') },
       mainEntity: {
         '@type': 'ItemList', name: 'Lead To Client Live Research sources', numberOfItems: directory.length,
         itemListElement: directory.map((row, index) => ({
           '@type': 'ListItem', position: index + 1, name: row.name, url: absolute(path + '#' + row.id),
+          description: row.freshness,
         })),
       },
     }} />

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { titleWords } from '../lead-title-search'
 import type { PaidProjectPost } from '../research-catalog'
 import { apiURL, bodyText, plain, ProviderBackoff } from './shared'
 
@@ -81,9 +82,8 @@ function retryTime(headers: Headers) {
     headers.get('x-ratelimit-remaining') === '0' && Number.isFinite(resetAt) ? resetAt : 0))
 }
 
-// All users share a single feed request. The common matcher applies their individual query.
-export async function searchPublicProjects(source: 'github', since: Date) {
-  const response = await fetch(feed, {
+async function readIssues(source: 'github', url: URL, since: Date) {
+  const response = await fetch(url, {
     headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'LeadToClient/1.0 (+https://leadtoclient.app)', 'X-GitHub-Api-Version': '2022-11-28' },
     next: { revalidate: 60 }, cache: 'force-cache', redirect: 'error', signal: AbortSignal.timeout(8000),
   })
@@ -109,4 +109,26 @@ export async function searchPublicProjects(source: 'github', since: Date) {
   return { posts: [...posts.values()], candidates: [...candidates.values()],
     partial: data.incomplete_results || (data.total_count > Math.min(75, data.items.length) && !reachedCutoff),
     retryAt: exhausted ? retryTime(response.headers) : undefined }
+}
+
+export async function searchPublicProjects(source: 'github', since: Date, keyword = '') {
+  const general = await readIssues(source, feed, since)
+  if (!general.partial || general.retryAt || !keyword) return general
+  // The first page can fill with other bounties. Search for the skill in
+  // issues created in this window while retaining every eligible general hit.
+  const skill = titleWords(keyword).find(term => term.length > 1 &&
+    !/^(?:senior|junior|freelance|remote|contract|developer|engineer|designer|job|looking|for)$/.test(term))
+  if (!skill) return general
+  const target = new URL(feed)
+  const start = new Date(Math.floor(since.getTime() / 60_000) * 60_000).toISOString()
+  target.searchParams.set('q', feed.searchParams.get('q') + ' "' + skill + '" created:>=' + start)
+  try {
+    const specific = await readIssues(source, target, since)
+    return { posts: [...new Map([...general.posts, ...specific.posts].map(p => [p.url, p])).values()],
+      candidates: [...new Map([...general.candidates, ...specific.candidates].map(p => [p.url, p])).values()],
+      partial: true, retryAt: specific.retryAt }
+  } catch (cause) {
+    // A supplementary read can be throttled while the initial page was valid.
+    return { ...general, retryAt: cause instanceof ProviderBackoff ? cause.retryAt : undefined }
+  }
 }

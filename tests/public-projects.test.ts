@@ -80,3 +80,18 @@ test('GitHub coverage flags truncation and respects primary and secondary cooldo
   response = new Response(' '.repeat(2_500_001))
   await assert.rejects(searchPublicProjects('github', since), /size limit/i)
 })
+
+test('a typed skill searches beyond a truncated general page and keeps the original posting cutoff', async t => {
+  t.mock.method(Date, 'now', () => now)
+  const reads: string[] = []
+  t.mock.method(globalThis, 'fetch', async (url: URL) => {
+    const query = url.searchParams.get('q')!
+    reads.push(query)
+    if (!query.includes('created:')) return page([issue(1, {title:'Build a billing export'})], {total_count: 900})
+    assert.match(query, /"shopify" created:>=2026-11-26T03:55:00.000Z/)
+    return page([issue(42), issue(43, {created_at: '2026-11-26T03:54:59Z'})])
+  })
+  const found = await searchPublicProjects('github', since, 'Shopify Developer')
+  assert.equal(reads.length, 2)
+  assert.deepEqual(found.posts.map(job => job.url.split('/').pop()), ['1', '42'])
+})

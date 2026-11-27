@@ -108,6 +108,48 @@ test('JobTech disambiguates the autumn DST hour only when a source timestamp cor
   assert.equal(result.partial, true)
 })
 
+test('typed JobTech search consults the skill index and recognizes explicit invoice offers without admitting salaried or expired ads', async t => {
+  t.mock.method(Date, 'now', () => now)
+  const calls: string[] = []
+  const listing = (id: string, text: string, overrides = {}) => swedish(id, {
+    headline: 'Shopify developer', description: {text}, ...overrides,
+  })
+  // Public Platsbanken ads 31788914 and 31787411 use these two forms of
+  // invoicing language. Role and timestamps here are deterministic fixtures.
+  const independent = listing('30', 'Du kan välja om du vill fakturera genom ditt eget bolag eller bli direkt anställd hos oss.')
+  const targetRows = [
+    independent,
+    listing('31', 'Contractors must operate and invoice through their own Swedish limited company.'),
+    listing('32', 'Du kan inte fakturera genom ditt eget bolag.'),
+    listing('33', 'Manage invoices for contractors. This is a permanent salaried role.'),
+    listing('34', 'Arbeta som underkonsult.', {publication_date: '2026-11-27T10:00:00'}),
+  ]
+  t.mock.method(globalThis, 'fetch', async (url: URL, options: RequestInit) => {
+    const q = url.searchParams.get('q')!
+    calls.push(q)
+    assert.equal(new Headers(options.headers).get('x-feature-freetext-bool-method'), 'or')
+    const hits = q.startsWith('shopify') ? targetRows : [independent]
+    return Response.json({hits, total: {value: hits.length}})
+  })
+  const result = await searchOpenJobBoard('jobtech', day, 'Shopify Developer')
+  assert.equal(calls.length, 2)
+  assert.ok(calls.includes('shopify shopifyutvecklare'))
+  assert.equal(result.candidates.length, 4)
+  assert.deepEqual(result.unpricedContracts.map(row => row.url.split('/').pop()), ['30', '31'])
+  assert.equal(result.partial, false)
+})
+
+test('JobTech keeps the shared feed if the requested skill search is throttled', async t => {
+  t.mock.method(Date, 'now', () => now)
+  t.mock.method(globalThis, 'fetch', async (url: URL) => url.searchParams.get('q')?.includes('frilansare')
+    ? Response.json({ total: {value: 1}, hits: [swedish('11')] })
+    : new Response('', {status: 429, headers: {'retry-after': '90'}}))
+  const result = await searchOpenJobBoard('jobtech', day, 'software engineer')
+  assert.equal(result.unpricedContracts.length, 1)
+  assert.equal(result.partial, true)
+  assert.equal(result.retryAt?.getTime(), now + 90_000)
+})
+
 test('English queries match Swedish contractor occupations while preserving the original headline', async t => {
   t.mock.method(Date, 'now', () => now)
   // An actual Platsbanken headline, occupation label and engagement phrase. Dates,

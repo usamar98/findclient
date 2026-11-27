@@ -132,6 +132,15 @@ const genericOpening = /\b(?:opportunity|opening|help wanted|contractor|project|
 const discussingHiring = /\b(?:cost of|tips (?:for|on)|advice (?:about|on)|guide to|(?:why|how) (?:is|does)|what does)\s*$/i
 const generalization = /^\s*(?:an?\s+)?(?:(?!(?:who|that|which|our|with|for)\b)[\p{L}\p{N}.#+-]+\s+){1,7}(?:is|was|can be|takes|costs|requires)\b/iu
 
+const delegateWork = /\b(?:(?:can|could|would) (?:anyone|someone|anybody|somebody)|(?:is there|do you know) (?:anyone|someone) (?:who|that) (?:can|could)) (?:take (?:on|over)|fix|build|implement|develop|design|redesign|migrate|configure|integrate|customi[sz]e|repair|audit|translate|edit)\b/i
+const offerToPay = /\b(?:(?:happy|willing|prepared) to pay|(?:i|we) (?:can|will) pay|(?:my|our|project) budget (?:is|of)\s*[$£€₹]\s*[1-9][\d,.]*|(?:send|share|quote) (?:me |us )?your (?:rates?|proposal))\b/i
+
+// A merchant can commission a deliverable without naming the worker's title.
+// Require an offer to pay alongside a request for somebody to do the work.
+export function paidProjectRequest(passage: string) {
+  return offerToPay.test(passage) ? delegateWork.exec(passage) : null
+}
+
 // Bind an employer's request to the work it names. A biography earlier in the
 // post can mention a completely different role from the person being hired.
 function hiringSignal(plan: Plan, passage: string, titleContext: boolean, platformMatches: boolean) {
@@ -191,6 +200,7 @@ export function matchResearchPost(plan: Plan, post: Candidate): ResearchMatch | 
   const headlineHasWork = Boolean(service?.work.test(title))
   const headlineIsLiteral = matchLeadTitle(plan, title)
   const instructionalTitle = instruction.test(title)
+  const paidBrief = paidProjectRequest(text.slice(0, 420))
   let best: ResearchMatch | null = null
   // Source text can exceed a screen. Keep the evidence and subject within a short
   // passage so a hiring comment at the bottom of a long unrelated post cannot qualify it.
@@ -204,7 +214,8 @@ export function matchResearchPost(plan: Plan, post: Candidate): ResearchMatch | 
       const inTitle = field === post.title
       const titleContext = !inTitle && offset === 0 && headlineIsLiteral
       if (!literal && !related && !titleContext) continue
-      const hiring = instructionalTitle ? null : hiringSignal(plan, passage, titleContext, platformMatches)
+      const hiring = instructionalTitle ? null : hiringSignal(plan, passage, titleContext, platformMatches) ||
+        paidProjectRequest(passage) || (inTitle && offset === 0 ? paidBrief : null)
       const asking = instructionalTitle || instruction.test(passage) ? null : help.exec(passage) || implementation.exec(passage) || breakage.exec(passage) || blockedTask.exec(passage) || howToQuestion.exec(passage)
       const kind: ResearchMatchKind | null = hiring ? 'hiring' : asking ? 'help' : literal ? 'topic' : null
       if (!kind) continue

@@ -21,7 +21,7 @@ export function researchInput(form: FormData) {
 
 export type ResearchStatus = 'checked' | 'delayed' | 'unconfigured' | 'cooldown' | 'unavailable' | 'limit' | 'access'
 export type ResearchSource = {
-  source: ResearchSourceId; status: ResearchStatus; count: number; requests: number; reviewed: number; indexed: boolean; partial?: boolean; durationMs?: number
+  source: ResearchSourceId; status: ResearchStatus; count: number; requests: number; reviewed: number; openings?: number; indexed: boolean; partial?: boolean; durationMs?: number
   checkedFeeds?: string[]; unavailableFeeds?: string[]; lastCheckedAt?: string
 }
 export type ResearchPost = Pick<ResearchCandidate, 'source' | 'title' | 'url' | 'posted_at' | 'author'> &
@@ -57,7 +57,7 @@ export function combineHiringReads(live: SourceRead, hiring: SourceRead): Source
   }
 }
 
-export function researchSnapshot(query: string, minutes: ResearchWindow, responses: SourceRead[], checkedAt = new Date()): ResearchResult {
+export function researchSnapshot(query: string, minutes: ResearchWindow, responses: SourceRead[], checkedAt = new Date(), onlyHiring = false): ResearchResult {
   const end = checkedAt.getTime()
   const cutoff = end - Number(minutes) * 60_000
   function isFresh(candidate: CandidateTime) {
@@ -69,6 +69,7 @@ export function researchSnapshot(query: string, minutes: ResearchWindow, respons
   const summaries = responses.map(response => {
     let count = 0
     const reviewed = new Set<string>()
+    const openings = new Set<string>()
     if (response.status === 'checked') {
       for (const item of response.candidates ?? []) if (isFresh(item)) reviewed.add(item.url)
     }
@@ -78,14 +79,15 @@ export function researchSnapshot(query: string, minutes: ResearchWindow, respons
         !isFresh(post) || seen.has(post.url)) continue
       reviewed.add(post.url)
       const match = 'engagement' in post ? matchJobListing(plan, post, query === '') : matchResearchPost(plan, post)
-      if (!match) continue
+      if (onlyHiring && ('engagement' in post || match?.kind === 'hiring')) openings.add(post.url)
+      if (!match || (onlyHiring && match.kind !== 'hiring')) continue
       seen.add(post.url)
       count++
       if (match.kind !== 'topic') requests++
       posts.push({ source: post.source, title: post.title, url: post.url, author: post.author, posted_at: post.posted_at, ...match,
         ...('engagement' in post && { engagement: post.engagement, compensation: post.compensation, first_found_at: post.first_found_at }) })
     }
-    return { source: response.source, status: response.status, indexed: response.indexed, count, reviewed: reviewed.size, requests, partial: response.partial,
+    return { source: response.source, status: response.status, indexed: response.indexed, count, reviewed: reviewed.size, ...(onlyHiring && { openings: openings.size }), requests, partial: response.partial,
       checkedFeeds: response.checkedFeeds, unavailableFeeds: response.unavailableFeeds, durationMs: response.durationMs, lastCheckedAt: response.lastCheckedAt }
   })
   posts.sort((a, b) => Date.parse(b.posted_at) - Date.parse(a.posted_at) || a.url.localeCompare(b.url))

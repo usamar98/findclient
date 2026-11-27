@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { closedRequest } from '../lead-intelligence'
+import { titleWords } from '../lead-title-search'
 import type { CandidateTime, PaidProjectPost, UnpricedContract } from '../research-catalog'
 import { advertisedPay, unpaid } from './contract-boards'
 import { bodyText, plain, ProviderBackoff, remote } from './shared'
@@ -55,6 +56,7 @@ function jobicyUrl(raw: string) {
 const explicitContract = /\b(?:freelanc(?:e|er)|independent contractor|frilans\w*|underkonsult\w*)\b/i
 const contractDescription = /\b(?:as an? (?:freelancer|independent contractor)|(?:this is|employment type\s*:)\s+(?:an? )?(?:contract|freelance)\b|(?:arbeta som (?:anställd eller )?|hyras ut som |för dig som |söker (?:en |dig som )?)(?:frilans\w*|underkonsult\w*)|(?:uppdraget|rollen) (?:är|passar) för (?:dig som är )?(?:egenföretagare|frilans\w*|underkonsult\w*))\b/i
 const acceptsIndependent = /\bvi (?:välkomnar (?:även )?|samarbetar (?:även )?med )underkonsulter och frilansare med eget bolag\b/i
+const independentBilling = /\b(?:(?:vill|kan|får|möjlighet att) fakturera (?:oss )?(?:via|genom|från) (?:(?:ditt|ert)(?: eget| egna)?|eget) (?:företag|bolag)|(?:contractors?|applicants?|candidates?) must (?:operate and )?invoice (?:through|via) their own (?:[\w-]+ ){0,3}compan(?:y|ies))\b/i
 const noCompensation = /\b(?:uncompensated|unremunerated|ideellt|obetalt?|oavlönad\w*)\b|\b(?:pay|salary|rate|budget)\s*:\s*[$£€]?\s*0(?:[.,]00)?(?:\s|$)|(?<![\d.,])\b0(?:[.,]00)?\s*(?:SEK|kr)\s*(?:\/|per)\s*(?:timme|tim|hour|dag|day|uppdrag)\b/i
 
 // English search terms for explicit Swedish job titles and occupation labels.
@@ -70,7 +72,33 @@ const swedishRoles: [RegExp, string[]][] = [
   [/\bformgivare\b/i, ['designer']],
 ]
 
-export async function searchOpenJobBoard(source: Board, since: Date) {
+type JobTechQuery = { q: string; method: 'or' | 'and' }
+const contractorQuery: JobTechQuery = {
+  q: 'freelance freelancer frilans frilansare frilansande underkonsult underkonsulter contractor fakturera egenföretagare',
+  method: 'or',
+}
+
+function jobtechRoleQuery(keyword: string): JobTechQuery | undefined {
+  const words = titleWords(keyword.trim().slice(0, 100))
+  if (!words.length) return
+  if (words.includes('shopify')) return { q: 'shopify shopifyutvecklare', method: 'or' }
+  if (/^(?:software (?:engineer|developer|programmer)s?|swe|sde)$/.test(words.join(' '))) {
+    return { q: 'systemutvecklare mjukvaruutvecklare programmerare mjukvaruingenjör developer', method: 'or' }
+  }
+  return { q: words.join(' '), method: 'and' }
+}
+
+async function fetchJobtechPage({ q, method }: JobTechQuery) {
+  const url = new URL('https://jobsearch.api.jobtechdev.se/search')
+  url.search = new URLSearchParams({ q, sort: 'pubdate-desc', limit: '100' }).toString()
+  const response = await remote(url, { cache: 'force-cache', next: { revalidate: 60 }, headers: {
+    ...providerHeaders, 'x-feature-disable-smart-freetext': 'true', 'x-feature-freetext-bool-method': method,
+    'X-Fields': 'total{value},hits{id,headline,description{text},employer{name},publication_date,last_publication_date,timestamp,removed,employment_type{label},occupation{label},must_have{skills{label}}}',
+  } })
+  return searchPage.parse(JSON.parse(await bodyText(response, 2_000_000)))
+}
+
+export async function searchOpenJobBoard(source: Board, since: Date, keyword = '') {
   const now = Date.now()
   const candidates = new Map<string, CandidateTime>()
   const posts = new Map<string, PaidProjectPost>()
@@ -137,41 +165,53 @@ export async function searchOpenJobBoard(source: Board, since: Date) {
       url.searchParams.set('cursor', data.nextCursor)
     }
   } else {
-    const url = new URL('https://jobsearch.api.jobtechdev.se/search')
-    url.search = new URLSearchParams({ q: 'freelance freelancer frilans frilansare frilansande underkonsult underkonsulter contractor',
-      sort: 'pubdate-desc', limit: '100' }).toString()
-    const response = await remote(url, { cache: 'force-cache', next: { revalidate: 60 }, headers: {
-      ...providerHeaders, 'x-feature-disable-smart-freetext': 'true', 'x-feature-freetext-bool-method': 'or',
-      'X-Fields': 'total{value},hits{id,headline,description{text},employer{name},publication_date,last_publication_date,timestamp,removed,employment_type{label},occupation{label},must_have{skills{label}}}',
-    } })
-    const data = searchPage.parse(JSON.parse(await bodyText(response, 2_000_000)))
-    let oldest = Infinity
-    for (const row of data.hits) {
-      const result = jobtechJob.safeParse(row)
-      if (!result.success) { partial = true; continue }
-      const job = result.data
-      const time = stockholmInstant(job.publication_date, job.timestamp)
-      if (!Number.isFinite(time)) { partial = true; continue }
-      oldest = Math.min(oldest, time)
-      if (job.removed || !inWindow(time)) continue
-      if (job.last_publication_date && !(stockholmInstant(job.last_publication_date) > now)) continue
-      const link = 'https://arbetsformedlingen.se/platsbanken/annonser/' + job.id
-      const posted_at = new Date(time).toISOString()
-      candidates.set(link, { url: link, posted_at })
-      const title = plain(job.headline), body = plain(job.description.text)
-      if (!explicitContract.test(title) && !explicitContract.test(job.employment_type?.label ?? '') && !contractDescription.test(body) && !acceptsIndependent.test(body)) continue
-      const sek = /\b[1-9][\d ]*(?:[.,]\d+)?\s*(?:SEK|kr)\s*(?:\/|per)\s*(?:timme|tim|hour|dag|day|uppdrag)\b/i.exec(body)?.[0]
-      const tags = new Set((job.must_have?.skills ?? []).map(skill => plain(skill.label)))
-      const occupation = plain(job.occupation?.label ?? '')
-      if (occupation) tags.add(occupation)
-      // These headlines can name a role the manager supervises or the teacher trains.
-      const roleTitle = /\b(?:chef|rekryterare|lärare|projektledare|säljare)\b/i.test(title) ? '' : title
-      for (const [pattern, aliases] of swedishRoles) {
-        if (pattern.test(occupation) || pattern.test(roleTitle)) aliases.forEach(alias => tags.add(alias))
+    // Platsbanken searches the ad text, and employers can describe an invoice
+    // arrangement without using the word "freelance". Search the role as well
+    // on explicit requests, keeping a single shared read for browse and alerts.
+    const roleQuery = jobtechRoleQuery(keyword)
+    const queries = roleQuery ? [contractorQuery, roleQuery] : [contractorQuery]
+    const reads = await Promise.allSettled(queries.map(fetchJobtechPage))
+    const pages = []
+    let failure: unknown
+    for (const read of reads) {
+      if (read.status === 'fulfilled') pages.push(read.value)
+      else {
+        partial = true
+        failure = read.reason
+        if (read.reason instanceof ProviderBackoff && (!retryAt || read.reason.retryAt > retryAt)) retryAt = read.reason.retryAt
       }
-      add({ source, title, body, author: plain(job.employer.name), tags: [...tags], url: link, posted_at }, sek, Boolean(sek))
     }
-    partial ||= data.total.value > data.hits.length && oldest >= since.getTime()
+    if (!pages.length) throw retryAt ? new ProviderBackoff(retryAt) : failure
+    for (const data of pages) {
+      let oldest = Infinity
+      for (const row of data.hits) {
+        const result = jobtechJob.safeParse(row)
+        if (!result.success) { partial = true; continue }
+        const job = result.data
+        const time = stockholmInstant(job.publication_date, job.timestamp)
+        if (!Number.isFinite(time)) { partial = true; continue }
+        oldest = Math.min(oldest, time)
+        if (job.removed || !inWindow(time)) continue
+        if (job.last_publication_date && !(stockholmInstant(job.last_publication_date) > now)) continue
+        const link = 'https://arbetsformedlingen.se/platsbanken/annonser/' + job.id
+        const posted_at = new Date(time).toISOString()
+        candidates.set(link, { url: link, posted_at })
+        const title = plain(job.headline), body = plain(job.description.text)
+        if (!explicitContract.test(title) && !explicitContract.test(job.employment_type?.label ?? '') &&
+            !contractDescription.test(body) && !acceptsIndependent.test(body) && !independentBilling.test(body)) continue
+        const sek = /\b[1-9][\d ]*(?:[.,]\d+)?\s*(?:SEK|kr)\s*(?:\/|per)\s*(?:timme|tim|hour|dag|day|uppdrag)\b/i.exec(body)?.[0]
+        const tags = new Set((job.must_have?.skills ?? []).map(skill => plain(skill.label)))
+        const occupation = plain(job.occupation?.label ?? '')
+        if (occupation) tags.add(occupation)
+        // These headlines can name a role the manager supervises or the teacher trains.
+        const roleTitle = /\b(?:chef|rekryterare|lärare|projektledare|säljare)\b/i.test(title) ? '' : title
+        for (const [pattern, aliases] of swedishRoles) {
+          if (pattern.test(occupation) || pattern.test(roleTitle)) aliases.forEach(alias => tags.add(alias))
+        }
+        add({ source, title, body, author: plain(job.employer.name), tags: [...tags], url: link, posted_at }, sek, Boolean(sek))
+      }
+      partial ||= data.total.value > data.hits.length && oldest >= since.getTime()
+    }
   }
   return { posts: [...posts.values()], unpricedContracts: [...unpricedContracts.values()], candidates: [...candidates.values()], partial, retryAt }
 }

@@ -33,7 +33,8 @@ globalThis.fetch = async (input, init) => {
   if (url.hostname === 'database.example.test') {
     switch (url.pathname) {
       case '/rest/v1/source_backoffs':
-        return Response.json([{ source: 'github', retry_at: new Date(Date.now() + 60_000).toISOString() }])
+        return Response.json((communityStatus === 'cooldown' ? ['github', 'hn'] : ['github'])
+          .map(source => ({ source, retry_at: new Date(Date.now() + 60_000).toISOString() })))
       case '/rest/v1/rpc/record_job_discoveries': {
         const { p_jobs } = await request.json() as { p_jobs: { source: string; url: string }[] }
         return Response.json(p_jobs.map(({ source, url }) => ({ source, url, first_found_at: foundAt })))
@@ -45,6 +46,19 @@ globalThis.fetch = async (input, init) => {
       case '/rest/v1/shared_hiring_jobs': return Response.json(shares.filter(job => url.searchParams.get('source') === 'eq.' + job.source))
       default: assert.fail('Unexpected database request ' + url.pathname)
     }
+  }
+  if (url.hostname === 'api.bsky.app') {
+    const rows = [
+      ['Hiring a freelance Shopify developer to fix our checkout. Send us your rates.', 2],
+      ['Hiring a freelance Shopify developer to build our storefront.', 6],
+      ['How can I fix my Shopify checkout?', 1],
+      ['Hire me! I am a freelance Shopify developer.', 1],
+    ] as const
+    return Response.json({ posts: rows.map(([text, age], i) => ({
+      uri: 'at://did:plc:buyer/app.bsky.feed.post/fresh' + i,
+      author: { handle: 'studio.bsky.social', did: 'did:plc:buyer' },
+      record: { text, createdAt: new Date(now - age * 60000).toISOString() },
+    })) })
   }
   if (url.hostname === 'weworkremotely.com') return new Response('<rss><channel><title>We Work Remotely</title>' + rows.join('') + '</channel></rss>')
   if (url.hostname === 'jobicy.com') return Response.json({ success: true, nextCursor: null, jobs: [
@@ -102,7 +116,21 @@ async function verify() {
   assert.equal(cached.sources[0].partial, true)
   assert.deepEqual(cached.posts.map(job => job.url), [shares[0].url])
   assert.equal(cached.posts[0].first_found_at, foundAt)
-  assert.ok(calls.every(host => host === 'database.example.test'))
+  assert.deepEqual(calls.filter(host => host !== 'database.example.test'), [])
+
+  calls.length = 0
+  communityStatus = 'checked'
+  const short = await getDailyJobs('Shopify developer', 'bluesky', '5')
+  assert.ok(calls.includes('api.bsky.app'))
+  assert.deepEqual(short.posts.map(post => post.url), ['https://bsky.app/profile/did%3Aplc%3Abuyer/post/fresh0'])
+  assert.equal(short.sources[0].count, 1)
+  assert.ok(short.sources[0].reviewed >= 3)
+  assert.equal(short.sources[0].openings, 2)
+  const day = await getDailyJobs('Shopify developer', undefined, '1440')
+  assert.equal(day.sources.length, 9)
+  assert.ok(day.sources.some(row => row.source === 'shopify'))
+  assert.ok(day.posts.some(post => post.url.endsWith('/fresh1')))
+  assert.ok(day.posts.every(post => post.kind === 'hiring'))
 }
 
 verify().catch(error => { console.error(error); process.exitCode = 1 })

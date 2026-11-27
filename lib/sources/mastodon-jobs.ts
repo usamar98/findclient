@@ -1,8 +1,7 @@
 import { Parser } from 'htmlparser2'
 import { z } from 'zod'
-import { closedRequest } from '../lead-intelligence'
-import type { PaidProjectPost } from '../research-catalog'
-import { advertisedPay } from './contract-boards'
+import type { PaidProjectPost, UnpricedContract } from '../research-catalog'
+import { advertisedPay, excludedContract } from './contract-boards'
 import { bodyText, remote } from './shared'
 
 const tags = ['hiring', 'fedihire', 'freelance', 'gamedevjobs']
@@ -58,12 +57,20 @@ const employer = /\b(?:(?:we(?:'re| are)|i(?:'m| am)|our (?:company|team|studio|
 const contract = /\b(?:freelance(?:r|rs)?|independent contractors?|contractors?|contract[- ]to[- ]hire|paid (?:project|gig|commission)|(?:\d+[- ](?:week|month)s?|remote|short[- ]term|fixed[- ]term) contract|contract (?:role|work|position|project|designer|developer|illustrator|engineer)|on (?:a )?contract basis|fixed[- ]price (?:job|project))\b/i
 const staleOrSelling = /\b(?:repost(?:ing)?|reshar(?:e|ing)|signal boost|boosting|still open from|open to work|hire me|for hire|my commissions are open|(?:i(?:'m| am)|we(?:'re| are)) (?:available|looking for (?:work|clients|a job)|seeking (?:work|clients|employment))|(?:commission|equity)[- ]only|if (?:we|our project) (?:get|gets|secure|secures) funding|subject to (?:successful )?(?:crowdfunding|funding)|volunteer(?:s|ing)?)\b/i
 
+function explicitContractOpening(text: string) {
+  // For an undisclosed rate, require the offer itself to identify a contractor.
+  // A permanent role can mention freelancers that the employee would manage.
+  return /\b(?:hiring|recruiting|seeking|looking for|need|to hire)\s+(?:(?!(?:for|to|on|manage|our|with|team|full[- ]time|permanent)\b)[\p{L}\d+#.-]+\s+){0,4}(?:freelancers?|freelance (?!work\b|gigs?\b|jobs?\b)|independent contractors?|contractors?|contract[- ]to[- ]hire|contract (?:roles?|positions?|developers?|designers?|engineers?))\b/iu.test(text) ||
+    /\b(?:employment type\s*:|this (?:role is|is)|(?:the|this) (?:role|position|engagement) (?:is|will be))\s*(?:an? )?(?:(?:short|fixed)[- ]term |[\d]+[- ]months? )?(?:contract\b|independent contractor\b|freelance\b)/i.test(text)
+}
+
 export async function searchMastodonJobs(since: Date) {
   const response = await remote(endpoint, { cache:'force-cache', next:{revalidate:30}, headers:{ 'User-Agent':'LeadToClient/1.0 (public hiring posts; https://leadtoclient.app)' } })
   const rows = z.array(z.unknown()).max(40).parse(JSON.parse(await bodyText(response, 2_000_000)))
   const now = Date.now()
   const candidates = new Map<string, {url:string; posted_at:string}>()
   const posts = new Map<string, PaidProjectPost>()
+  const unpricedContracts = new Map<string, UnpricedContract>()
   let oldest = Infinity
   for (const value of rows) {
     if (value && typeof value === 'object' && 'created_at' in value && typeof value.created_at === 'string') {
@@ -82,15 +89,19 @@ export async function searchMastodonJobs(since: Date) {
     candidates.set(url, {url,posted_at})
     const body = authorText(row.content)
     const text = body.replace(/[’‘]/g,"'")
-    if (!contract.test(text) || !employer.test(text) || staleOrSelling.test(text) || closedRequest(text)) continue
+    if (!employer.test(text) || staleOrSelling.test(text) || excludedContract(text)) continue
+    const explicitOpening = explicitContractOpening(text)
+    if (!explicitOpening && !contract.test(text)) continue
+    const details = {source:'mastodon' as const, title:body.slice(0,180), body:body.slice(0,2000), url, posted_at, author:''}
     const pay = advertisedPay(text)
-    if (!pay) continue
-    posts.set(url, { source:'mastodon', engagement:'paid_freelance', title:body.slice(0,180), body:body.slice(0,2000), url, posted_at, author:'', ...pay })
+    if (pay) posts.set(url, { ...details, engagement:'paid_freelance', ...pay })
+    else if (explicitOpening) unpricedContracts.set(url, { ...details, engagement:'contract_pay_unlisted' })
   }
   const reset = Date.parse(response.headers.get('x-ratelimit-reset') ?? '')
   const exhausted = response.headers.get('x-ratelimit-remaining') === '0'
   return {
     posts: [...posts.values()].sort((a, b) => b.posted_at.localeCompare(a.posted_at)),
+    unpricedContracts: [...unpricedContracts.values()].sort((a, b) => b.posted_at.localeCompare(a.posted_at)),
     candidates: [...candidates.values()],
     partial: rows.length === 40 && oldest > since.getTime(),
     retryAt: exhausted ? new Date(Number.isFinite(reset) && reset > now ? reset : now + 60_000) : undefined,

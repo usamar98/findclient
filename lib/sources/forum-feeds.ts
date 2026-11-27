@@ -43,6 +43,20 @@ const xmlParser = new XMLParser({
 
 const headers = { 'User-Agent': 'LeadToClient/1.0 (community RSS reader)' }
 const agents = ['LeadToClient', 'Clientfind']
+const shopifyJobsCategory = 'https://community.shopify.com/c/job-listings/334.json?order=created'
+const publicJobTopic = z.object({
+  id: z.number().int().positive(), category_id: z.number().int(), visible: z.boolean(),
+  closed: z.boolean(), archived: z.boolean(), created_at: z.iso.datetime({ offset: true }),
+})
+const firstJobPost = z.object({
+  id: z.number().int().positive(), category_id: z.number().int(), closed: z.boolean(), archived: z.boolean(),
+  slug: z.string().regex(/^[\p{L}\p{N}_-]+$/u), title: z.string().min(1),
+  post_stream: z.object({ posts: z.array(z.unknown()) }),
+})
+const firstAuthor = z.object({
+  post_number: z.literal(1), post_type: z.literal(1), hidden: z.literal(false), username: z.string().min(1),
+  created_at: z.iso.datetime({ offset: true }), cooked: z.string(),
+})
 async function publisherRules(origin: string) {
   const robotsUrl = origin + '/robots.txt'
   const robots = await remote(robotsUrl, { headers, next: { revalidate: 3600 } })
@@ -149,6 +163,51 @@ export async function searchForumFeeds(query: string, since: Date, cooldowns: Re
   })), cooldowns)
 }
 
+// Busy support forums can push a job off the front page. Discourse's public
+// merchant Job Listings category retains the original topic creation dates.
+async function readShopifyJobTopics(since: Date, rules: Awaited<ReturnType<typeof publisherRules>>, markPartial: () => void,
+  backoffs: { source: string; retryAt: Date }[]) {
+  const origin = new URL(shopifyJobsCategory).origin
+  const ttl = Math.max(60, ...agents.map(agent => rules.getCrawlDelay(agent) ?? 0))
+  async function json(url: string) {
+    if (agents.some(agent => rules.isAllowed(url, agent) !== true)) throw new FeedAccessRestricted()
+    const response = await remote(url, { headers: { ...headers, Accept: 'application/json' }, next: { revalidate: ttl } })
+    return JSON.parse(await bodyText(response, 1_500_000)) as unknown
+  }
+  const list = z.object({ topic_list: z.object({ topics: z.array(z.unknown()), more_topics_url: z.string().nullish() }) })
+    .parse(await json(shopifyJobsCategory)).topic_list
+  const topics = list.topics.flatMap(value => {
+    const row = publicJobTopic.safeParse(value)
+    if (!row.success) { markPartial(); return [] }
+    return [row.data]
+  })
+  const inWindow = topics.filter(topic => Date.parse(topic.created_at) >= since.getTime() && Date.parse(topic.created_at) <= Date.now())
+  const open = inWindow.filter(topic => topic.category_id === 334 && topic.visible && !topic.closed && !topic.archived)
+  const limit = 6
+  if (open.length > limit || (list.more_topics_url && (!topics.length || inWindow.length === topics.length))) markPartial()
+  const results = await Promise.allSettled(open.slice(0, limit).map(async topic => {
+    const response = await json(origin + '/t/' + topic.id + '/1.json')
+    const parsed = firstJobPost.safeParse(response)
+    if (!parsed.success || parsed.data.id !== topic.id) { markPartial(); return [] }
+    const job = parsed.data
+    if (job.category_id !== 334 || job.closed || job.archived) return []
+    const op = job.post_stream.posts.map(post => firstAuthor.safeParse(post)).find(post => post.success)?.data
+    if (!op) return []
+    return cleanPosts([{ source: 'shopify', title: job.title, body: authorText(op.cooked), author: op.username,
+      url: origin + '/t/' + encodeURIComponent(job.slug) + '/' + job.id, posted_at: op.created_at }], since)
+  }))
+  const posts: NormalizedPost[] = []
+  for (const result of results) {
+    if (result.status === 'fulfilled') posts.push(...result.value)
+    else {
+      markPartial()
+      if (result.reason instanceof ProviderBackoff) backoffs.push({ source: 'shopify', retryAt: result.reason.retryAt })
+      if (results.every(row => row.status === 'rejected')) throw result.reason
+    }
+  }
+  return posts
+}
+
 type FeedTask = { key: string; label: string; read(): Promise<NormalizedPost[]> }
 
 async function collectFeeds(tasks: FeedTask[], cooldowns: ReadonlyMap<string, number>) {
@@ -176,18 +235,21 @@ async function collectFeeds(tasks: FeedTask[], cooldowns: ReadonlyMap<string, nu
   return { posts: [...unique.values()].sort((a, b) => b.posted_at.localeCompare(a.posted_at)), checked, unavailable, backoffs }
 }
 
-async function liveFeeds(communities: readonly PublishedFeed[], keys: string[], since: Date, cooldowns: ReadonlyMap<string, number>) {
+async function liveFeeds(communities: readonly PublishedFeed[], keys: string[], since: Date, cooldowns: ReadonlyMap<string, number>, includeJobListings = false) {
   const rules = new Map<string, ReturnType<typeof publisherRules>>()
   const tasks: FeedTask[] = []
   let sampled = false
   const markSampled = () => { sampled = true }
   const threadBackoffs: { source: string; retryAt: Date }[] = []
+  function getRules(origin: string) {
+    let permission = rules.get(origin)
+    if (!permission) { permission = publisherRules(origin); rules.set(origin, permission) }
+    return permission
+  }
   function add(feed: PublishedFeed, key: string, label: string, verifyTopicDates = false) {
     const origin = new URL(feed.url).origin
     tasks.push({ key, label, async read() {
-      let permission = rules.get(origin)
-      if (!permission) { permission = publisherRules(origin); rules.set(origin, permission) }
-      const policy = await permission
+      const policy = await getRules(origin)
       const rows = await readFeed(feed, since, policy, markSampled)
       if (!verifyTopicDates) return rows
       // bbPress all-topics uses last-active timestamps. Read the thread feed for
@@ -224,12 +286,16 @@ async function liveFeeds(communities: readonly PublishedFeed[], keys: string[], 
       add({ ...community, url: 'https://wordpress.org/support/view/all-topics/feed/', entries: undefined }, key, 'WordPress topics', true)
     }
   }
+  if (includeJobListings) {
+    tasks.unshift({ key: 'shopify', label: 'Shopify Job Listings', read: async () =>
+      readShopifyJobTopics(since, await getRules(new URL(shopifyJobsCategory).origin), markSampled, threadBackoffs) })
+  }
   const result = await collectFeeds(tasks, cooldowns)
   return { ...result, backoffs: [...result.backoffs, ...threadBackoffs], partial: sampled || result.unavailable.length > 0 }
 }
 
-export function fetchShopifyResearchCandidates(since: Date, cooldowns: ReadonlyMap<string, number> = new Map()) {
-  return liveFeeds(shopifyFeeds, shopifyFeedKeys, since, cooldowns)
+export function fetchShopifyResearchCandidates(since: Date, cooldowns: ReadonlyMap<string, number> = new Map(), includeJobListings = false) {
+  return liveFeeds(shopifyFeeds, shopifyFeedKeys, since, cooldowns, includeJobListings)
 }
 
 const livePublicFeeds: PublishedFeed[] = [

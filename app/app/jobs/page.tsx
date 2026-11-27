@@ -4,7 +4,8 @@ import { JobActions } from '@/components/workspace/job-actions'
 import { getDailyJobs } from '@/lib/daily-jobs'
 import { requireUser } from '@/lib/db/server'
 import { getJobTracking, jobTrackingProof } from '@/lib/job-tracking'
-import { dailyJobSources, isDailyJobSource, researchSourceLabels, researchSourceNotes, type DailyJobSource } from '@/lib/research-catalog'
+import { dailySearchSources, isDailySearchSource, researchSourceLabels, researchSourceNotes, type DailySearchSource } from '@/lib/research-catalog'
+import { validJobKeyword } from '@/lib/lead-title-search'
 import type { ResearchSource } from '@/lib/live-research'
 import { parseResearchWindow, researchWindows, type ResearchWindow } from '@/lib/research-windows'
 import './jobs.css'
@@ -16,7 +17,7 @@ const perPage = 24
 const postedTime = new Intl.DateTimeFormat('en-US', {
   timeZone: 'UTC', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
 })
-type Filters = { query: string; source?: DailyJobSource; page: number; minutes: ResearchWindow }
+type Filters = { query: string; source?: DailySearchSource; page: number; minutes: ResearchWindow }
 
 function jobsUrl(filters: Filters, page = 1) {
   const params = new URLSearchParams()
@@ -32,9 +33,10 @@ function coverageLabel(source: ResearchSource) {
   if (source.status === 'cooldown') return 'Rate limited'
   if (source.status === 'access') return 'Access restricted'
   if (source.status !== 'checked') return 'Unavailable'
-  const count = source.count === 1 ? '1 match' : source.count + ' matches'
-  if (source.unavailableFeeds?.length) return count + ' saved · Refresh unavailable'
-  return source.partial ? count + ' · Partial coverage' : count
+  const reviewed = source.reviewed + (source.reviewed === 1 ? ' recent post checked' : ' recent posts checked')
+  const openings = source.openings + (source.openings === 1 ? ' opening identified' : ' openings identified')
+  const count = source.count + (source.count === 1 ? ' match' : ' matches')
+  return [reviewed, source.openings !== undefined && openings, count, source.partial && 'Partial coverage'].filter(Boolean).join(' · ')
 }
 
 async function Results({ filters }: { filters: Filters }) {
@@ -44,17 +46,22 @@ async function Results({ filters }: { filters: Filters }) {
   const page = Math.min(filters.page, pages)
   const visible = jobs.slice((page - 1) * perPage, page * perPage)
   const tracking = await getJobTracking(visible)
-  const checked = sources.filter(row => row.status === 'checked' && !row.unavailableFeeds?.length).length
+  const checked = sources.filter(row => row.status === 'checked').length
+  const reviewed = sources.reduce((total, row) => total + row.reviewed, 0)
+  const openings = sources.reduce((total, row) => total + (row.openings ?? 0), 0)
+  const broader = new URLSearchParams({ q: filters.query, window: filters.minutes })
 
   return <>
     <div className="daily-result-heading">
-      <h2>{jobs.length} {jobs.length === 1 ? 'opening' : 'openings'}</h2>
+      <h2>{checked ? jobs.length + (jobs.length === 1 ? ' opening' : ' openings') : 'No results available'}</h2>
       <span>Checked <time dateTime={result.checkedAt}>{postedTime.format(new Date(result.checkedAt))} UTC</time></span>
     </div>
     <details className="daily-coverage" open={!jobs.length}>
-      <summary>Source coverage · {checked} of {sources.length} responded</summary>
+      <summary>Source coverage · {checked} of {sources.length} returned data · {reviewed} recent {reviewed === 1 ? 'post' : 'posts'} checked</summary>
       <ul>{sources.map(row => <li key={row.source}>
         <strong>{researchSourceLabels[row.source]}</strong> · {coverageLabel(row)}
+        {!!row.checkedFeeds?.length && <> · Checked {row.checkedFeeds.join(', ')}</>}
+        {!!row.unavailableFeeds?.length && <> · Couldn’t check {row.unavailableFeeds.join(', ')}</>}
         {row.lastCheckedAt && <> · Last source check <time dateTime={row.lastCheckedAt}>{postedTime.format(new Date(row.lastCheckedAt))} UTC</time></>}
         {researchSourceNotes[row.source] && <> · {researchSourceNotes[row.source]}</>}
       </li>)}</ul>
@@ -85,9 +92,15 @@ async function Results({ filters }: { filters: Filters }) {
         <p>{sources.every(row => row.status === 'delayed')
           ? 'This source releases listings after your selected window. Choose a longer window or another platform.'
           : checked
-          ? 'The responding sources returned no matching openings in this publication window.'
+          ? reviewed
+            ? openings && filters.query
+              ? `We identified ${openings} ${openings === 1 ? 'opening' : 'openings'} across the sources checked. None matched “${filters.query}”.`
+              : 'The posts checked in this window included no matching hiring requests.'
+            : 'The sources that responded returned no recent candidates in this publication window.'
           : 'The selected sources could not be checked. Try again later.'}</p>
-        {(filters.query || filters.source || filters.minutes !== '1440') && <Link href="/app/jobs">See all jobs from the past 24 hours</Link>}
+        {filters.query && <p><Link href={'/app/research?' + broader}>Search more communities for “{filters.query}” in Live Research</Link></p>}
+        {filters.query && filters.minutes !== '1440' && <p><Link href={jobsUrl({ ...filters, minutes: '1440' })}>Search the past 24 hours for “{filters.query}”</Link></p>}
+        {(filters.query || filters.source || filters.minutes !== '1440') && <Link href="/app/jobs">Browse all openings from the past 24 hours</Link>}
       </div>
     )}
     {pages > 1 && <nav className="daily-pagination" aria-label="Job pages">
@@ -105,7 +118,7 @@ export default async function Jobs({ searchParams }: {
   const { q, source, page, window } = await searchParams
   const filters: Filters = {
     query: typeof q === 'string' ? q.trim().slice(0, 100) : '',
-    source: typeof source === 'string' && isDailyJobSource(source) ? source : undefined,
+    source: typeof source === 'string' && isDailySearchSource(source) ? source : undefined,
     minutes: parseResearchWindow(window, '1440'),
     page: typeof page === 'string' && /^\d{1,6}$/.test(page) ? Math.max(1, Number(page)) : 1,
   }
@@ -118,13 +131,15 @@ export default async function Jobs({ searchParams }: {
         {Object.entries(researchWindows).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
       </select></label>
       <label>Platform<select name="source" defaultValue={filters.source ?? ''}>
-        <option value="">All platforms</option>
-        {dailyJobSources.map(id => <option key={id} value={id}>{researchSourceLabels[id]}</option>)}
+        <option value="">All job sources</option>
+        {dailySearchSources.map(id => <option key={id} value={id}>{researchSourceLabels[id]}</option>)}
       </select></label>
       <button type="submit">Search jobs</button>
     </form>
     <Suspense key={jobsUrl(filters, filters.page)} fallback={<p role="status">Checking job sources…</p>}>
-      <Results filters={filters} />
+      {(filters.query || filters.source === 'shopify') && !validJobKeyword(filters.query)
+        ? <p role="status">Enter a job title or skill to search these sources.</p>
+        : <Results filters={filters} />}
     </Suspense>
   </div>
 }

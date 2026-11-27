@@ -64,13 +64,13 @@ export async function findFreshPosts(_previous: ResearchState, form: FormData): 
     }
     try {
       if (isPaidSource(source)) {
-        const listings = await paidListings(source, since)
+        const listings = await paidListings(source, since, q)
         if (listings.retryAt) await db.rpc('defer_source', { p_source: provider, p_until: listings.retryAt.toISOString() })
         const posts = await stampJobDiscoveries<JobListing>([...listings.posts, ...(listings.unpricedContracts ?? [])])
         return { ...report('checked', posts), partial: listings.partial, candidates: listings.candidates }
       }
       if (source === 'forums' || source === 'shopify') {
-        const feeds = source === 'forums' ? await fetchForumResearchCandidates(since, cooldowns) : await fetchShopifyResearchCandidates(since, cooldowns)
+        const feeds = source === 'forums' ? await fetchForumResearchCandidates(since, cooldowns) : await fetchShopifyResearchCandidates(since, cooldowns, true)
         await Promise.all(feeds.backoffs.map(gate => db.rpc('defer_source', { p_source: gate.source, p_until: gate.retryAt.toISOString() })))
         return { ...report(feeds.checked.length ? 'checked' : 'unavailable', feeds.posts), partial: feeds.partial, checkedFeeds: feeds.checked, unavailableFeeds: feeds.unavailable }
       }

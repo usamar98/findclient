@@ -43,14 +43,18 @@ test('daily browsing separately exposes current employer-listed contracts with u
   t.mock.method(globalThis, 'fetch', async () => new Response(rss(
     rssRow('reviewer', { text }), rssRow('expired', { text, expires: fresh }),
     rssRow('permanent', { text, type: 'Full-Time' }), rssRow('freelance-tag-only', { text, type: 'Freelance' }),
+    rssRow('Senior Recruiter - Contract', { text: 'Six-month opening with our remote studio.', type: 'Full-Time', link:wwr + 'senior-recruiter-contract' }),
     rssRow('zero', { text: 'Pay: $0. Review films.' }), rssRow('found', { text: 'Thanks everyone, the role is filled.' }),
     rssRow('no-pay', { text: 'An unpaid role to review films.' }), rssRow('missing-author', { text }).replace('Acme: ', ''),
     rssRow('unpaid-equity', { text: 'This is an equity-only position.' }),
+    rssRow('closed-paid', { text: 'The role is filled. Previously $60/hour.' }),
+    rssRow('no-money', { text: 'Budget: $0. Our other jobs pay $50/hour.' }),
+    rssRow('for-hire', { text: 'Hire me to develop a Shopify store.' }),
   )))
   const result = await searchContractBoard('weworkremotely', since)
   assert.deepEqual(result.posts, [])
   assert.deepEqual(result.unpricedContracts?.map(job => [job.url, job.engagement, job.compensation]),
-    [[wwr + 'reviewer', 'contract_pay_unlisted', undefined]])
+    ['reviewer','freelance-tag-only','senior-recruiter-contract'].map(slug => [wwr + slug, 'contract_pay_unlisted', undefined]))
 })
 
 test('Remote OK distinguishes contract hiring from contract-related permanent work and ignores feed generation time', async t => {
@@ -64,11 +68,21 @@ test('Remote OK distinguishes contract hiring from contract-related permanent wo
       { ...remoteJob('7', 'Contractor'), closed: true }, { ...remoteJob('8', 'Contractor'), url:rok + 'other-9' },
       { ...remoteJob('9', 'Contractor'), epoch: now / 1000 }, { ...remoteJob('10', 'Developer', 'Employment type: freelance'), salary_min: 1000 },
       { ...remoteJob('11', 'Freelance writer'), date:'2026-11-25T20:00:00Z', epoch: Date.parse('2026-11-25T20:00:00Z') / 1000 },
+      remoteJob('12', 'Mobile contract developer', 'We are not currently hiring contractors. Salary: $900/month.'),
+      remoteJob('13', 'Contractor', 'We wish we could hire a developer.'),
+      remoteJob('14', 'Freelance developer', 'The position is filled. Rate: $85/hr.'),
+      remoteJob('15', 'Contract Shopify Developer', 'Build our store checkout.'),
+      remoteJob('16', 'Contractor Compliance Analyst', 'Coordinate freelancers and suppliers.'),
+      remoteJob('17', 'Contract Compliance Analyst', 'Review permanent staff agreement templates.'),
     ])
   })
   const result = await searchContractBoard('remoteok', since)
   assert.deepEqual(result.posts.map(post => [post.title, post.compensation, post.url]), [
     ['Web Designer (Contract)', '$60 per hour', rok + 'publisher-slug-1'], ['Developer', undefined, rok + 'publisher-slug-10'],
+  ])
+  assert.deepEqual(result.unpricedContracts?.map(post => [post.title, post.engagement, post.url]), [
+    ['Freelance developer', 'contract_pay_unlisted', rok + 'publisher-slug-6'],
+    ['Contract Shopify Developer', 'contract_pay_unlisted', rok + 'publisher-slug-15'],
   ])
 })
 

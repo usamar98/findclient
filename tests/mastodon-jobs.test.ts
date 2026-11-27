@@ -36,7 +36,7 @@ test('Mastodon links only to verified public status URLs and uses original time,
   assert.deepEqual([result.posts[0].posted_at,result.posts[0].engagement,result.posts[0].compensation,result.posts[0].author],['2026-11-26T03:44:30.000Z','paid_freelance','50–70 USD/hr',''])
 })
 
-test('public seller offers, re-shared vacancies, unpriced asks, link labels and jobs seeking funds only count as examined', async t => {
+test('original contract offers with undisclosed pay are eligible and quoted, closed, unpaid or speculative contracts are excluded', async t => {
   t.mock.method(Date,'now',()=>now)
   const body = [
     'We are hiring a freelance web designer for a paid contract. Contact people@example.com or <a href="https://example.com">visit our careers site</a>.',
@@ -48,11 +48,19 @@ test('public seller offers, re-shared vacancies, unpriced asks, link labels and 
     'Reposting: we are hiring a freelance engineer at $50/hour.',
     'We are hiring a freelance designer. <a href="https://example.com">Pay rate: $60/hour</a>',
     'We are hiring a freelance artist at $60/hr. Position filled.',
+    'We are hiring a freelance Shopify developer for our store. Budget: $0. Our earlier contract paid $70/hr.',
+    'I need a freelance gig. Hire me for a Shopify project.',
+    'We wish we could hire a freelance Shopify developer. We need funding.',
+    'We are hiring a full-time manager to work with our Shopify contractors.',
+    'We are looking for a freelance developer to fix our checkout. This is unpaid.',
+    'We are seeking a Shopify engineer. This role is a contract.',
+    'I am looking for a freelance Shopify developer role. I need a job.',
   ]
   t.mock.method(globalThis,'fetch',async ()=>Response.json(body.map((text,i)=>post(String(i+20),text))))
   const r=await searchMastodonJobs(since)
   assert.equal(r.candidates.length,body.length)
   assert.deepEqual(r.posts.map(p=>p.url),[site+'/@studio/20'])
+  assert.deepEqual(r.unpricedContracts.map(p=>[p.url,p.engagement,p.compensation]),[23,27,34].map(id=>[site+'/@studio/'+id,'contract_pay_unlisted',undefined]))
   assert.doesNotMatch(r.posts[0].body,/@|https|careers site/)
 })
 

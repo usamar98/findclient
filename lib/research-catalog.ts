@@ -13,6 +13,13 @@ export function sourceCanPublishInWindow(source: ResearchSourceId, minutes: Rese
 }
 export type DailyJobSource = PaidSourceId | 'hn' | 'bluesky'
 export const dailyJobSources: DailyJobSource[] = [...paidSources, 'hn', 'bluesky']
+// The browse feed and recurring Telegram watches share the same eight sources.
+// Interactive keyword searches can also look for employers in Shopify Community.
+export const dailySearchSources = [...dailyJobSources, 'shopify'] as const
+export type DailySearchSource = typeof dailySearchSources[number]
+export function isDailySearchSource(source: string): source is DailySearchSource {
+  return source === 'shopify' || isDailyJobSource(source)
+}
 export function isDailyJobSource(source: string): source is DailyJobSource {
   return source === 'hn' || source === 'bluesky' || Object.hasOwn(paidSourceLabels, source)
 }

@@ -66,8 +66,14 @@ async function networkPage(source: Network, request: Request, since: Date): Prom
   return { posts, next: data.has_more && data.items.length ? String(Number(request.cursor ?? 1) + 1) : undefined }
 }
 
-async function searchPages(source: Network, query: string, since: Date, readStream: boolean) {
-  const variants = researchMatchPlan(query).queries
+async function searchPages(source: Network, query: string, since: Date, readStream: boolean, hiringOnly: boolean) {
+  const plan = researchMatchPlan(query)
+  const skill = plan.service?.platform ?? plan.queries[0]
+  // A broad skill such as Liquid can fill a page with unrelated conversation.
+  // For Jobs, use the same request budget on both the role and employer language.
+  const variants = hiringOnly && skill ? [...new Set([
+    query, skill + ' hiring', skill + ' freelance', plan.service?.platform ?? plan.queries[1] ?? skill,
+  ])] : plan.queries
   const requests: Request[] = (readStream ? [''] : variants).map(term => ({ term }))
   const maximumReads = source === 'stackexchange' ? 3 : 4
   const visited = new Set<string>()
@@ -112,9 +118,9 @@ async function searchPages(source: Network, query: string, since: Date, readStre
   }
 }
 
-export async function searchKeylessNetwork(source: Network, query: string, since: Date) {
+export async function searchKeylessNetwork(source: Network, query: string, since: Date, hiringOnly = false) {
   const readStream = source !== 'bluesky' && Date.now() - since.getTime() <= shortWindow
-  const pages = searchPages(source, query, since, readStream)
+  const pages = searchPages(source, query, since, readStream, hiringOnly)
   if (source !== 'hn' || !readStream) return pages
 
   const [index, newest] = await Promise.allSettled([pages, readNewestHn(since)])

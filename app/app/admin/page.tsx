@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { planLabels } from '@/lib/offers'
 import { OWNER_PAGE_SIZE } from '@/lib/owner-model'
 import { getOwnerReport } from '@/lib/owner-report'
@@ -46,10 +45,10 @@ function Pagination({ filters, directory, total }: {
   if (pages === 1 && page === 1) return null
   return <nav className="owner-pagination" aria-label={`${directory} pages`}>
     {page <= pages && <span>Page {number.format(page)} of {number.format(pages)}</span>}
-    {page > 1 && <Link prefetch={false} href={reportHref(filters, { [param]: page > pages ? 1 : page - 1 }, directory)}>
+    {page > 1 && <a href={reportHref(filters, { [param]: page > pages ? 1 : page - 1 }, directory)}>
       {page > pages ? 'First page' : 'Previous'}
-    </Link>}
-    {page < pages && <Link prefetch={false} href={reportHref(filters, { [param]: page + 1 }, directory)}>Next</Link>}
+    </a>}
+    {page < pages && <a href={reportHref(filters, { [param]: page + 1 }, directory)}>Next</a>}
   </nav>
 }
 
@@ -73,8 +72,8 @@ export default async function OwnerDashboard({ searchParams }: {
         </nav>
       </div>
       <nav className="owner-period" aria-label="Overview period">
-        {[7, 30, 90].map(days => <Link key={days} prefetch={false} href={reportHref(filters, { days })}
-          aria-current={days === filters.days ? 'page' : undefined}>{days} days</Link>)}
+        {[7, 30, 90].map(days => <a key={days} href={reportHref(filters, { days })}
+          aria-current={days === filters.days ? 'page' : undefined}>{days} days</a>)}
       </nav>
     </div>
 
@@ -111,7 +110,7 @@ export default async function OwnerDashboard({ searchParams }: {
         <label htmlFor="owner-search">Email or account ID</label>
         <div><input key={filters.search} type="search" id="owner-search" name="q" defaultValue={filters.search} maxLength={254} placeholder="Search customer records" autoComplete="off" />
           <button type="submit">Search</button>
-          {filters.search && <Link prefetch={false} href={reportHref(filters, { search: '', userPage: 1, purchasePage: 1 }, 'directory')}>Clear</Link>}
+          {filters.search && <a href={reportHref(filters, { search: '', userPage: 1, purchasePage: 1 }, 'directory')}>Clear</a>}
         </div>
       </form>
 

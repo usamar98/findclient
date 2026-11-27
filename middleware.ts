@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import { canonicalOrigin } from './lib/origin'
+import { isPlatformOwner } from './lib/owner-access'
 export async function middleware(request: NextRequest) {
   const u = request.nextUrl
   if (process.env.VERCEL_ENV !== 'preview') {
@@ -25,10 +26,11 @@ export async function middleware(request: NextRequest) {
   if (u.pathname === '/app/checkout/monthly' || u.pathname === '/app/checkout/free')
     return NextResponse.redirect(new URL('/pricing', u))
   let response = NextResponse.next({ request })
+  const ownerRoute = u.pathname === '/app/admin' || u.pathname.startsWith('/app/admin/')
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL,
     key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
   const loginUrl = new URL('/auth/login', u)
-  const query = new URLSearchParams(u.search)
+  const query = new URLSearchParams(ownerRoute ? '' : u.search)
   query.delete('_rsc')
   if (u.pathname !== '/app' || query.size) {
     loginUrl.searchParams.set('next', u.pathname + (query.size ? '?' + query.toString() : ''))
@@ -52,6 +54,14 @@ export async function middleware(request: NextRequest) {
     const login = NextResponse.redirect(loginUrl)
     for (const cookie of response.cookies.getAll()) login.cookies.set(cookie)
     return login
+  }
+  if (ownerRoute && !isPlatformOwner(user)) {
+    const denied = new NextResponse('Page not found', {
+      status: 404,
+      headers: { 'Cache-Control': 'private, no-store', 'X-Robots-Tag': 'noindex, nofollow' },
+    })
+    for (const cookie of response.cookies.getAll()) denied.cookies.set(cookie)
+    return denied
   }
   response.headers.set('Cache-Control', 'private, no-store')
   return response

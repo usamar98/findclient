@@ -22,6 +22,7 @@ The [environment template](.env.example) lists every application setting. The [f
 | --- | --- | --- |
 | Canonical origin | `NEXT_PUBLIC_SITE_URL` | Use https://leadtoclient.app for production. Configure preview and local origins separately. |
 | Supabase | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | Required for authenticated accounts, the database, shared rate limits and live pricing. |
+| Owner dashboard | `OWNER_USER_ID` | Set the private Supabase Auth UID of the one person who can open the platform-wide dashboard. Leaving it empty disables access. |
 | AI | `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_INPUT_USD_PER_MILLION`, `OPENAI_OUTPUT_USD_PER_MILLION`, `AI_MAX_USD_PER_CREDIT` | The key enables generation. The default model and cost guard have built-in settings. Set both rates for another model. |
 | Discovery | `EXA_API_KEY`, `STACK_EXCHANGE_KEY` | Exa enables indexed Reddit, X, Indie Hackers and forum results. The Stack Exchange key increases the available quota. |
 | Optional direct Reddit and X live search | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_USER_AGENT`, `X_BEARER_TOKEN` | Use credentials for a Reddit app approved for your use and a descriptive user agent identifying its operator. The X app needs recent-search access. Without these, live research uses Exa on those platforms when configured. |
@@ -84,6 +85,24 @@ Each scored request and each reply generation uses one credit. Rejected scores s
 The lifetime campaign accepts new reservations through December 16, 2026 in Asia/Karachi. A buyer with an existing Stripe session can finish at the reserved price until that session expires. The public sales counter uses completed lifetime purchases. Unspent credits carry forward. Existing monthly subscribers keep their one-niche allowance and credits for each paid period. Existing lifetime agency purchases keep their original allowance and niche limit.
 
 Each AI call must fit both `AI_MAX_USD_PER_CREDIT` and half the price of one credit in the cheapest configured top-up. The estimate includes the maximum output tokens, input bytes and an allowance for message framing. Set current token rates when changing models. A one-time purchase with unlimited future refills has no fixed maximum lifetime cost. Search queries, free accounts, payment fees, hosting and notification delivery also affect margins.
+
+## Owner dashboard
+
+1. Apply the [owner dashboard migration](supabase/migrations/20261127175139_owner_dashboard.sql) in the Lead To Client project's Supabase SQL Editor. Apply it before deploying the checkout update so Stripe events can record billing locations.
+2. In Supabase **Authentication → Users**, open your existing sign-in account and copy its **User UID**. In the Vercel project's **Settings → Environment Variables**, add the server variable `OWNER_USER_ID` with that UUID for Production. Redeploy the app for the setting to take effect.
+3. Sign in with that account and open **Account → Owner dashboard** in the workspace. The dashboard is at [leadtoclient.app/app/admin](https://leadtoclient.app/app/admin). To revoke access, remove the variable and redeploy.
+
+The two directories cover all recorded signups and payments. The 7-, 30- and 90-day summaries count gross USD payments before fees and refunds. The buyer count includes lifetime or agency purchases and legacy monthly payments. Credit pack sales contribute to gross payments. Activation counts people who signed up during the selected window and currently have a lead in their inbox. Scan totals come from saved scan receipts.
+
+Purchase locations come from the billing address on the Stripe Checkout Session or paid invoice. The app retains city and country. Older purchases can show an unknown location if Stripe did not collect one.
+
+To recover available historical cities, use a private local environment with the matching Supabase service key, project URL, and Stripe secret key for the same account and payment mode. Preview the first 50 recorded purchases:
+
+```powershell
+npx --no-install tsx --env-file=.env.local scripts/backfill-purchase-locations.ts --limit 50
+```
+
+Run the same command with `--apply` to save those locations. For the next batch, append `--after <purchase-uuid>` using the cursor printed by the script. Each batch can be retried. Stripe records without usable billing information stay unknown.
 
 ## Stripe, email and Telegram
 

@@ -102,6 +102,10 @@ export const infoPages = {
         'Invited members can access shared leads, drafts, assignments, deals and proposals. Anyone with a published proposal link can read that version and download its PDF. Lead To Client records link opens for the workspace. You can revoke a link or replace it from the proposal editor.',
       ],
       [
+        'How does Lead To Client use billing location and account activity?',
+        'Stripe collects a billing address at checkout. Lead To Client stores the city and country from available payment records. The site owner can review purchases by billing city, see when accounts signed up and whether they saved a lead, and check which sources return matches. These reports help the owner improve the product.',
+      ],
+      [
         'What does the website and writing analysis use?',
         'Lead To Client reads a public business page linked to a lead to check its HTML, response time, search metadata and mobile layout signals. When mobile testing is enabled, Google PageSpeed Insights receives the public page URL. Draft generation can send findings, your writing samples and opted-in edits to OpenAI. Change your writing preferences in Settings.',
       ],

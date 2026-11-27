@@ -10,6 +10,7 @@ import type { SiteReport } from '@/lib/site-audit/analyze'
 import type { WorkspaceResult } from '@/lib/workspace-results'
 import type { NormalizedPost } from '@/lib/sources/shared'
 import type { TrackableJob } from '@/lib/job-tracking-model'
+import type { OwnerReport } from '@/lib/owner-model'
 export type Product =
   'lifetime' | 'agency' | 'monthly' | 'topup9' | 'topup19' | 'topup29'
 type Plan = 'free' | 'lifetime' | 'agency' | 'monthly'
@@ -239,6 +240,11 @@ export type Database = {
         },
         'user_id' | 'stripe_session_id' | 'product' | 'amount'
       >
+      purchase_billing_locations: Table<{
+        stripe_session_id: string
+        city: string | null
+        country: string | null
+      }, 'stripe_session_id'>
       checkout_quotes: Table<
         Quote,
         'user_id' | 'product' | 'amount' | 'credits' | 'expires_at',
@@ -278,6 +284,12 @@ export type Database = {
     CompositeTypes: Record<never, never>
     Functions: WorkflowFunctions & AgencyFunctions &
       ProposalFunctions & {
+        owner_report: Rpc<{
+          p_days: number; p_search: string; p_user_page: number; p_purchase_page: number
+        }, OwnerReport>
+        record_purchase_location: Rpc<{
+          p_receipt: string; p_city: string | null; p_country: string | null
+        }, undefined>
         get_job_tracking: Rpc<{ p_urls: string[] }, { id: string; url: string; applied_at: string | null }[]>
         track_inbox_job: Rpc<{ p_owner: string; p_job: TrackableJob; p_applied: boolean }, { id: string; applied_at: string | null }[]>
         mark_inbox_job_applied: Rpc<{ p_actor: string; p_lead: string }, string | null>

@@ -1,6 +1,7 @@
 import 'server-only'
 import type Stripe from 'stripe'
 import { admin } from './db/admin'
+import { billingLocation, recordBillingLocation } from './billing-location'
 import {
   monthlyInvoice,
   paidCheckout,
@@ -26,7 +27,7 @@ export async function fulfill(s: Stripe.Checkout.Session) {
         typeof s.invoice === 'string'
           ? await stripe().invoices.retrieve(s.invoice)
           : s.invoice
-      await applyInvoice(invoice)
+      await applyInvoice(invoice, s.customer_details?.address)
     }
     return
   }
@@ -34,15 +35,30 @@ export async function fulfill(s: Stripe.Checkout.Session) {
   if (!payment) return
   const { currency, ...args } = payment
   if (currency === 'usd') {
-    const { error } = await admin().rpc('fulfill_checkout', args)
+    const db = admin()
+    const { error } = await db.rpc('fulfill_checkout', args)
     if (error) throw new Error('Payment fulfillment pending')
+    await recordBillingLocation(
+      db,
+      args.p_session,
+      billingLocation(s.customer_details?.address),
+    )
   }
 }
-async function applyInvoice(invoice: Stripe.Invoice) {
+async function applyInvoice(
+  invoice: Stripe.Invoice,
+  checkoutAddress?: Stripe.Address | null,
+) {
   const args = monthlyInvoice(invoice)
   if (!args) return
-  const { error } = await admin().rpc('apply_subscription_invoice', args)
+  const db = admin()
+  const { error } = await db.rpc('apply_subscription_invoice', args)
   if (error) throw new Error('Subscription refill pending')
+  await recordBillingLocation(
+    db,
+    args.p_invoice,
+    billingLocation(invoice.customer_address, checkoutAddress),
+  )
 }
 async function expireQuote(id: string) {
   const { error } = await admin()
@@ -163,6 +179,7 @@ export async function startCheckout(
     {
       mode: 'payment',
       payment_method_types: ['card'],
+      billing_address_collection: 'required',
       customer,
       client_reference_id: userId,
       metadata,

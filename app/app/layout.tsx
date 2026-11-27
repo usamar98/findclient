@@ -4,6 +4,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { WorkspaceNav } from '@/components/workspace/workspace-nav'
 import { AccountMenu } from '@/components/workspace/account-menu'
 import { requireUser } from '@/lib/db/server'
+import { isPlatformOwner } from '@/lib/owner-access'
 export const metadata: Metadata = {
   title: 'Workspace | Lead To Client',
   robots: { index: false, follow: false },
@@ -14,7 +15,7 @@ export default async function Layout({
 }: {
   children: React.ReactNode
 }) {
-  await requireUser()
+  const { user } = await requireUser()
   return (
     <div className="workspace">
       <header className="work-header">
@@ -22,7 +23,7 @@ export default async function Layout({
         <WorkspaceNav />
         <div className="work-account">
           <ThemeToggle />
-          <AccountMenu />
+          <AccountMenu showOwnerDashboard={isPlatformOwner(user)} />
         </div>
       </header>
       <main>{children}</main>

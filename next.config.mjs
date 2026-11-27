@@ -26,7 +26,15 @@ const config = {
         { key: 'Cache-Control', value: 'private, no-store' },
         ...(prefix === '/p' ? [{ key: 'Referrer-Policy', value: 'no-referrer' }] : []),
       ],
-    }))]
+    })), {
+      source: '/app/admin/:path*',
+      headers: [
+        { key: 'Referrer-Policy', value: 'no-referrer' },
+        { key: 'Content-Security-Policy', value: "script-src 'self' 'unsafe-inline'" +
+          (process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : '') +
+          "; frame-ancestors 'none'; form-action 'self'; base-uri 'self'" },
+      ],
+    }]
   },
 }
 export default config

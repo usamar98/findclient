@@ -12,7 +12,10 @@ const links = [
   { href: '/app/settings', label: 'Settings' },
 ]
 
-export function AccountMenu({ onOpen }: { onOpen?: () => void }) {
+export function AccountMenu({ onOpen, showOwnerDashboard = false }: {
+  onOpen?: () => void
+  showOwnerDashboard?: boolean
+}) {
   const pathname = usePathname()
   const menu = useRef<HTMLDetailsElement>(null)
   const trigger = useRef<HTMLElement>(null)
@@ -51,6 +54,10 @@ export function AccountMenu({ onOpen }: { onOpen?: () => void }) {
             {link.label}
           </Link>
         ))}
+        {showOwnerDashboard && (
+          // A full navigation applies the dashboard's private document security policy.
+          <a href="/app/admin" aria-current={pathname === '/app/admin' ? 'page' : undefined}>Owner dashboard</a>
+        )}
         <form action={submitSignOut}>
           <button type="submit" disabled={signingOut}>{signingOut ? 'Signing out…' : 'Sign out'}</button>
           {message && <p className="cf-account-status" role="status">{message}</p>}

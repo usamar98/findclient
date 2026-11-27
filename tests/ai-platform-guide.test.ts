@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import test from 'node:test'
-import { platformFreshnessAnswer, platformGuideRows, platformTimingNote, platformWatchAnswer } from '../lib/platform-guide'
+import { browseSourceNames, dailySourceNames, platformAccessAnswer, platformFreshnessAnswer, platformGuideRows, platformTimingNote, platformWatchAnswer } from '../lib/platform-guide'
 import { platformGuideMarkdown } from '../lib/platform-guide-markdown'
 import { faqGroups, homeFaq, howItWorksFaq, marketingFaq, pricingFaq } from '../lib/marketing-faq'
 import { niches } from '../lib/niche-content'
-import { researchSourceLabels } from '../lib/research-catalog'
+import { dailyJobSources, keylessSources, paidSources, researchSourceLabels } from '../lib/research-catalog'
 import { absolute } from '../lib/seo'
 
 test('the public AI guides cover every searchable platform and point to the HTML guide', () => {
@@ -60,5 +60,18 @@ test('FAQ navigation and page excerpts reference distinct questions in the publi
   const answers = new Map(marketingFaq.map(item => [item.question, item.answer]))
   for (const item of [...homeFaq, ...pricingFaq, ...howItWorksFaq]) {
     assert.equal(answers.get(item.question), item.answer)
+  }
+})
+
+test('publication constraints and browse coverage are consistent across the public guide and FAQ', () => {
+  for (const source of paidSources) assert.ok(browseSourceNames.includes(researchSourceLabels[source]))
+  for (const source of dailyJobSources) assert.ok(dailySourceNames.includes(researchSourceLabels[source]))
+  for (const source of keylessSources) assert.ok(platformAccessAnswer.includes(researchSourceLabels[source]))
+  const guide = platformGuideMarkdown()
+  const faq = marketingFaq.map(item => item.answer).join('\n')
+  for (const text of [guide, faq]) {
+    assert.match(text, /Jobicy.{0,100}three hours/i)
+    assert.match(text, /at most hourly/i)
+    assert.match(text, /(?:frilans|underkonsult)/i)
   }
 })

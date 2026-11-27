@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { buildMetadata, absolute, siteConfig } from '@/lib/seo'
 import { organization } from '@/lib/brand'
 import { homeFaq } from '@/lib/marketing-faq'
+import { dailySourceNames } from '@/lib/platform-guide'
+import { researchSources } from '@/lib/research-catalog'
 import { shopifySnapshot } from '@/lib/demo-snapshot'
 import { DiscoveryHero, SourceExamples } from '@/components/marketing/home-discovery'
 import { PublicSearch } from '@/components/marketing/public-search'
@@ -43,9 +45,9 @@ export default function Home() {
         <div className="cf-paid-research">
           <h3>Where can I find paid freelance work?</h3>
           <div>
-            <p>Browse <Link href="/app/jobs">jobs from the past 24 hours</Link> for freelance requests on Hacker News, Bluesky and Mastodon, contracts on We Work Remotely and Remote OK, and cash bounties on GitHub.</p>
+            <p>Browse <Link href="/app/jobs">jobs from the past 24 hours</Link> across {dailySourceNames}.</p>
             <p>See when a job was posted and when Lead To Client first found it. Open the original listing to check the terms and apply.</p>
-            <Link href="/platforms">See all 12 sources and how post age is measured <span aria-hidden="true">↗</span></Link>
+            <Link href="/platforms">See all {researchSources.length} sources and how post age is measured <span aria-hidden="true">↗</span></Link>
           </div>
         </div>
         <TelegramJobCard>

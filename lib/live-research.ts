@@ -1,9 +1,10 @@
 import { matchJobListing, matchResearchPost, researchMatchPlan } from './research-matching'
+import { validJobKeyword } from './lead-title-search'
+import { inPublicationWindow, researchWindows, type ResearchWindow } from './research-windows'
 import { isPaidSource, researchSources, type CandidateTime, type JobListing, type ResearchCandidate, type ResearchSourceId } from './research-catalog'
 export { isPaidSource, keylessSources, paidSources, researchSources, researchSourceLabels, researchSourceNotes } from './research-catalog'
 export type { ResearchSourceId } from './research-catalog'
-export const researchWindows = { '1': 'Past minute', '15': 'Past 15 minutes', '60': 'Past hour', '1440': 'Past 24 hours' } as const
-export type ResearchWindow = keyof typeof researchWindows
+export { researchWindows, type ResearchWindow } from './research-windows'
 
 export function researchInput(form: FormData) {
   const q = form.get('q')
@@ -14,11 +15,11 @@ export function researchInput(form: FormData) {
     !selected.length || selected.some(value => !researchSources.includes(value as ResearchSourceId))) return null
   const sources = researchSources.filter(id => selected.includes(id))
   const query = q.trim()
-  if (query.length < 2 && !(query === '' && sources.every(isPaidSource))) return null
+  if (!validJobKeyword(query) && !(query === '' && sources.every(isPaidSource))) return null
   return { q: query, minutes: window as ResearchWindow, sources }
 }
 
-export type ResearchStatus = 'checked' | 'unconfigured' | 'cooldown' | 'unavailable' | 'limit' | 'access'
+export type ResearchStatus = 'checked' | 'delayed' | 'unconfigured' | 'cooldown' | 'unavailable' | 'limit' | 'access'
 export type ResearchSource = {
   source: ResearchSourceId; status: ResearchStatus; count: number; requests: number; reviewed: number; indexed: boolean; partial?: boolean; durationMs?: number
   checkedFeeds?: string[]; unavailableFeeds?: string[]; lastCheckedAt?: string
@@ -60,8 +61,7 @@ export function researchSnapshot(query: string, minutes: ResearchWindow, respons
   const end = checkedAt.getTime()
   const cutoff = end - Number(minutes) * 60_000
   function isFresh(candidate: CandidateTime) {
-    const time = Date.parse(candidate.posted_at)
-    return time >= cutoff && time <= end
+    return inPublicationWindow(candidate.posted_at, cutoff, end)
   }
   const plan = researchMatchPlan(query)
   const seen = new Set<string>()

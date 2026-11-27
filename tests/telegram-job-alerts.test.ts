@@ -107,6 +107,7 @@ test('paid job alerts filter, deduplicate and recheck consent before Telegram de
   const now = Date.now()
   const minutesAgo = (n: number) => new Date(now - n * 60_000).toISOString()
   const watch = { id: randomUUID(), user_id: randomUUID(), chat_id: '42', started_at: minutesAgo(5), query: 'Shopify' }
+  const designWatch = { ...watch, id: randomUUID(), started_at: minutesAgo(300), query: 'Motion designer' }
   type Notification = { kind: string; user_id: string; event_key: string; payload: { watch_id: string; source: string; posted_at: string; first_found_at?: string; url: string } }
   const outbox = new Map<string, Notification>()
   const delivered: { chat_id: string; text: string }[] = []
@@ -135,6 +136,14 @@ test('paid job alerts filter, deduplicate and recheck consent before Telegram de
       job('shopify-contract', 1) + job('shopify-theme', 3, 'Build a new storefront theme.') +
       job('shopify-old', 10) + job('transcription', 2) + '</channel></rss>')
     if (url.host === 'api.github.com') return Response.json({ total_count: 0, incomplete_results: false, items: [] })
+    if (url.host === 'jobicy.com') return Response.json({ success: true, nextCursor: null, jobs: [
+      { companyName: 'Studio', jobTitle: 'Motion designer', jobType: ['Contract'], jobDescription: 'Design a title sequence.',
+        pubDate: minutesAgo(241), url: 'https://jobicy.com/jobs/motion-designer', salaryMin: 60, salaryMax: 80, salaryCurrency: 'USD', salaryPeriod: 'hourly' },
+    ] })
+    if (url.host === 'jobsearch.api.jobtechdev.se') return Response.json({ total: {value: 1}, hits: [
+      { id: '1234', employer: {name: 'Studio AB'}, headline: 'Freelance Shopify developer', removed: false,
+        publication_date: minutesAgo(1), description: {text: 'Build an online store.'} },
+    ] })
     if (url.host === 'remoteok.com' || url.host === 'mastodon.social') return Response.json([])
     if (url.host === 'api.telegram.org') {
       assert.equal(url.pathname, '/bottest-token/sendMessage')
@@ -145,7 +154,7 @@ test('paid job alerts filter, deduplicate and recheck consent before Telegram de
     assert.equal(url.host, 'db.example.test')
     switch (url.pathname) {
       case '/rest/v1/rpc/claim_telegram_job_watches':
-        return Response.json([watch])
+        return Response.json([watch, designWatch])
       case '/rest/v1/source_backoffs':
         return Response.json([])
       case '/rest/v1/rpc/record_job_discoveries': {
@@ -174,14 +183,15 @@ test('paid job alerts filter, deduplicate and recheck consent before Telegram de
       }
       case '/rest/v1/telegram_job_watches': {
         const matches = subscribed && url.searchParams.get('user_id') === 'eq.' + watch.user_id &&
-          url.searchParams.get('chat_id') === 'eq.' + watch.chat_id && url.searchParams.get('id') === 'eq.' + watch.id
-        return Response.json(matches ? [{ id: watch.id }] : [])
+          url.searchParams.get('chat_id') === 'eq.' + watch.chat_id
+        const active = [watch, designWatch].find(candidate => url.searchParams.get('id') === 'eq.' + candidate.id)
+        return Response.json(matches && active ? [{ id: active.id }] : [])
       }
       default: throw new Error('Unexpected request during alert test: ' + url.pathname)
     }
   })
-  assert.deepEqual(await queueTelegramJobAlerts(), { checked: 1, queued: 5 })
-  assert.deepEqual(await queueTelegramJobAlerts(), { checked: 1, queued: 0 })
+  assert.deepEqual(await queueTelegramJobAlerts(), { checked: 2, queued: 7 })
+  assert.deepEqual(await queueTelegramJobAlerts(), { checked: 2, queued: 0 })
   const queued = [...outbox.values()]
   const [notice, unpriced] = queued.filter(job => job.payload.source === 'weworkremotely')
   assert.equal(notice.kind, 'telegram_job')
@@ -213,6 +223,18 @@ test('paid job alerts filter, deduplicate and recheck consent before Telegram de
   withdrawn.add(retired.payload.url)
   await deliverTelegramJob(watch.user_id, watch.chat_id, retired.payload)
   assert.equal(delivered.length, 4)
+  for (const [source, label, postedAt, url] of [
+    ['jobicy', 'Jobicy', minutesAgo(241), 'https://jobicy.com/jobs/motion-designer'],
+    ['jobtech', 'JobTech Sweden', minutesAgo(1), 'https://arbetsformedlingen.se/platsbanken/annonser/1234'],
+  ]) {
+    const match = queued.find(entry => entry.payload.source === source)
+    assert.ok(match)
+    assert.equal(match.payload.posted_at, postedAt)
+    assert.equal(match.payload.first_found_at, minutesAgo(0.5))
+    await deliverTelegramJob(watch.user_id, watch.chat_id, match.payload)
+    assert.ok(delivered.at(-1)!.text.includes(label))
+    assert.ok(delivered.at(-1)!.text.includes(url))
+  }
   // Pending notices created before the discovery-time migration still deliver.
   const legacy = { ...notice.payload, first_found_at: undefined }
   await deliverTelegramJob(watch.user_id, watch.chat_id, legacy)
@@ -224,5 +246,5 @@ test('paid job alerts filter, deduplicate and recheck consent before Telegram de
   await deliverTelegramJob(watch.user_id, watch.chat_id, { ...notice.payload, watch_id: randomUUID() })
   subscribed = false
   await send()
-  assert.equal(delivered.length, 5)
+  assert.equal(delivered.length, 7)
 })

@@ -9,6 +9,7 @@ import {
 import { indexed, shopify } from '../lib/sources/discovery'
 import { bluesky, hn, stackexchange } from '../lib/sources/api'
 import { FeedAccessRestricted, searchForumFeeds, shopifyRecent } from '../lib/sources/forum-feeds'
+import { redditRecent, xRecent } from '../lib/sources/research-social'
 import { nicheSchema } from '../lib/niche'
 const since = new Date('2025-08-01T00:00:00Z')
 const post: NormalizedPost = {
@@ -34,6 +35,12 @@ test('normalization rejects stale, undated and unsafe results and deduplicates t
   assert.equal(list[0].url, post.url)
   assert.equal(list[0].title, 'A & B')
   assert.equal(list[0].body, 'Help')
+  const dates = cleanPosts([
+    { ...post, posted_at: '2025-08-02' },
+    { ...post, url: post.url + '2', posted_at: '2025-08-02T00:00:00' },
+  ], since)
+  assert.equal(dates.length, 1)
+  assert.equal(dates[0].posted_precision, 'day')
 })
 test('provider HTTP throttling exposes the requested retry time', async (t) => {
   t.mock.method(
@@ -84,8 +91,11 @@ test('Reddit adapter requests only indexed threads with a publication date', asy
     if (original === undefined) delete process.env.EXA_API_KEY
     else process.env.EXA_API_KEY = original
   })
-  t.mock.method(globalThis, 'fetch', async (url: string) => {
+  t.mock.method(globalThis, 'fetch', async (url: string, options: RequestInit) => {
     assert.equal(url, 'https://api.exa.ai/search')
+    const request = JSON.parse(String(options.body))
+    assert.match(request.query, /employers hiring.*project help with theme/)
+    assert.equal(request.startPublishedDate, since.toISOString())
     const result = {
       url: 'https://www.reddit.com/r/shopify/comments/abc/need_help/',
       title: 'Need help with a theme',
@@ -265,4 +275,48 @@ test('live Shopify reports a restricted feed and scheduled Shopify skips it with
   })
   await assert.rejects(shopifyRecent.search('Shopify', since), FeedAccessRestricted)
   assert.deepEqual(await shopify.search('Shopify', since), [])
+})
+
+test('Shopify merchant feeds keep matching project requests that omit the job title and drop unrelated threads', async t => {
+  const published = 'Wed, 25 Nov 2026 12:00:20 GMT'
+  t.mock.method(globalThis, 'fetch', async (url: string) => {
+    if (url.endsWith('/robots.txt')) return new Response('User-agent: *\nAllow: /')
+    const row = (id: number, title: string) => '<item><title>' + title + '</title><link>https://community.shopify.com/t/thread/' +
+      id + '</link><pubDate>' + published + '</pubDate></item>'
+    return new Response('<rss><channel>' + row(1, 'Need someone to fix my cart drawer') +
+      row(2, 'Hiring a cashier at our Shopify store') + row(3, 'Help with developertools pricing') + '</channel></rss>')
+  })
+  const rows = await shopify.search('Shopify developer', new Date('2026-11-25T12:00:00Z'))
+  assert.deepEqual(rows.map(post => post.url), ['https://community.shopify.com/t/thread/1'])
+})
+
+test('official X and Reddit searches include buyer-language variants in one query and discard fresh reshares of older listings', async t => {
+  const since = new Date('2026-11-25T12:00:00Z')
+  const posted = new Date(+since + 5_000)
+  const searches: string[] = []
+  t.mock.method(globalThis, 'fetch', async (input: URL | string) => {
+    const url = new URL(input)
+    if (url.hostname === 'www.reddit.com') return Response.json({ access_token: 'test', expires_in: 3600 })
+    searches.push(url.hostname)
+    const x = url.hostname === 'api.x.com'
+    const query = url.searchParams.get(x ? 'query' : 'q')!
+    assert.match(query, /"Shopify developer" OR/i)
+    assert.match(query, /"Shopify" OR "Liquid"/)
+    assert.match(query, /hiring OR hire/)
+    if (x) {
+      assert.match(query, /-is:retweet$/)
+      const row = { id: '45', text: 'Hiring a Shopify developer', author_id: '1', created_at: posted.toISOString() }
+      return Response.json({ meta: { result_count: 2 }, includes: { users: [{ id: '1', username: 'tester' }] }, data: [
+        row, { ...row, id: '46', referenced_tweets: [{ type: 'retweeted', id: '44' }] },
+      ] })
+    }
+    assert.match(query, / AND /)
+    const row = { id: 'ab12', subreddit: 'shopify', title: 'Looking for a Shopify developer', author: 'tester', created_utc: +posted / 1000 }
+    return Response.json({ data: { children: [row, { ...row, id: 'aa20', crosspost_parent: 't3_aaaa' },
+      { ...row, id: 'bb22', removed_by_category: 'moderator' }].map(data => ({ kind: 't3', data })) } })
+  })
+  const [x, reddit] = await Promise.all([xRecent.search('Shopify developer', since), redditRecent.search('Shopify developer', since)])
+  assert.deepEqual(searches.sort(), ['api.x.com', 'oauth.reddit.com'])
+  assert.deepEqual(x.map(post => post.url), ['https://x.com/tester/status/45'])
+  assert.deepEqual(reddit.map(post => post.url), ['https://www.reddit.com/r/shopify/comments/ab12/'])
 })

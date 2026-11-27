@@ -14,6 +14,7 @@ test('the shared feed keeps first observations, fences overlapping collectors, a
       insert into public.source_backoffs values (p_source,p_until) on conflict (source)
       do update set retry_at=greatest(source_backoffs.retry_at,excluded.retry_at) $$;`)
   await db.exec(await readFile(new URL('../supabase/migrations/20261126183650_shared_hiring_feed.sql', import.meta.url), 'utf8'))
+  await db.exec(await readFile(new URL('../supabase/migrations/20261127194343_expand_job_discovery_sources.sql', import.meta.url), 'utf8'))
   const query = async <T>(sql: string, args: unknown[] = []) => (await db.query<T>(sql, args)).rows
   const claim = () => query<{source: string; lease_id: string}>('select * from claim_shared_hiring_sources($1)', [['hn', 'bluesky']])
   const stored = () => query<{found: string; title: string}>(`select first_found_at::text as found, listing->>'title' as title from shared_hiring_jobs where source='hn'`)
@@ -66,4 +67,11 @@ test('the shared feed keeps first observations, fences overlapping collectors, a
     { ...job, source: 'github', source_key: 'future', posted_at: new Date(Date.now() + 60_000).toISOString() }]
   const accepted = await query<{date: string}>('select first_found_at::text as date from record_job_discoveries($1)', [JSON.stringify(observations)])
   assert.deepEqual(accepted, [{date: first.found}])
+  const boardJobs = ['jobicy', 'jobtech'].map(source => ({source, source_key: '123', url: 'https://jobs.test/' + source, posted_at: posted}))
+  const recordBoards = () => query<{source: string; first_found_at: string}>(
+    'select source, first_found_at::text from record_job_discoveries($1) order by source', [JSON.stringify(boardJobs)])
+  const observed = await recordBoards()
+  assert.deepEqual(observed.map(row => row.source), ['jobicy', 'jobtech'])
+  assert.ok(observed.every(row => Date.parse(row.first_found_at) >= Date.parse(posted)))
+  assert.deepEqual(await recordBoards(), observed)
 })

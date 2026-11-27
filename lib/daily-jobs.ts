@@ -1,9 +1,11 @@
 import 'server-only'
 import { admin } from './db/admin'
 import { researchSnapshot, type ResearchResult, type ResearchStatus } from './live-research'
-import { dailyJobSources, isPaidSource, type CandidateTime, type DailyJobSource, type PaidProjectPost, type PaidSourceId, type UnpricedContract } from './research-catalog'
+import { dailyJobSources, isPaidSource, sourceCanPublishInWindow, type CandidateTime, type DailyJobSource, type PaidProjectPost, type PaidSourceId, type UnpricedContract } from './research-catalog'
 import { readSharedHiringFeed, stampJobDiscoveries } from './shared-hiring-feed'
 import { searchContractBoard } from './sources/contract-boards'
+import { searchOpenJobBoard } from './sources/open-job-boards'
+import type { ResearchWindow } from './research-windows'
 import { searchMastodonJobs } from './sources/mastodon-jobs'
 import { searchPublicProjects } from './sources/public-projects'
 import { ProviderBackoff } from './sources/shared'
@@ -14,17 +16,20 @@ export function paidListings(source: PaidSourceId, since: Date): Promise<PaidLis
   switch (source) {
     case 'github': return searchPublicProjects(source, since)
     case 'mastodon': return searchMastodonJobs(since)
+    case 'jobicy':
+    case 'jobtech': return searchOpenJobBoard(source, since)
     default: return searchContractBoard(source, since)
   }
 }
 
-async function readJobBoards(sources: PaidSourceId[], since: Date) {
+async function readJobBoards(sources: PaidSourceId[], since: Date, minutes: ResearchWindow) {
   if (!sources.length) return []
   const db = admin()
   const gates = await db.from('source_backoffs').select('source,retry_at').in('source', sources)
   const cooldowns = new Map(gates.data?.map(gate => [gate.source, Date.parse(gate.retry_at)]))
   return Promise.all(sources.map(async source => {
     const empty = (status: ResearchStatus) => ({ source, status, indexed: false, posts: [] })
+    if (!sourceCanPublishInWindow(source, minutes)) return empty('delayed')
     if (gates.error) return empty('unavailable')
     if ((cooldowns.get(source) ?? 0) > Date.now()) return empty('cooldown')
     try {
@@ -44,13 +49,13 @@ async function readJobBoards(sources: PaidSourceId[], since: Date) {
   }))
 }
 
-export async function loadDailyJobFeed(selectedSource?: DailyJobSource): Promise<(query?: string) => ResearchResult> {
+export async function loadDailyJobFeed(selectedSource?: DailyJobSource, minutes: ResearchWindow = '1440'): Promise<(query?: string) => ResearchResult> {
   const started = performance.now()
   const sources = selectedSource ? [selectedSource] : dailyJobSources
-  const since = new Date(Date.now() - 86_400_000)
+  const since = new Date(Date.now() - Number(minutes) * 60_000)
   const communities = sources.filter(source => source === 'hn' || source === 'bluesky')
   const [boards, hiring] = await Promise.all([
-    readJobBoards(sources.filter(isPaidSource), since),
+    readJobBoards(sources.filter(isPaidSource), since, minutes),
     communities.length ? readSharedHiringFeed(communities, since) : [],
   ])
   const responses = [...boards, ...hiring.map(row => row.status !== 'checked' && row.posts.length
@@ -59,12 +64,12 @@ export async function loadDailyJobFeed(selectedSource?: DailyJobSource): Promise
   const checkedAt = new Date()
   const durationMs = Math.round(performance.now() - started)
   return (query = '') => ({
-    ...researchSnapshot(query.trim().slice(0, 100), '1440', responses, checkedAt),
+    ...researchSnapshot(query.trim().slice(0, 100), minutes, responses, checkedAt),
     durationMs,
   })
 }
 
-export async function getDailyJobs(query = '', selectedSource?: DailyJobSource): Promise<ResearchResult> {
-  const search = await loadDailyJobFeed(selectedSource)
+export async function getDailyJobs(query = '', selectedSource?: DailyJobSource, minutes: ResearchWindow = '1440'): Promise<ResearchResult> {
+  const search = await loadDailyJobFeed(selectedSource, minutes)
   return search(query)
 }

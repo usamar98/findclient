@@ -9,6 +9,9 @@ type Hit = {
   posted_at: string
   author?: string
 }
+const postedTime = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'UTC', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
+})
 export function PublicSearch({
   redditOnly = false,
   initial = [],
@@ -61,7 +64,7 @@ export function PublicSearch({
                 {hit.source === 'stackexchange' ? 'Stack Overflow' : hit.source}
                 {hit.author ? ' · ' + hit.author : ''} ·{' '}
                 <time dateTime={hit.posted_at}>
-                  {hit.posted_at.slice(0, 10)}
+                  {hit.posted_at.length === 10 ? hit.posted_at : postedTime.format(new Date(hit.posted_at))}
                 </time>
               </small>
               <h3>

@@ -65,6 +65,10 @@ export const infoPages = {
       'The Lead To Client changelog records changes that affect how freelancers find requests, review intent, draft responses and manage credits. Use the dated entries to check which workflows are available, then follow the product guides for instructions on configuring a niche or reviewing a potential client conversation.',
     sections: [
       [
+        'November 28, 2026 · Jobicy and JobTech Sweden contract listings',
+        'Find remote Jobicy contracts and freelance openings on Sweden’s Platsbanken in Live Research, Jobs and Telegram. Search by role and original posting time, from one minute to 24 hours. Jobicy releases listings after three hours, so choose six or 24 hours for that source.',
+      ],
+      [
         'November 26, 2026 · Hacker News and Bluesky hiring feed',
         'Freelance hiring posts from Hacker News and Bluesky now appear in Live Research, 24-hour Jobs and Telegram watches. Each job shows its source publication time and when Lead To Client first saved it.',
       ],

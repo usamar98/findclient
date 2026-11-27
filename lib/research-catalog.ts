@@ -1,11 +1,16 @@
 import { sources } from './niche'
 import { paidSourceLabels, paidSources, type PaidSourceId } from './paid-sources'
 import type { NormalizedPost } from './sources/shared'
+import type { ResearchWindow } from './research-windows'
 export { isPaidSource, paidSources, type PaidSourceId } from './paid-sources'
 
 export const researchSourceLabels = { ...sources, ...paidSourceLabels }
 export type ResearchSourceId = keyof typeof researchSourceLabels
 export const researchSources = Object.keys(researchSourceLabels) as ResearchSourceId[]
+const publicationDelays: Partial<Record<ResearchSourceId, number>> = { jobicy: 180 }
+export function sourceCanPublishInWindow(source: ResearchSourceId, minutes: ResearchWindow) {
+  return Number(minutes) >= (publicationDelays[source] ?? 0)
+}
 export type DailyJobSource = PaidSourceId | 'hn' | 'bluesky'
 export const dailyJobSources: DailyJobSource[] = [...paidSources, 'hn', 'bluesky']
 export function isDailyJobSource(source: string): source is DailyJobSource {
@@ -17,6 +22,8 @@ export const researchSourceNotes: Partial<Record<ResearchSourceId, string>> = {
   remoteok: 'Age uses the Remote OK listing date. Employers can renew listings.',
   github: 'Open, unassigned issues with a cash bounty offered by a maintainer.',
   mastodon: 'Original public hiring posts from selected tags visible on mastodon.social.',
+  jobicy: 'Jobicy releases jobs to its public API three hours after publication. The feed is checked at most hourly.',
+  jobtech: 'Freelance openings from Sweden’s Platsbanken. Age uses the publication time of the listing in Sweden.',
 }
 
 type JobDetails = Omit<NormalizedPost, 'source' | 'posted_precision'> & {

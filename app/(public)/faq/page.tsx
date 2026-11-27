@@ -6,6 +6,7 @@ import { infoPages } from '@/lib/marketing-pages'
 import { headingId } from '@/lib/posts'
 import { staticPageUpdated } from '@/lib/public-pages'
 import { absolute, buildMetadata } from '@/lib/seo'
+import { researchSources } from '@/lib/research-catalog'
 import './faq.css'
 
 const path = '/faq'
@@ -15,7 +16,7 @@ export const metadata = buildMetadata({ title: page.title, description: page.des
 const topicGuides: Record<string, { href: string; label: string }> = {
   'finding-freelance-work': { href: '/how-it-works#live-research', label: 'Walk through a freelance job search' },
   'freelance-niches': { href: '/find-clients', label: 'Find clients by freelance service' },
-  platforms: { href: '/platforms', label: 'Compare the 12 Live Research sources' },
+  platforms: { href: '/platforms', label: `Compare the ${researchSources.length} Live Research sources` },
   'source-freshness': { href: '/platforms#source-freshness', label: 'Compare source timing and publisher references' },
   'saved-searches': { href: '/how-it-works#source-coverage', label: 'Check saved search coverage and scan intervals' },
   'buyer-intent': { href: '/how-it-works#buyer-quality', label: 'See a worked buyer quality score' },

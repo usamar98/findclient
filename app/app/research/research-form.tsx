@@ -6,6 +6,7 @@ import { isPaidSource, keylessSources, researchSourceLabels, researchSourceNotes
 import { findFreshPosts } from './actions'
 
 const messages: Record<Exclude<ResearchStatus, 'checked'>, string> = {
+  delayed: 'Source publication delay exceeds this window',
   unconfigured: 'Search provider not configured', access: 'Provider denied access',
   cooldown: 'Provider rate limit', unavailable: 'Source unavailable', limit: 'Daily search limit reached',
 }
@@ -56,12 +57,13 @@ function PostCard({ post, checkedAt, tracking, proof }: { post: ResearchPost; ch
   </article>
 }
 
-export function ResearchForm({ initialQuery, initialSources, initialWindow }: { initialQuery: string; initialSources: ResearchPost['source'][]; initialWindow: ResearchWindow }) {
+export function ResearchForm({ initialQuery, initialSources, initialWindow, searchFromInbox }: { initialQuery: string; initialSources: ResearchPost['source'][]; initialWindow: ResearchWindow; searchFromInbox: boolean }) {
   const [q, setQuery] = useState(initialQuery)
   const [selected, setSelected] = useState(initialSources)
   const [minutes, setMinutes] = useState<ResearchWindow>(initialWindow)
   const [watch, setWatch] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
+  const initialSearchSent = useRef(false)
   const [state, submit, pending] = useActionState<Awaited<ReturnType<typeof findFreshPosts>>, FormData>(submitSearch, {})
   const paidOnly = selected.length > 0 && selected.every(isPaidSource)
   const snapshot = state.result
@@ -69,9 +71,19 @@ export function ResearchForm({ initialQuery, initialSources, initialWindow }: { 
     snapshot.sources.length === selected.length && snapshot.sources.every(s => selected.includes(s.source)) ? snapshot : undefined
   const checked = result?.sources.filter(source => source.status === 'checked').length ?? 0
   const reviewed = result?.sources.reduce((sum, source) => sum + source.reviewed, 0) ?? 0
-  const requests = result?.posts.filter(post => post.kind !== 'topic') ?? []
+  const jobs = result?.posts.filter(post => post.kind === 'hiring') ?? []
+  const help = result?.posts.filter(post => post.kind === 'help') ?? []
   const discussions = result?.posts.filter(post => post.kind === 'topic') ?? []
   const canWatch = Boolean(result && checked && (minutes === '1' || minutes === '15') && selected.every(id => keylessSources.includes(id)))
+
+  useEffect(() => {
+    if (!searchFromInbox || initialSearchSent.current) return
+    initialSearchSent.current = true
+    const url = new URL(window.location.href)
+    url.searchParams.delete('run')
+    window.history.replaceState(window.history.state, '', url)
+    formRef.current?.requestSubmit()
+  }, [searchFromInbox])
 
   useEffect(() => {
     if (!watch || !canWatch || pending) return
@@ -84,7 +96,7 @@ export function ResearchForm({ initialQuery, initialSources, initialWindow }: { 
   return <>
     <form ref={formRef} action={submit} className="panel research-form" onChange={() => setWatch(false)}>
       <div className="research-inputs">
-        <label>Keywords{paidOnly && ' (optional)'}<input type="search" name="q" minLength={2} maxLength={100} required={!paidOnly} placeholder={paidOnly ? 'All paid freelance jobs' : 'e.g. Shopify developer'} value={q} onChange={e => setQuery(e.target.value)} aria-describedby={paidOnly ? 'paid-search-hint' : undefined} /></label>
+        <label>Job title or skill{paidOnly && ' (optional)'}<input type="search" name="q" maxLength={100} required={!paidOnly} placeholder="e.g. Software engineer or Shopify developer" value={q} onChange={e => setQuery(e.target.value)} aria-describedby={paidOnly ? 'paid-search-hint' : undefined} /></label>
         <label>Posted within<select name="window" value={minutes} onChange={e => setMinutes(e.target.value as ResearchWindow)}>
           {Object.entries(researchWindows).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select></label>
@@ -95,22 +107,22 @@ export function ResearchForm({ initialQuery, initialSources, initialWindow }: { 
             setSelected(e.target.checked ? [...selected, id] : selected.filter(s => s !== id))} />{researchSourceLabels[id]}
         </label>)}</div>
       </fieldset>
-      {paidOnly && <p id="paid-search-hint">Leave keywords empty to browse all paid freelance jobs in this time window.</p>}
+      {paidOnly && <p id="paid-search-hint">Leave keywords empty to browse freelance openings in this time window. Contracts with undisclosed rates are labeled.</p>}
       <p>Post age uses the platform’s publication time. First found shows when Lead To Client first recorded a job. Live searches use no scoring credits.</p>
       <div className="research-submit">
-        <button disabled={!selected.length || pending} type="submit">{pending ? 'Checking platforms…' : 'Search posts'}</button>
+        <button disabled={!selected.length || pending} type="submit">{pending ? 'Checking platforms…' : 'Search jobs'}</button>
         {pending && <RunningTimer />}
       </div>
       {!selected.length && <p role="status">Choose at least one platform.</p>}
     </form>
     {state.error && <p role="alert">{state.error}</p>}
-    {snapshot && !result && !pending && <p role="status">Your search settings changed. Select <strong>Search posts</strong> to check the new selection.</p>}
+    {snapshot && !result && !pending && <p role="status">Your search settings changed. Select <strong>Search jobs</strong> to check the new selection.</p>}
     {result && <section aria-labelledby="research-results">
-      <h2 id="research-results" aria-live="polite">{requests.length} {paidOnly ? `paid freelance opening${requests.length === 1 ? '' : 's'}` : requests.length === 1 ? 'request' : 'requests'}{result.query && <> for “{result.query}”</>}</h2>
+      <h2 id="research-results" aria-live="polite">{jobs.length} {jobs.length === 1 ? 'hiring request' : 'hiring requests'}{result.query && <> for “{result.query}”</>}</h2>
       <p>{researchWindows[result.minutes]} · Checked <time dateTime={result.checkedAt}>{timestamp.format(new Date(result.checkedAt))} UTC</time>
         {result.durationMs != null && <> · Search runtime <Runtime ms={result.durationMs} /></>}</p>
       {canWatch && <label className="research-watch"><input type="checkbox" checked={watch} onChange={e => setWatch(e.target.checked)} />Check again every minute while this tab is visible</label>}
-      <details className="research-coverage" open={!requests.length}>
+      <details className="research-coverage" open={!jobs.length && !help.length}>
         <summary>Platform coverage · {reviewed} {reviewed === 1 ? 'fresh post' : 'fresh posts'} checked</summary>
         <ul className="research-sources" aria-label="Platform coverage">
         {result.sources.map(source => <li key={source.source}><strong>{researchSourceLabels[source.source]}</strong> · {source.indexed ? 'Search index' : 'API or feed'} · {source.status === 'checked' ? source.reviewed + ' checked, ' + source.requests + (source.requests === 1 ? ' request' : ' requests') : messages[source.status]}
@@ -123,13 +135,18 @@ export function ResearchForm({ initialQuery, initialSources, initialWindow }: { 
         </li>)}
         </ul>
       </details>
-      {!requests.length && <div className="panel"><p>{!checked
+      {!jobs.length && <div className="panel"><p>{result.sources.every(source => source.status === 'delayed')
+        ? 'This source releases listings after your selected window. Choose a longer window or another platform.'
+        : !checked
         ? 'The selected platforms could not complete this search. See platform coverage for the reason.'
-        : paidOnly ? 'The responding platforms returned no matching paid freelance openings published in this window.'
-        : reviewed ? 'The fresh posts reviewed contained no matching request for help or hiring.'
+        : reviewed ? 'The responding platforms returned no matching hiring requests published in this window.'
         : 'The responding sources returned no candidate posts published in this window.'}</p></div>}
-      {requests.map(post => <PostCard key={post.url} post={post} checkedAt={result.checkedAt}
+      {jobs.map(post => <PostCard key={post.url} post={post} checkedAt={result.checkedAt}
         tracking={state.tracking?.[post.url]} proof={state.proofs?.[post.url]} />)}
+      {!!help.length && <details className="research-discussions">
+        <summary>People asking for help ({help.length})</summary>
+        {help.map(post => <PostCard key={post.url} post={post} checkedAt={result.checkedAt} />)}
+      </details>}
       {!!discussions.length && <details className="research-discussions">
         <summary>Related discussions ({discussions.length})</summary>
         {discussions.map(post => <PostCard key={post.url} post={post} checkedAt={result.checkedAt} />)}

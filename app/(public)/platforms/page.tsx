@@ -12,7 +12,7 @@ import './platforms.css'
 const path = '/platforms'
 const markdown = '/guides/platforms.md'
 const title = 'Fresh freelance leads by platform: post age and rechecks | Lead To Client'
-const description = 'Compare freshness across 12 freelance lead sources. See how the 15-minute post filter and optional 1-minute recheck work for job boards, bounties and communities.'
+const description = `Compare freshness across ${platformGuideRows.length} freelance lead sources. See how the 15-minute post filter and optional 1-minute recheck work for job boards, bounties and communities.`
 const baseMetadata = buildMetadata({ path, title, description })
 export const metadata: Metadata = {
   ...baseMetadata,
@@ -54,12 +54,12 @@ export default function Platforms() {
       <h2 id="freshness">What does the 15-minute filter show?</h2>
       <p>{platformFreshnessAnswer}</p>
       <p>For a check at 10:20 UTC, a post published at 10:13 is seven minutes old. A job posted at 10:04 and first found at 10:19 falls outside the 15-minute window. It can still appear in the 24-hour Jobs feed.</p>
-      <p>Open <Link href="/app/jobs">24-hour jobs</Link> to browse freelance openings. We Work Remotely contracts without published compensation are marked “Pay not listed.” Community results in Live Research can also include people asking for advice.</p>
+      <p>Open <Link href="/app/jobs">24-hour Jobs</Link> to browse freelance openings. An employer contract can show “Pay not listed” when its source gives no rate. Community results in Live Research can also include people asking for advice.</p>
     </section>
     <section aria-labelledby="one-minute-recheck">
       <h2 id="one-minute-recheck">When does the 1-minute recheck run?</h2>
       <p>{platformWatchAnswer}</p>
-      <p>All six Jobs sources support this recheck in Live Research. Selecting Reddit, X or Indie Hackers makes rechecks manual. For ongoing inbox alerts, <Link href="/how-it-works#source-coverage">see the separate saved search schedule</Link>.</p>
+      <p>Each recheck keeps your original time window. Jobicy’s three-hour publication delay puts its listings outside both recheck windows. Selecting Reddit, X or Indie Hackers makes rechecks manual. For ongoing inbox alerts, <Link href="/how-it-works#source-coverage">see the saved search schedule</Link>.</p>
     </section>
     <section aria-labelledby="source-freshness">
       <h2 id="source-freshness">How fresh is each freelance lead source?</h2>
@@ -84,7 +84,7 @@ export default function Platforms() {
     </section>
     <section aria-labelledby="community-sources">
       <h2 id="community-sources">Where do people ask for help?</h2>
-      <p>Search these eight sources for the work you do. Live Research distinguishes hiring requests, requests for help and related discussions so you can decide which conversations to join.</p>
+      <p>Search these {communityRows.length} sources for the work you do. Live Research groups hiring requests, requests for help and related discussions so you can decide which conversations to join.</p>
       <SourceList rows={communityRows} />
     </section>
     <section>

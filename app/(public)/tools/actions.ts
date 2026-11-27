@@ -1,68 +1,30 @@
 'use server'
-import { unstable_cache } from 'next/cache'
 import { z } from 'zod'
 import { allowRequest } from '@/lib/limits'
 import { generateReply } from '@/lib/ai'
 import { searchPublic } from '@/lib/sources'
-import { redditSnapshot } from '@/lib/free-tools'
-import { shopifySnapshot, snapshotDate } from '@/lib/demo-snapshot'
 const ready = () =>
   Boolean(
     process.env.SUPABASE_SERVICE_ROLE_KEY &&
     process.env.NEXT_PUBLIC_SUPABASE_URL,
   )
 const forSearch = z.string().trim().min(2).max(80)
-const cachedSearch = unstable_cache(
-  async (q: string, reddit: boolean) => {
-    return (await searchPublic(q, reddit))
-      .slice(0, 3)
-      .map(({ title, body, url, source, posted_at, author }) => ({
-        title,
-        author,
-        body: body.slice(0, 370),
-        url,
-        source,
-        posted_at,
-      }))
-  },
-  ['clientfind-public-search-v2'],
-  { revalidate: 3600 },
-)
 export async function publicSearch(input: unknown, redditOnlyInput: unknown) {
   const skill = forSearch.parse(input),
     redditOnly = z.boolean().parse(redditOnlyInput)
-  const samples = redditOnly ? redditSnapshot : shopifySnapshot
   if (!(await allowRequest('public-search', 8, 3600, true)))
     return { mode: 'Please wait before searching again.', hits: [] }
-  if (ready()) {
-    try {
-      if (!redditOnly || process.env.EXA_API_KEY) {
-        const hits = await cachedSearch(skill.toLowerCase(), redditOnly)
-        return {
-          mode: hits.length
-            ? 'Recent public results · cached for up to one hour'
-            : 'No recent matching posts were returned.',
-          hits,
-        }
-      }
-    } catch {
-      /* Keep the dated local examples accessible during a provider outage. */
-    }
-  }
-  const tokens = skill
-    .toLowerCase()
-    .split(/\s+/)
-    .filter((t) => t.length > 2)
-  const hits = samples
-    .filter((p) =>
-      tokens.some((t) =>
-        (p.title + ' ' + p.body + ' ' + p.source).toLowerCase().includes(t),
-      ),
-    )
-    .slice(0, 3)
-  return {
-    mode: 'Saved examples from ' + snapshotDate + ' · live search unavailable',
-    hits,
+  if (!ready() || (redditOnly && !process.env.EXA_API_KEY))
+    return { mode: 'Live search is unavailable.', hits: [] }
+  try {
+    const posts = await searchPublic(skill, redditOnly)
+    const hits = posts.map(({ title, body, url, source, posted_at, author }) => ({
+      title, author, body: body.slice(0, 370), url, source, posted_at,
+    }))
+    return { mode: hits.length ? 'Matching requests from the past 24 hours'
+      : 'No matching requests were found in the past 24 hours.', hits }
+  } catch {
+    return { mode: 'The search providers are temporarily unavailable.', hits: [] }
   }
 }
 const draftInput = z.object({

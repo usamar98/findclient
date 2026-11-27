@@ -12,6 +12,11 @@ test('research validates every platform and preserves a one-minute time window',
   assert.equal(researchInput(form), null)
   for (const source of ['reddit', 'hn', 'reddit']) form.append('source', source)
   assert.deepEqual(researchInput(form), { q: 'web design', minutes: '1', sources: ['hn', 'reddit'] })
+  for (const days of [3, 7, 30]) {
+    form.set('window', String(days * 1440))
+    assert.equal(researchInput(form), null)
+  }
+  form.set('window', '1')
   form.append('source', 'any-url')
   assert.equal(researchInput(form), null)
 })
@@ -25,6 +30,7 @@ test('research keeps precise publication times inside the window at response tim
     post(1, '2026-01-01T23:59:30Z'), post(2, '2026-01-02T00:00:20Z'), post(1, '2026-01-01T23:59:30Z'),
     post(3, '2026-01-01T23:59:29Z'), post(4, '2026-01-02T00:00:31Z'), post(5, ''),
     { ...post(6, '2026-01-02T00:00:00Z'), posted_precision: 'day' as const },
+    post(7, '2026-01-02'), post(8, '2026-01-02T00:00:10'),
   ]
   const result = researchSnapshot('engineer', '1', [
     { source: 'hn', indexed: false, status: 'checked', posts },
@@ -44,6 +50,10 @@ test('browsing all openings accepts an empty query only for verified paid source
   assert.deepEqual(researchInput(form), { q: '', minutes: '1', sources: paidSources })
   form.set('q', 'x')
   assert.equal(researchInput(form), null)
+  for (const keyword of ['C', 'R']) {
+    form.set('q', keyword)
+    assert.equal(researchInput(form)?.q, keyword)
+  }
   form.set('q', '')
   form.append('source', 'bluesky')
   assert.equal(researchInput(form), null)
@@ -126,7 +136,7 @@ test('official social searches retain author and source ID with the original pub
     assert.equal(options.cache, 'no-store')
     if (url.hostname === 'api.x.com') {
       assert.equal(url.searchParams.get('sort_order'), 'recency')
-      assert.equal(url.searchParams.get('query'), 'engineer')
+      assert.equal(url.searchParams.get('query'), 'engineer -is:retweet')
       return Response.json({ meta: { result_count: 1 }, data: [{ id: '1234', author_id: '42', text: 'Hiring an engineer', created_at: published }],
         includes: { users: [{ id: '42', username: 'tester' }] } })
     }

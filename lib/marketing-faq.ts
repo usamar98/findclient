@@ -1,6 +1,9 @@
 import { coverageIntro, freshnessAnswer } from './marketing-coverage'
 import { lifetimeLastDay } from './offers'
 import {
+  browseSourceNames,
+  dailySourceNames,
+  platformAccessAnswer,
   platformFreshnessAnswer,
   platformGuideRows,
   platformRuntimeAnswer,
@@ -73,9 +76,9 @@ export const faqGroups: FaqGroup[] = [
       qa('How does Lead To Client find freelance leads?',
         'Use Live Research to search recent community posts and freelance openings by skill. For ongoing discovery, save your service, buyer phrases and sources, then run a scan. Qualifying posts arrive in the lead inbox with a reason to review them and a link to the original conversation.'),
       qa('Where can I find freelance jobs posted in the last 24 hours?',
-        'Open 24-hour Jobs to browse Hacker News, Bluesky, Mastodon, We Work Remotely, Remote OK and GitHub paid bounties. Filter by a skill, choose a single source or browse them together. Each opening links to its original listing so you can check whether the buyer is still accepting applications.'),
+        `Open 24-hour Jobs to browse ${dailySourceNames}. Filter by job title, skill, platform or publication window. Each opening links to its original listing so you can check whether the buyer is still accepting applications.`),
       qa('Can I browse paid freelance jobs without a keyword?',
-        'Yes. In Live Research, leave Keywords blank and select any combination of We Work Remotely, Remote OK, GitHub paid bounties and Mastodon hiring posts. Choose a publication window and run the search. Including a community source such as Hacker News or Bluesky in Live Research requires a keyword.'),
+        `Yes. In Live Research, leave Job title or skill blank and select any combination of ${browseSourceNames}. Choose a publication window and select Search jobs. Enter a keyword if you also select a community source such as Hacker News or Bluesky.`),
       qa('How do I start looking for clients before setting up a saved search?',
         'Sign in, open Live Research, enter a skill or project phrase and choose your platforms and time window. For example, try “landing page” on Bluesky. You can run another search with different words right away. Save a service search when you want to monitor the same kind of work over time.'),
       qa('How can I tell a hiring post from a request for free advice?',
@@ -105,7 +108,7 @@ export const faqGroups: FaqGroup[] = [
     title: 'Platforms and source coverage',
     items: [
       qa('Which freelance lead sources work without an API key or Exa?',
-        'Nine Live Research sources work without a source API key or Exa. They are Hacker News, Bluesky, Stack Overflow, Shopify Community, selected public forums, We Work Remotely, Remote OK, GitHub paid bounties and Mastodon hiring posts. Reddit and X can use configured direct access or Exa. Indie Hackers uses Exa.'),
+        platformAccessAnswer),
       reddit,
       qa('How can I find Shopify merchants requesting freelance help?',
         'Select Shopify Community and search for the task a merchant might describe, such as “checkout redirect” or “theme migration”. Open the matching topic or reply to see what the merchant has tried and whether they invite paid help. You can also choose Shopify Community in a saved service search.'),
@@ -117,6 +120,10 @@ export const faqGroups: FaqGroup[] = [
         'Lead To Client looks for an open, unassigned GitHub issue where a repository owner, member or collaborator offers a specific cash amount for a deliverable. A “help wanted” label alone is insufficient. Read the original issue for acceptance criteria and claiming instructions.'),
       qa('Which Mastodon posts can appear as freelance jobs?',
         'Lead To Client checks selected hiring tags visible on mastodon.social for original public posts from accounts that allow indexing. A post from another Mastodon server can appear after it reaches that timeline. Open the post to check the author’s instructions.'),
+      qa('Why are there no Jobicy jobs in a 15-minute search?',
+        'Jobicy releases its public job listings three hours after the original posting time. Lead To Client checks that feed at most hourly. Choose the 6-hour or 24-hour window and look for a remote role marked freelance or contract.'),
+      qa('Which jobs from Sweden’s Platsbanken appear in Lead To Client?',
+        'Choose JobTech Sweden to find open Platsbanken ads that identify the engagement as freelance or independent contract work. Swedish listings can use terms such as frilans or underkonsult. Each result links to the original ad, where you can read its language, location and application requirements.'),
       qa('Does Lead To Client include Upwork jobs?',
         'Upwork is outside the current source list. For paid freelance work, use the 24-hour Jobs feed to browse contracts, paid GitHub bounties and public hiring posts. Every listing opens on the platform where it was published.'),
     ],
@@ -136,7 +143,7 @@ export const faqGroups: FaqGroup[] = [
     title: 'Saved searches and scan receipts',
     items: [
       qa('Does applying inbox filters start a new search?',
-        'Inbox filters narrow the leads already saved in your workspace. Use Search posts in Live Research to check current posts, or Scan now under Scans to run an existing service search with a credit cap.'),
+        'Apply filters searches leads already saved in your workspace. To check the platforms now, enter a job title such as “software engineer”, choose the sources and time window, then select Search live. Open Scans and choose Scan now to run a saved service search with a credit cap.'),
       qa('How do I search for leads again using the same service?',
         'Open Scans, select your saved service and run Scan now. Your keywords, platforms and minimum intent score are already saved. Edit those choices under Settings when you want to change what future scans look for.'),
       qa('How recent are the leads in my saved searches?', freshnessAnswer),

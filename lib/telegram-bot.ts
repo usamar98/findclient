@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { researchSourceLabels, type ResearchResult } from './live-research'
 import { jobTimestamps } from './job-timestamps'
+import { validJobKeyword } from './lead-title-search'
 
 const updateSchema = z.object({
   update_id: z.number().int().nonnegative(),
@@ -17,7 +18,7 @@ type Command =
   | { kind: 'jobs' | 'watch'; query: string }
 
 function parseCommand(text: string, username?: string): Command | undefined {
-  if (!text.startsWith('/')) return validQuery(text) ? { kind: 'jobs', query: text } : { kind: 'usage' }
+  if (!text.startsWith('/')) return validJobKeyword(text) ? { kind: 'jobs', query: text } : { kind: 'usage' }
   const match = /^\/(\w+)(?:@(\w+))?(?:\s+([\s\S]*))?$/.exec(text)
   if (!match) return { kind: 'usage' }
   if (match[2] && match[2].toLowerCase() !== username?.trim().replace(/^@/, '').toLowerCase()) return
@@ -32,15 +33,13 @@ function parseCommand(text: string, username?: string): Command | undefined {
     case 'help': return { kind: 'help' }
     case 'alerts': return { kind: 'alerts' }
     case 'unwatch': return { kind: 'unwatch' }
-    case 'search': return validQuery(value) ? { kind: 'jobs', query: value } : { kind: 'usage' }
-    case 'jobs':
+    case 'search': return validJobKeyword(value) ? { kind: 'jobs', query: value } : { kind: 'usage' }
+    case 'jobs': return (!value || validJobKeyword(value)) ? { kind: 'jobs', query: value } : { kind: 'usage' }
     case 'watch':
-      return (!value || validQuery(value)) ? { kind: name, query: value } : { kind: 'usage' }
+      return (!value || (value.length >= 2 && validJobKeyword(value))) ? { kind: name, query: value } : { kind: 'usage' }
     default: return { kind: 'usage' }
   }
 }
-
-const validQuery = (query: string) => query.length >= 2 && query.length <= 100
 
 export function readTelegramUpdate(input: unknown, username?: string) {
   const update = updateSchema.safeParse(input)

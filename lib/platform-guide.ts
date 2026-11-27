@@ -1,13 +1,16 @@
-import { researchSourceLabels, researchSources, type ResearchSourceId } from './research-catalog'
+import { dailyJobSources, keylessSources, paidSources, researchSourceLabels, researchSources, type ResearchSourceId } from './research-catalog'
 
-export const platformGuideUpdated = '2026-11-26'
+export const platformGuideUpdated = '2026-11-28'
 
+const sourceList = new Intl.ListFormat('en', { type: 'conjunction' })
+export const dailySourceNames = sourceList.format(dailyJobSources.map(id => researchSourceLabels[id]))
+export const browseSourceNames = sourceList.format(paidSources.map(id => researchSourceLabels[id]))
 export const platformGuideAnswer =
-  'Lead To Client searches 12 public sources in Live Research. The 24-hour Jobs feed covers freelance hiring posts from Hacker News, Bluesky and Mastodon, contracts from We Work Remotely and Remote OK, and paid GitHub bounties. Each result links to the original post so you can check the request before replying.'
+  `Lead To Client searches ${researchSources.length} public sources in Live Research. Its 24-hour Jobs feed covers ${dailySourceNames}. Each result links to the original hiring post, contract listing or bounty so you can check the terms and apply.`
 export const platformAccessAnswer =
-  'Nine Live Research sources work without API keys. These are Hacker News, Bluesky, Stack Overflow, Shopify Community, selected public forums and all four paid-work sources. Direct Reddit and X searches require configured platform credentials. Reddit and X can also use the Exa search index, which Indie Hackers requires. Indexed posts may appear later than posts from a direct feed.'
+  `${keylessSources.length} Live Research sources work without API keys. They are ${sourceList.format(keylessSources.map(id => researchSourceLabels[id]))}. Direct Reddit and X searches require configured platform credentials. Reddit and X can also use the Exa search index, which Indie Hackers requires. Indexed posts may appear later than posts from a direct feed.`
 export const platformBrowseAnswer =
-  'Open Jobs in the workspace to browse openings published in the past 24 hours across six sources. Add a skill to narrow the results. For a shorter window, select the individual sources in Live Research. Searches that include community sources need a keyword. A linked Telegram account can search the same jobs with /jobs or watch a skill with /watch. Jobs and Live Research use no scoring credits.'
+  `Open Jobs to browse openings from ${dailyJobSources.length} sources over the past 24 hours. Choose a shorter window or enter a role such as “Shopify developer” to narrow the results. In Live Research, you can browse ${browseSourceNames} with the job title left blank. A linked Telegram account can browse with /jobs, search with /search, or watch a skill with /watch. Jobs and Live Research use no scoring credits.`
 export const platformFreshnessAnswer =
   'Choose “Past 15 minutes” to see matching posts published in the 15 minutes ending at the search’s “Checked” time. A post exactly 15 minutes old qualifies. Lead To Client shows both times in UTC and requires a precise publication timestamp. If a listing reaches a feed after that window closes, try “Past hour” or “Past 24 hours”.'
 export const platformTimingNote =
@@ -68,7 +71,7 @@ const descriptions: Record<ResearchSourceId, SourceDescription> = {
     url: 'https://wordpress.org/support/forums/feed/',
   },
   weworkremotely: {
-    detail: 'Looks for freelance and contract listings with evidence of pay in the public jobs feed.',
+    detail: 'Checks freelance and contract listings in the public jobs feed. Identified employer contracts can appear with “Pay not listed” when the listing gives no compensation.',
     freshness: 'Age uses the RSS listing’s publication time. The feed asks readers to cache it for 60 minutes, and the app uses that interval. A listing can be older than 15 minutes when it first appears in a search.',
     reference: 'We Work Remotely job feed',
     url: 'https://weworkremotely.com/remote-jobs.rss',
@@ -90,6 +93,18 @@ const descriptions: Record<ResearchSourceId, SourceDescription> = {
     freshness: 'Age starts when the original status was published. The app uses a 30-second cache for hiring-tag timelines on mastodon.social. Posts from another server must reach that timeline before a search can find them.',
     reference: 'Mastodon hashtag timelines',
     url: 'https://docs.joinmastodon.org/methods/timelines/#tag',
+  },
+  jobicy: {
+    detail: 'Finds remote roles that Jobicy labels freelance or contract. Check the original listing for location restrictions and the employer’s application instructions.',
+    freshness: 'Jobicy delays its public API listings by three hours and the app checks the feed at most hourly. A Jobicy job will already be outside a 1-minute or 15-minute search when it reaches the feed. Choose “Past 6 hours” or “Past 24 hours” for this source.',
+    reference: 'Jobicy Jobs API',
+    url: 'https://jobicy.com/jobs-rss-feed',
+  },
+  jobtech: {
+    detail: 'Finds ads from Sweden’s Platsbanken that explicitly identify a freelance or independent contractor engagement, including Swedish terms such as frilans and underkonsult. Open the original ad to check the contract and location.',
+    freshness: 'Age uses the original Swedish publication time, converted to UTC. The app caches the public JobSearch response for 60 seconds. A listing can appear after the publisher indexes it.',
+    reference: 'Arbetsförmedlingen JobSearch API',
+    url: 'https://data.arbetsformedlingen.se/dataservice/jobsearch/',
   },
 }
 

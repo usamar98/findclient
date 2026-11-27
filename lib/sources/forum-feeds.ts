@@ -2,6 +2,7 @@ import robotsParser from 'robots-parser'
 import { XMLParser } from 'fast-xml-parser'
 import { Parser } from 'htmlparser2'
 import { z } from 'zod'
+import { matchResearchPost, researchMatchPlan } from '../research-matching'
 import { bodyText, cleanPosts, ProviderBackoff, remote, type Adapter, type NormalizedPost } from './shared'
 
 type PublishedFeed = {
@@ -115,11 +116,9 @@ async function readFeed(feed: PublishedFeed, since: Date, rules: Awaited<ReturnT
 async function searchFeed(feed: PublishedFeed, query: string, since: Date) {
   const rules = await publisherRules(new URL(feed.url).origin)
   const posts = await readFeed(feed, since, rules)
-  const words = query.toLowerCase().split(/\s+/).filter(word => word && word !== feed.community.toLowerCase())
-  return posts.filter(post => {
-    const text = (post.title + ' ' + post.body).toLowerCase()
-    return words.every(word => text.includes(word))
-  })
+  if (!query.trim()) return posts
+  const plan = researchMatchPlan(query)
+  return posts.filter(post => matchResearchPost(plan, post))
 }
 
 export class FeedAccessRestricted extends Error {

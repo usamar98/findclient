@@ -1,4 +1,6 @@
 import { absolute, siteConfig } from './seo'
+import { researchSources } from './research-catalog'
+import { browseSourceNames } from './platform-guide'
 
 const profiles = [
   ['X', process.env.BRAND_X_URL],
@@ -43,8 +45,8 @@ export const softwareApplication = {
   description: siteConfig.description,
   softwareHelp: { '@type': 'WebPage', url: absolute('/platforms') },
   featureList: [
-    'Live Research across 12 public community, job and bounty sources',
-    'Browse We Work Remotely and Remote OK contracts, GitHub paid bounties and Mastodon hiring posts with optional keywords',
+    `Live Research across ${researchSources.length} public community, job and bounty sources`,
+    `Browse ${browseSourceNames} with optional keywords`,
     'Publication-time filters, original post links and listed compensation when available',
     'Search runtime and coverage for each selected source',
     'Buyer intent and quality scores with supporting evidence',

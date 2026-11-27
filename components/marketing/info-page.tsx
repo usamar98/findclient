@@ -5,6 +5,7 @@ import { infoPages, type InfoSlug } from '@/lib/marketing-pages'
 import { absolute, buildMetadata } from '@/lib/seo'
 import { brandProfiles, organization } from '@/lib/brand'
 import { howItWorksFaq } from '@/lib/marketing-faq'
+import { dailySourceNames } from '@/lib/platform-guide'
 import {
   buyerQualityExample,
   buyerQualityMethod,
@@ -73,12 +74,9 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing' | 'faq'> 
         <section id="live-research">
           <h2>How do I find paid freelance jobs posted today?</h2>
           <p>
-            Open <Link href="/app/jobs">24-hour jobs</Link> for hiring posts on
-            Hacker News, Bluesky and Mastodon, contracts from We Work Remotely and
-            Remote OK, and paid GitHub bounties.
-            Enter a skill to narrow the results. For the past minute, 15 minutes
-            or hour, select the sources individually in Live Research. Each
-            job links to its original post and shows when it was published and first found.
+            Open <Link href="/app/jobs">24-hour Jobs</Link> to find openings across {dailySourceNames}.
+            Enter a role such as “Shopify developer” and choose when the job was posted, from the past minute to the past 24 hours.
+            Open the original listing to read the terms and apply.
           </p>
           <p>
             A short window can be empty while a feed catches up or when nobody

@@ -2,6 +2,9 @@ import { z } from 'zod'
 import { admin } from '../db/admin'
 import { bluesky, hn, stackexchange } from './api'
 import { indexed, shopify } from './discovery'
+import { matchResearchPost, researchMatchPlan } from '../research-matching'
+import { maxJobAgeMs } from '../research-windows'
+import { searchKeylessNetwork } from './keyless-research'
 import {
   cleanPosts,
   ProviderBackoff,
@@ -25,10 +28,8 @@ export function providerKey(id: string) {
 }
 export async function searchPublic(skill: string, redditOnly = false) {
   const input = z.string().trim().min(2).max(100).parse(skill)
-  const query =
-    input.replace(/\s+(developers?|designers?|freelancers?)$/i, '').trim() ||
-    input
-  const since = new Date(Date.now() - 7 * 86400000)
+  const plan = researchMatchPlan(input)
+  const since = new Date(Date.now() - maxJobAgeMs)
   const ids: SourceId[] = redditOnly
     ? ['reddit']
     : [
@@ -51,7 +52,15 @@ export async function searchPublic(skill: string, redditOnly = false) {
       if (gate.data && Date.parse(gate.data.retry_at) > Date.now())
         throw new Error('Source is cooling down.')
       try {
-        return await adapters[id].search(query, since)
+        if (id === 'hn' || id === 'bluesky' || id === 'stackexchange') {
+          const page = await searchKeylessNetwork(id, input, since)
+          if (page.retryAt) {
+            const { error } = await db.rpc('defer_source', { p_source: source, p_until: page.retryAt.toISOString() })
+            if (error) throw new Error('Source cooldown could not be saved.')
+          }
+          return page.posts
+        }
+        return await adapters[id].search(input, since)
       } catch (error) {
         if (error instanceof ProviderBackoff) {
           const result = await db.rpc('defer_source', {
@@ -68,9 +77,10 @@ export async function searchPublic(skill: string, redditOnly = false) {
   if (tasks.every((t) => t.status === 'rejected'))
     throw new Error('Search providers are temporarily unavailable.')
   const posts = tasks.flatMap((t) => (t.status === 'fulfilled' ? t.value : []))
-  const help =
-    /\?|\b(help|need|hire|hiring|looking for|seeking|issue|fix|how can|how do|recommend)\b/i
-  return cleanPosts(posts, since)
-    .filter((p) => help.test(p.title + ' ' + p.body))
+  return cleanPosts(posts, new Date(Date.now() - maxJobAgeMs))
+    .filter(post => {
+      const match = post.posted_precision !== 'day' && matchResearchPost(plan, post)
+      return match && match.kind !== 'topic'
+    })
     .slice(0, 3)
 }

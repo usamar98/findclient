@@ -51,6 +51,11 @@ export function postBody(value: string) {
 export function cleanPosts(posts: NormalizedPost[], since: Date) {
   const result = new Map<string, NormalizedPost>()
   for (const post of posts) {
+    if (typeof post.posted_at !== 'string') continue
+    const calendarDate = /^\d{4}-\d{2}-\d{2}$/.test(post.posted_at)
+    // Accept explicit ISO and RSS time zones. A local clock time can mean
+    // different instants on different servers.
+    if (!calendarDate && !/(?:z|gmt|utc|[+-]\d\d:?\d\d)$/i.test(post.posted_at.trim())) continue
     const time = Date.parse(post.posted_at)
     if (!Number.isFinite(time) || time < since.getTime() || time > Date.now())
       continue
@@ -69,6 +74,7 @@ export function cleanPosts(posts: NormalizedPost[], since: Date) {
     if (!title || url.href.length > 2000) continue
     result.set(url.href, {
       ...post,
+      ...(calendarDate && { posted_precision: 'day' as const }),
       title,
       url: url.href,
       body: postBody(post.body).slice(0, 4500),

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { stageNames, statuses } from '@/lib/niche'
 import { researchSourceLabels, researchSources } from '@/lib/research-catalog'
 import { advancedFiltersActive, type InboxFilters } from '@/lib/inbox-filters'
+import { researchWindows } from '@/lib/research-windows'
 import { SearchScope } from './search-scope'
 
 type Props = {
@@ -15,16 +16,15 @@ export function LeadFilters({ filters: f, clearHref, spaces, searches }: Props) 
   return (
     <form action="/app/inbox" method="get" className="panel inbox-filters" aria-labelledby="lead-filters-title">
       <div>
-        <h2 id="lead-filters-title">Filter saved leads</h2>
-        <p className="inbox-filter-help">Filter jobs you saved and leads found by your scans.</p>
+        <h2 id="lead-filters-title">{f.view ? 'Search saved history' : 'Filter recent saved leads'}</h2>
+        <p className="inbox-filter-help">{f.view ? 'Track saved jobs, applications and follow-ups from any date.' : 'Filter your saved leads by original posting time. Choose Search live to find new jobs on the selected platforms.'}</p>
       </div>
       <div className="inbox-filter-grid">
         <label>Search lead titles<input type="search" name="q" placeholder="e.g. Shopify redesign" defaultValue={f.q} maxLength={100} /></label>
         <SearchScope workspace={f.workspace} service={f.service} spaces={spaces} searches={searches} />
-        <label>Posted within<select name="days" defaultValue={f.days ?? ''}>
-          <option value="">Any time</option><option value="1">Past 24 hours</option>
-          {[3, 7, 30].map(days => <option key={days} value={days}>Past {days} days</option>)}
-        </select></label>
+        {f.view ? <input type="hidden" name="view" value="history" /> : <label>Posted within<select name="window" defaultValue={f.window}>
+          {Object.entries(researchWindows).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        </select></label>}
         <label>Sort by<select name="sort" defaultValue={f.sort}>
           <option value="newest">Newest posts</option><option value="score">Highest intent</option>
           <option value="buyer">Highest buyer quality</option><option value="value">Highest deal value</option>
@@ -57,7 +57,11 @@ export function LeadFilters({ filters: f, clearHref, spaces, searches }: Props) 
           <label>Minimum deal value (USD)<input type="number" name="value" min="0" max="21474836.47" step="0.01" placeholder="0.00" defaultValue={f.value || ''} /></label>
         </div>
       </details>
-      <div className="inbox-filter-actions"><Link href={clearHref}>Clear filters</Link><button type="submit">Apply filters</button></div>
+      <div className="inbox-filter-actions">
+        <Link href={clearHref}>Clear filters</Link>
+        <button type="submit">Apply filters</button>
+        {!f.view && <button type="submit" name="run" value="1">Search live</button>}
+      </div>
     </form>
   )
 }

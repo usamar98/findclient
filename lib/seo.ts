@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { canonicalOrigin, searchIndexingEnabled } from './origin'
+import { researchSources } from './research-catalog'
 
 const origin = canonicalOrigin
 const indexable = searchIndexingEnabled()
@@ -8,7 +9,7 @@ export const siteConfig = {
   title: 'Find freelance leads and paid projects | Lead To Client',
   url: origin,
   description:
-    'Find freelance leads across 12 sources. Browse community requests, We Work Remotely and Remote OK contracts, GitHub paid bounties and Mastodon hiring posts.',
+    `Find fresh freelance leads across ${researchSources.length} sources. Search by role, see when each job was posted, and apply to contracts, community hiring requests and paid bounties.`,
   twitterHandle: process.env.NEXT_PUBLIC_TWITTER_HANDLE || undefined,
   defaultOgImage: '/opengraph-image',
   indexable,

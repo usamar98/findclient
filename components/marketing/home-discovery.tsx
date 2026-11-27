@@ -15,7 +15,9 @@ function SourceMark({ source }: { source: (typeof heroPlatforms)[number] }) {
   if (source.mark) {
     return <span aria-hidden="true" className="cf-source-mark" style={{ maskImage: `url(/brands/${source.mark}.svg)` }} />
   }
-  return source.id === 'forums' ? <span aria-hidden="true" className="cf-forums-mark" /> : null
+  if (source.id === 'forums') return <span aria-hidden="true" className="cf-forums-mark" />
+  const initials = source.name.split(' ').slice(0, 2).map(word => word[0]).join('')
+  return <span aria-hidden="true" className="cf-source-initials">{initials}</span>
 }
 
 export function DiscoveryHero() {

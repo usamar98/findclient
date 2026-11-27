@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from './db/schema'
 import { inboxPageSize, type InboxFilters } from './inbox-filters'
+import { leadTitleSearchGroups, researchMatchPlan } from './research-matching'
 
 const sortColumns = {
   newest: 'posted_at', score: 'intent_score', buyer: 'buyer_quality_score', value: 'deal_value_cents', followup: 'follow_up_on',
@@ -8,6 +9,14 @@ const sortColumns = {
 
 const leadColumns = 'id,source,title,posted_at,intent_score,buyer_quality_score,problem_summary,status,assignee_id,deal_value_cents,follow_up_on'
 const applicationColumns = `${leadColumns},applied_at` as const
+
+// The API treats every imatch on a column as AND. One regex alternation is
+// an OR group. Only our separators and boundaries become regex operators.
+function titleGroupRegex(alternatives: readonly string[]) {
+  const escaped = alternatives.map(alias => alias.split(/\s+/).map(part =>
+    part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[[:space:]-]+'))
+  return '(^|[^[:alnum:].+#])(' + escaped.join('|') + ')($|[^[:alnum:].+#]|[.]($|[^[:alnum:]]))'
+}
 
 export async function queryInbox(db: SupabaseClient<Database>, userId: string, filters: InboxFilters, now = new Date()) {
   const result = await fetchRows(db, userId, filters, now, true)
@@ -28,7 +37,11 @@ function fetchRows(db: SupabaseClient<Database>, userId: string, filters: InboxF
     : leads.select(leadColumns, { count: 'exact' })
   if (filters.workspace) query = query.eq('user_id', filters.workspace)
   if (filters.service) query = query.eq('niche_id', filters.service)
-  if (filters.q) query = query.ilike('title', '%' + filters.q.replace(/[\\%_]/g, '\\$&') + '%')
+  if (filters.q) {
+    const groups = leadTitleSearchGroups(researchMatchPlan(filters.q))
+    if (!groups.length) query = query.is('id', null)
+    for (const aliases of groups) query = query.regexIMatch('title', titleGroupRegex(aliases))
+  }
   if (filters.source.length) query = query.in('source', filters.source)
   if (filters.status.length) query = query.in('status', filters.status)
   if (filters.application) {
@@ -37,7 +50,10 @@ function fetchRows(db: SupabaseClient<Database>, userId: string, filters: InboxF
   if (filters.score) query = query.gte('intent_score', filters.score)
   if (filters.quality) query = query.gte('buyer_quality_score', filters.quality)
   if (filters.value) query = query.gte('deal_value_cents', Math.round(filters.value * 100))
-  if (filters.days) query = query.gte('posted_at', new Date(now.getTime() - Number(filters.days) * day).toISOString())
+  if (!filters.view) {
+    const since = new Date(now.getTime() - Number(filters.window) * 60_000)
+    query = query.gte('posted_at', since.toISOString()).lte('posted_at', now.toISOString())
+  }
   if (filters.assigned === 'me') query = query.eq('assignee_id', userId)
   if (filters.assigned === 'unassigned') query = query.is('assignee_id', null)
   if (filters.due === 'yes') query = query.lte('follow_up_on', today)

@@ -11,14 +11,14 @@ export const metadata = { title: 'Dashboard | Lead To Client' }
 
 const dollars = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 const shortDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
-const inboxKeys = new Set(['workspace', 'service', 'assigned', 'application', 'due', 'q', 'source', 'status', 'score', 'days', 'sort', 'page'])
+const inboxKeys = new Set(['workspace', 'service', 'assigned', 'application', 'due', 'q', 'source', 'status', 'score', 'quality', 'value', 'days', 'window', 'view', 'sort', 'page'])
 const operations = [
   { name: '24-hour jobs', href: '/app/jobs', detail: 'Browse freelance contracts, cash bounties and hiring posts published in the last 24 hours.' },
   { name: 'Live research', href: '/app/research', detail: 'Search public posts by keyword and publication time.' },
   { name: 'Saved searches', href: '/app/settings#saved-searches', detail: 'Manage the services, communities and keywords you monitor.' },
   { name: 'Scans', href: '/app/scans', detail: 'Run a saved search, set a credit limit or review a scan receipt.' },
   { name: 'Automations', href: '/app/automations', detail: 'Manage assignment rules, reply drafts and proposal follow-ups.' },
-  { name: 'Proposals sent', href: '/app/inbox?status=proposal_sent', detail: 'Revisit leads in the proposal sent stage and plan your next follow-up.' },
+  { name: 'Proposals sent', href: '/app/inbox?view=history&status=proposal_sent', detail: 'Revisit leads in the proposal sent stage and plan your next follow-up.' },
   { name: 'Results', href: '/app/results', detail: 'Compare replies, calls and won revenue by source or saved search.' },
 ]
 
@@ -48,7 +48,7 @@ function LeadQueue({ leads, due, today, owners }: {
   owners: Map<string, string>
 }) {
   const title = due ? 'Follow-ups due' : 'New leads to review'
-  const href = due ? '/app/inbox?due=yes' : '/app/inbox?status=new'
+  const href = due ? '/app/inbox?view=history&due=yes' : '/app/inbox?view=history&status=new'
   return (
     <section className="dashboard-queue">
       <div className="dashboard-section-head">
@@ -114,9 +114,9 @@ export default async function Dashboard({ searchParams }: {
   const owners = new Map(spaces.data.map(space => [space.id, space.id === user.id ? 'My workspace' : space.name]))
   const hasSearch = (searches.count ?? 0) > 0
   const metrics = [
-    { label: 'New leads', value: recent.count ?? 0, href: '/app/inbox?status=new' },
-    { label: 'Follow-ups due', value: due.count ?? 0, href: '/app/inbox?due=yes' },
-    { label: 'Won revenue', value: dollars.format(totals.data.revenue_cents / 100), href: '/app/inbox?status=won' },
+    { label: 'New leads', value: recent.count ?? 0, href: '/app/inbox?view=history&status=new' },
+    { label: 'Follow-ups due', value: due.count ?? 0, href: '/app/inbox?view=history&due=yes' },
+    { label: 'Won revenue', value: dollars.format(totals.data.revenue_cents / 100), href: '/app/inbox?view=history&status=won' },
     { label: 'Your credits', value: profile.data.credits, href: '/app/profile' },
   ]
   return (
@@ -127,7 +127,7 @@ export default async function Dashboard({ searchParams }: {
           {owners.size > 1 && <p>Lead activity across your {owners.size} workspaces.</p>}
         </div>
         <div className="actions">
-          <Link href="/app/inbox?assigned=me">Assigned to me</Link>
+          <Link href="/app/inbox?view=history&assigned=me">Assigned to me</Link>
           <Link className="work-scan-action" href="/app/inbox">Open lead inbox <span aria-hidden="true">↗</span></Link>
         </div>
       </div>

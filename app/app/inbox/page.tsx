@@ -1,10 +1,12 @@
 import Link from 'next/link'
+import { headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { requireUser } from '@/lib/db/server'
 import { admin } from '@/lib/db/admin'
 import { stageNames } from '@/lib/niche'
 import { researchSourceLabels, type ResearchSourceId } from '@/lib/research-catalog'
-import { inboxHref, inboxPageSize, parseInboxFilters, type InboxParams } from '@/lib/inbox-filters'
+import { inboxHref, inboxPageSize, inboxResearchHref, isInboxNavigation, parseInboxFilters, type InboxParams } from '@/lib/inbox-filters'
+import { researchWindows } from '@/lib/research-windows'
 import { queryInbox } from '@/lib/inbox-query'
 import { LeadFilters } from './filters'
 import './inbox.css'
@@ -12,11 +14,13 @@ import './inbox.css'
 export const metadata = { title: 'Lead inbox | Lead To Client' }
 
 const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
-const postedDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+const postedDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC', timeZoneName: 'short' })
 
 export default async function Inbox({ searchParams }: { searchParams: Promise<InboxParams> }) {
   const [{ db, user }, params] = await Promise.all([requireUser(), searchParams])
   const filters = parseInboxFilters(params)
+  if (params.run === '1') redirect(inboxResearchHref(filters, isInboxNavigation(await headers())))
+  if (params.days !== undefined) redirect(inboxHref(filters, 1))
   const offset = (filters.page - 1) * inboxPageSize
   const [result, memberships, searches] = await Promise.all([
     queryInbox(db, user.id, filters),
@@ -36,10 +40,10 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<In
   const count = result.count ?? 0
   const pages = Math.max(1, Math.ceil(count / inboxPageSize))
   if (filters.page > pages) redirect(inboxHref(filters, pages))
-  const clearHref = inboxHref(parseInboxFilters({ workspace: filters.workspace }))
+  const clearHref = inboxHref(parseInboxFilters({ workspace: filters.workspace, view: filters.view }))
   const active = inboxHref({ ...filters, sort: 'newest' }, 1) !== clearHref
   let hasSavedLeads = count > 0
-  if (!hasSavedLeads && active) {
+  if (!hasSavedLeads && (!filters.view || active)) {
     let probe = db.from('leads').select('id').limit(1)
     if (filters.workspace) probe = probe.eq('user_id', filters.workspace)
     const saved = await probe
@@ -50,7 +54,8 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<In
   const shared = Boolean(owner && owner !== user.id)
   const ownSearches = searches.data.filter(search => search.user_id === user.id)
   const removeTitle = filters.q ? inboxHref({ ...filters, q: '' }, 1) : undefined
-  const anyTime = filters.days ? inboxHref({ ...filters, days: undefined }, 1) : undefined
+  const historyHref = inboxHref({ ...filters, view: 'history' }, 1)
+  const recentHref = inboxHref({ ...filters, view: undefined }, 1)
   const spaces = memberships.data.map(space => ({ ...space, name: space.id === user.id ? 'My workspace' : space.name }))
   const currentUrl = inboxHref(filters)
 
@@ -58,10 +63,14 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<In
     <div className="work-title-row">
       <h1>Lead inbox</h1>
       <div className="actions">
-        <Link href={{ pathname: '/app/research', query: { q: filters.q, source: filters.source } }}>Live research</Link>
+        <Link href={inboxResearchHref(filters)}>Live research</Link>
         {!shared && <Link className="work-scan-action" href="/app/scans">Scan now <span aria-hidden="true">↗</span></Link>}
       </div>
     </div>
+    <nav className="inbox-views" aria-label="Saved lead views">
+      <Link href={recentHref} aria-current={!filters.view ? 'page' : undefined}>Recent saved leads</Link>
+      <Link href={historyHref} aria-current={filters.view ? 'page' : undefined}>Saved history</Link>
+    </nav>
     <LeadFilters key={currentUrl} filters={filters} clearHref={clearHref} spaces={spaces} searches={searches.data} />
     <section aria-labelledby="inbox-results-heading">
       <div className="inbox-results-heading">
@@ -91,13 +100,13 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<In
       })}
       {!count && <div className="panel inbox-empty">
         {hasSavedLeads ? <>
-          <h3>No saved leads match these filters</h3>
-          {(filters.q || filters.days) && <p>{filters.q ? <>The title must contain “{filters.q}”. </> : null}
-            {filters.days ? 'The date filter uses the original post date.' : null}</p>}
+          <h3>{!filters.view && !active ? 'No saved leads were posted in the past 24 hours' : 'No saved leads match these filters'}</h3>
+          {filters.q && <p>Looking for titles matching “{filters.q}”.</p>}
+          {!filters.view && active && <p>{researchWindows[filters.window]} by original posting time.</p>}
           <div className="inbox-empty-actions">
             {removeTitle && <Link href={removeTitle}>Remove title filter</Link>}
-            {anyTime && <Link href={anyTime}>Include older posts</Link>}
-            {clearHref !== removeTitle && clearHref !== anyTime && <Link href={clearHref}>Show all saved leads</Link>}
+            {!filters.view && <Link href={historyHref}>Check saved history</Link>}
+            {active && clearHref !== removeTitle && <Link href={clearHref}>Clear filters</Link>}
           </div>
         </> : <>
           <h3>No saved leads yet</h3>
@@ -107,6 +116,7 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<In
             : !ownSearches.some(search => search.active) ? <p><Link href="/app/settings#saved-searches">Activate a saved search</Link> to start scanning for new leads.</p>
             : <p><Link href="/app/scans">Run a scan or check your scan receipts</Link> to see which sources returned posts and how many matched your saved search.</p>}
         </>}
+        {filters.q && <p><a href={inboxResearchHref(filters, true)}>Search live for “{filters.q}”</a></p>}
       </div>}
     </section>
     {pages > 1 && <nav className="inbox-pages" aria-label="Inbox pages">

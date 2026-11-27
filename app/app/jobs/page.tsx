@@ -4,8 +4,9 @@ import { JobActions } from '@/components/workspace/job-actions'
 import { getDailyJobs } from '@/lib/daily-jobs'
 import { requireUser } from '@/lib/db/server'
 import { getJobTracking, jobTrackingProof } from '@/lib/job-tracking'
-import { dailyJobSources, isDailyJobSource, researchSourceLabels, type DailyJobSource } from '@/lib/research-catalog'
+import { dailyJobSources, isDailyJobSource, researchSourceLabels, researchSourceNotes, type DailyJobSource } from '@/lib/research-catalog'
 import type { ResearchSource } from '@/lib/live-research'
+import { parseResearchWindow, researchWindows, type ResearchWindow } from '@/lib/research-windows'
 import './jobs.css'
 
 export const metadata = { title: '24-hour jobs | Lead To Client' }
@@ -15,17 +16,19 @@ const perPage = 24
 const postedTime = new Intl.DateTimeFormat('en-US', {
   timeZone: 'UTC', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
 })
-type Filters = { query: string; source?: DailyJobSource; page: number }
+type Filters = { query: string; source?: DailyJobSource; page: number; minutes: ResearchWindow }
 
 function jobsUrl(filters: Filters, page = 1) {
   const params = new URLSearchParams()
   if (filters.query) params.set('q', filters.query)
   if (filters.source) params.set('source', filters.source)
+  if (filters.minutes !== '1440') params.set('window', filters.minutes)
   if (page > 1) params.set('page', String(page))
   return params.size ? '/app/jobs?' + params : '/app/jobs'
 }
 
 function coverageLabel(source: ResearchSource) {
+  if (source.status === 'delayed') return 'Source publication delay exceeds this window'
   if (source.status === 'cooldown') return 'Rate limited'
   if (source.status === 'access') return 'Access restricted'
   if (source.status !== 'checked') return 'Unavailable'
@@ -35,7 +38,7 @@ function coverageLabel(source: ResearchSource) {
 }
 
 async function Results({ filters }: { filters: Filters }) {
-  const result = await getDailyJobs(filters.query, filters.source)
+  const result = await getDailyJobs(filters.query, filters.source, filters.minutes)
   const { sources, posts: jobs } = result
   const pages = Math.max(1, Math.ceil(jobs.length / perPage))
   const page = Math.min(filters.page, pages)
@@ -53,6 +56,7 @@ async function Results({ filters }: { filters: Filters }) {
       <ul>{sources.map(row => <li key={row.source}>
         <strong>{researchSourceLabels[row.source]}</strong> · {coverageLabel(row)}
         {row.lastCheckedAt && <> · Last source check <time dateTime={row.lastCheckedAt}>{postedTime.format(new Date(row.lastCheckedAt))} UTC</time></>}
+        {researchSourceNotes[row.source] && <> · {researchSourceNotes[row.source]}</>}
       </li>)}</ul>
     </details>
     {visible.length ? (
@@ -78,10 +82,12 @@ async function Results({ filters }: { filters: Filters }) {
       </ul>
     ) : (
       <div className="panel">
-        <p>{checked
-          ? 'The responding sources returned no matching openings published in the last 24 hours.'
+        <p>{sources.every(row => row.status === 'delayed')
+          ? 'This source releases listings after your selected window. Choose a longer window or another platform.'
+          : checked
+          ? 'The responding sources returned no matching openings in this publication window.'
           : 'The selected sources could not be checked. Try again later.'}</p>
-        {(filters.query || filters.source) && <Link href="/app/jobs">See all jobs</Link>}
+        {(filters.query || filters.source || filters.minutes !== '1440') && <Link href="/app/jobs">See all jobs from the past 24 hours</Link>}
       </div>
     )}
     {pages > 1 && <nav className="daily-pagination" aria-label="Job pages">
@@ -93,13 +99,14 @@ async function Results({ filters }: { filters: Filters }) {
 }
 
 export default async function Jobs({ searchParams }: {
-  searchParams: Promise<{ q?: string | string[]; source?: string | string[]; page?: string | string[] }>
+  searchParams: Promise<{ q?: string | string[]; source?: string | string[]; page?: string | string[]; window?: string | string[] }>
 }) {
   await requireUser()
-  const { q, source, page } = await searchParams
+  const { q, source, page, window } = await searchParams
   const filters: Filters = {
     query: typeof q === 'string' ? q.trim().slice(0, 100) : '',
     source: typeof source === 'string' && isDailyJobSource(source) ? source : undefined,
+    minutes: parseResearchWindow(window, '1440'),
     page: typeof page === 'string' && /^\d{1,6}$/.test(page) ? Math.max(1, Number(page)) : 1,
   }
   return <div className="daily-jobs">
@@ -107,6 +114,9 @@ export default async function Jobs({ searchParams }: {
     <p>Browse freelance contracts, cash bounties and hiring posts, newest first. Apply on the original listing, then mark the job as applied to track your follow-up.</p>
     <form className="panel daily-filter" action="/app/jobs">
       <label>Search jobs<input type="search" name="q" placeholder="Skill or job title" maxLength={100} defaultValue={filters.query} /></label>
+      <label>Posted within<select name="window" defaultValue={filters.minutes}>
+        {Object.entries(researchWindows).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+      </select></label>
       <label>Platform<select name="source" defaultValue={filters.source ?? ''}>
         <option value="">All platforms</option>
         {dailyJobSources.map(id => <option key={id} value={id}>{researchSourceLabels[id]}</option>)}

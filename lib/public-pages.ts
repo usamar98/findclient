@@ -5,8 +5,8 @@ import { platformGuideUpdated } from './platform-guide'
 import { absolute, siteConfig } from './seo'
 export const contentUpdated = '2026-11-24'
 const faqReleaseUpdated = '2026-11-27'
-const pagesWithRevisedFaq = new Set(['/', '/faq', '/find-clients', '/how-it-works', '/pricing'])
-const updatedWithPlatformGuide = new Set(['/platforms', '/about', '/changelog'])
+const pagesWithRevisedFaq = new Set(['/find-clients'])
+const updatedWithPlatformGuide = new Set(['/', '/faq', '/how-it-works', '/pricing', '/platforms', '/about', '/changelog'])
 export function staticPageUpdated(path: string) {
   if (pagesWithRevisedFaq.has(path) || path.startsWith('/find-clients/')) return faqReleaseUpdated
   return updatedWithPlatformGuide.has(path) ? platformGuideUpdated : contentUpdated

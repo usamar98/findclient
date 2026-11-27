@@ -15,7 +15,10 @@
 .inbox-advanced { border-top: 1px solid var(--cf-line); padding-top: .85rem; }
 .inbox-advanced summary { cursor: pointer; width: fit-content; font-weight: 600; }
 .inbox-advanced[open] .inbox-checks { margin: .9rem 0; }
-.inbox-filter-actions { display: flex; justify-content: flex-end; align-items: center; gap: 1rem; border-top: 1px solid var(--cf-line); padding-top: .9rem; }
+.inbox-filter-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: .6rem 1rem; border-top: 1px solid var(--cf-line); padding-top: .9rem; }
+.workspace .inbox-views { margin-bottom: 1rem; gap: .35rem; flex-wrap: wrap; }
+.workspace .inbox-views a { display: inline-block; padding: .42rem .85rem; border: 1px solid var(--cf-line); border-radius: 2rem; }
+.workspace .inbox-views a[aria-current='page'] { background: var(--cf-wash); font-weight: 650; border-color: var(--cf-text); }
 .inbox-filter-actions a { font-size: .9rem; }
 .workspace .inbox-filter-actions button { padding-inline: 1.5rem; }
 .inbox-results-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; margin-top: 2rem; gap: .2rem 1rem; }

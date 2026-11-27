@@ -3,6 +3,8 @@ export const paidSourceLabels = {
   remoteok: 'Remote OK',
   github: 'GitHub paid bounties',
   mastodon: 'Mastodon hiring posts',
+  jobicy: 'Jobicy',
+  jobtech: 'JobTech Sweden',
 } as const
 
 export type PaidSourceId = keyof typeof paidSourceLabels

@@ -33,7 +33,7 @@ export function indexed(source: keyof typeof scopes): Adapter {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': key },
         body: JSON.stringify({
-          query,
+          query: 'Recent original posts from employers hiring or clients requesting project help with ' + query,
           type: 'lite',
           includeDomains: paths,
           startPublishedDate: since.toISOString(),
@@ -50,8 +50,8 @@ export function indexed(source: keyof typeof scopes): Adapter {
           if (!parsed.success) return []
           const p = parsed.data
           if (!p.title || !p.publishedDate) return []
-          // Some indexes normalize a calendar date to midnight. Keep those useful
-          // in week-long scans without presenting an invented minute of publication.
+          // Some indexes normalize a calendar date to midnight. It cannot
+          // establish that a post appeared inside a live search window.
           const dayOnly = p.publishedDate.length === 10 ||
             new Date(p.publishedDate).toISOString().endsWith('T00:00:00.000Z')
           if (dayOnly && Date.now() - since.getTime() <= 86400000) return []

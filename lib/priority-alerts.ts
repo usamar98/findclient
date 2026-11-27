@@ -4,6 +4,7 @@ import { siteOrigin } from './origin'
 import { alertDestination } from './alert-webhook'
 import { assessBuyer, buyerSchema, requestLabels } from './lead-intelligence'
 import { verifyLeadSource } from './verify-lead-source'
+import { inPublicationWindow, maxJobAgeMs } from './research-windows'
 
 export async function priorityLead(owner: string, id: string, minimum: number) {
   const db = admin()
@@ -16,6 +17,7 @@ export async function priorityLead(owner: string, id: string, minimum: number) {
     .eq('id', id)
     .maybeSingle()
   if (error) throw error
+  const now = Date.now()
   if (
     !lead ||
     lead.intent_score === null || lead.intent_score < minimum ||
@@ -27,7 +29,7 @@ export async function priorityLead(owner: string, id: string, minimum: number) {
       'call_booked',
       'proposal_sent',
     ].includes(lead.status) ||
-    Date.now() - Date.parse(lead.posted_at) > 7 * 86400000
+    !inPublicationWindow(lead.posted_at, now - maxJobAgeMs, now)
   )
     return null
   const stored = buyerSchema.safeParse(lead.buyer_intelligence)

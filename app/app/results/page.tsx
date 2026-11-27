@@ -37,6 +37,7 @@ export default async function Results({ searchParams }: {
     revenue: sum.revenue + row.revenue_cents,
   }), { leads: 0, calls: 0, won: 0, revenue: 0 })
   const workspaceQuery = new URLSearchParams({ workspace: owner })
+  const historyQuery = new URLSearchParams({ workspace: owner, view: 'history' })
   return (
     <section className="cf-results">
       <h1>Results</h1>
@@ -81,7 +82,7 @@ export default async function Results({ searchParams }: {
               const label = group === 'platform'
                 ? researchSourceLabels[row.group_id as ResearchSourceId] ?? row.group_id
                 : row.search_name
-              const filter = new URLSearchParams(workspaceQuery)
+              const filter = new URLSearchParams(historyQuery)
               if (row.group_id) filter.set(group === 'platform' ? 'source' : 'service', row.group_id)
               return <tr key={row.group_id ?? 'unattributed'}>
                 <th scope="row">{label && row.leads_found > 0
@@ -98,7 +99,7 @@ export default async function Results({ searchParams }: {
         </div>
       ) : <section className="panel"><h3>No results yet</h3>
         <p>Your first saved lead{showCosts ? ' or scoring charge' : ''} will appear here.</p>
-        <Link href={'/app/inbox?' + workspaceQuery}>Open the lead inbox</Link>
+        <Link href={'/app/inbox?' + historyQuery}>Open saved history</Link>
       </section>}
       <details className="cf-result-notes"><summary>How results are counted</summary>
         <p>Replies and calls count each lead once when a teammate marks that stage. Older leads include the stage on record when tracking began. Won revenue uses the current deal value of leads marked won.</p>

@@ -89,7 +89,12 @@ async function searchPages(source: Network, query: string, since: Date, readStre
         partial = true
         break
       }
-      if (page.next) requests.push({ term: request.term, cursor: page.next })
+      if (page.next) {
+        // Two full pages from the global stream can crowd a relevant post out of
+        // the request budget. Use the remaining reads for targeted searches.
+        if (request.term === '' && request.cursor) requests.push(...variants.map(term => ({ term })))
+        requests.push({ term: request.term, cursor: page.next })
+      }
       if (page.next && page.next === request.cursor) partial = true
     } catch (error) {
       lastError = error

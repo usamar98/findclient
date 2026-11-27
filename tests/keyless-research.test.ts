@@ -93,3 +93,25 @@ test('total throttle stays visible; a busy term never produces unbounded paginat
   assert.equal(data.partial, true)
   assert.equal(data.posts.length, 1)
 })
+
+test('a busy newest stream uses its remaining request budget to find targeted jobs deeper in the selected window', async t => {
+  t.mock.method(Date, 'now', () => at)
+  const terms: string[] = []
+  t.mock.method(globalThis, 'fetch', async (url: URL) => {
+    if (url.hostname === 'hacker-news.firebaseio.com') return Response.json(url.pathname.includes('maxitem') ? 1 : null)
+    const term = url.searchParams.get('query')!
+    const page = Number(url.searchParams.get('page'))
+    terms.push(term)
+    const hit = { objectID: String(80 + page), title: 'Discussion of local bridges', created_at: new Date(at - 82_000).toISOString() }
+    return Response.json(term ? { page, nbPages: 1, hits: term === 'software developer' ? [
+      { ...hit, objectID: '123', title: 'We are hiring a software developer', created_at: since.toISOString() },
+      { ...hit, objectID: '122', title: 'We are hiring a software developer', created_at: new Date(+since - 1_000).toISOString() },
+    ] : [] } : { page, nbPages: 80, hits: [hit] })
+  })
+  const data = await searchKeylessNetwork('hn', 'software engineer', since)
+  assert.deepEqual(terms, ['', '', 'software engineer', 'software developer'])
+  assert.equal(data.partial, true)
+  const plan = researchMatchPlan('software engineer')
+  assert.deepEqual(data.posts.filter(post => matchResearchPost(plan, post)?.kind === 'hiring')
+    .map(post => post.url), ['https://news.ycombinator.com/item?id=123'])
+})

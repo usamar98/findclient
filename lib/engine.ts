@@ -10,20 +10,14 @@ import { assessBuyer, closedRequest } from './lead-intelligence'
 import { verifyLeadSource } from './verify-lead-source'
 import { evaluateScanPost, type ScoringIssue } from './scan-scoring'
 import { ProviderBackoff } from './sources/shared'
+import { inPublicationWindow, maxJobAgeMs } from './research-windows'
 
-const week = 7 * 86400000
 class SourceRequestFailed extends Error {}
 class ScanUpgradeRequired extends Error {}
 
 function validPost(post: NormalizedPost, since: Date, negative: string[]) {
   if (!post || typeof post.title !== 'string' || typeof post.body !== 'string') return false
-  const timestamp = Date.parse(post.posted_at)
-  if (
-    !Number.isFinite(timestamp) ||
-    timestamp < since.valueOf() ||
-    timestamp > Date.now() + 5 * 60_000
-  )
-    return false
+  if (post.posted_precision === 'day' || !inPublicationWindow(post.posted_at, since.valueOf(), Date.now())) return false
   try {
     const url = new URL(post.url)
     if (url.protocol !== 'https:' && url.protocol !== 'http:') return false
@@ -78,7 +72,7 @@ async function runJob(job: ScanJob, deadline: number) {
     ...row,
     portfolio_url: row.portfolio_url ?? '',
   })
-  const since = new Date(Date.now() - week)
+  const since = new Date(Date.now() - maxJobAgeMs)
   const cadence =
     row.profiles.fast_discovery && ['hn', 'bluesky', 'shopify'].includes(source)
       ? 600000

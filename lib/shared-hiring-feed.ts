@@ -18,7 +18,7 @@ const sharedSources: Source[] = ['hn', 'bluesky']
 const day = 86_400_000
 const readLimit = 500
 
-// These four sources are read directly. Store only their identity and dates.
+// For directly read job boards, store only the listing identity and dates.
 // Including the publication date distinguishes a genuinely re-issued listing.
 export async function stampJobDiscoveries<T extends JobListing>(posts: T[]): Promise<Array<T & { first_found_at?: string }>> {
   if (!posts.length) return posts

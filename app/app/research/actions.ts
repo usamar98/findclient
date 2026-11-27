@@ -10,7 +10,7 @@ import { paidListings } from '@/lib/daily-jobs'
 import { getJobTracking, jobTrackingProof } from '@/lib/job-tracking'
 import type { JobTracking } from '@/lib/job-tracking-model'
 import { readSharedHiringFeed, stampJobDiscoveries } from '@/lib/shared-hiring-feed'
-import { isPaidSource, type ResearchCandidate, type ResearchSourceId } from '@/lib/research-catalog'
+import { isPaidSource, sourceCanPublishInWindow, type JobListing, type ResearchCandidate, type ResearchSourceId } from '@/lib/research-catalog'
 import { combineHiringReads, researchInput, researchSnapshot, type ResearchState, type ResearchStatus, type SourceRead } from '@/lib/live-research'
 
 function liveProvider(id: ResearchSourceId) {
@@ -28,7 +28,7 @@ export async function findFreshPosts(_previous: ResearchState, form: FormData): 
   const started = performance.now()
   const { user } = await requireUser()
   const input = researchInput(form)
-  if (!input) return { error: 'Choose a time window and at least one platform. Enter 2–100 characters, or select only paid freelance platforms to browse without keywords.' }
+  if (!input) return { error: 'Choose a time window and at least one platform. Enter a role or skill (2–100 characters, or C or R), or browse job boards without keywords.' }
   const db = admin()
   const budget = await db.rpc('allow_request', { p_key: 'live-research:' + user.id, p_limit: 10, p_window: 600 })
   if (budget.error) return { error: 'Live search is temporarily unavailable. Please try again.' }
@@ -48,6 +48,7 @@ export async function findFreshPosts(_previous: ResearchState, form: FormData): 
     const provider = liveProvider(source)
     const indexed = provider === 'exa'
     const report = (status: ResearchStatus, posts: ResearchCandidate[] = []) => ({ source, indexed, status, posts })
+    if (!sourceCanPublishInWindow(source, minutes)) return report('delayed')
     if (indexed && !process.env.EXA_API_KEY) return report('unconfigured')
     // The merchant and developer forums can throttle independently.
     if (source !== 'shopify' && (cooldowns.get(provider) ?? 0) > Date.now()) return report('cooldown')
@@ -65,7 +66,7 @@ export async function findFreshPosts(_previous: ResearchState, form: FormData): 
       if (isPaidSource(source)) {
         const listings = await paidListings(source, since)
         if (listings.retryAt) await db.rpc('defer_source', { p_source: provider, p_until: listings.retryAt.toISOString() })
-        const posts = await stampJobDiscoveries(listings.posts)
+        const posts = await stampJobDiscoveries<JobListing>([...listings.posts, ...(listings.unpricedContracts ?? [])])
         return { ...report('checked', posts), partial: listings.partial, candidates: listings.candidates }
       }
       if (source === 'forums' || source === 'shopify') {

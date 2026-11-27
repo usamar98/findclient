@@ -1,6 +1,6 @@
 import { absolute } from './seo'
 import { infoPages } from './marketing-pages'
-import { marketingFaq } from './marketing-faq'
+import { faqGroups } from './marketing-faq'
 import {
   buyerQualityExample,
   buyerQualityMethod,
@@ -59,10 +59,14 @@ export function llmsDocument(full: boolean) {
     ),
     link(
       '/faq',
-      'Product questions and answers',
-      'Buyer scores, reply drafts, alerts, proposal links and revenue tracking.',
+      'Freelance lead generation FAQ',
+      'How to find fresh freelance jobs, check buyer intent, apply and track client work.',
     ),
     link('/changelog', 'Release notes', 'Dated product updates.'),
+    '',
+    '## FAQ topics',
+    '',
+    ...faqGroups.map(group => `- [${group.title}](${absolute('/faq#' + group.id)})`),
     '',
     '## Freelance research and tools',
     '',
@@ -162,8 +166,11 @@ export function llmsDocument(full: boolean) {
     buyerQualityExample,
   )
   lines.push('', '## Product questions', '', 'Source: ' + absolute('/faq'))
-  for (const { question, answer } of marketingFaq) {
-    lines.push('', '### ' + question, '', answer)
+  for (const group of faqGroups) {
+    lines.push('', '### ' + group.title, '', 'Source: ' + absolute('/faq#' + group.id))
+    for (const { question, answer } of group.items) {
+      lines.push('', '#### ' + question, '', answer)
+    }
   }
   lines.push('', '## Service playbooks')
   for (const niche of niches) {
@@ -177,8 +184,13 @@ export function llmsDocument(full: boolean) {
       '',
       ...niche.where.map((s) => '- ' + s),
       '',
+      'Example search phrases: ' + niche.searchPhrases.join(' · '),
+      '',
       niche.approach,
     )
+    for (const { question, answer } of niche.faq) {
+      lines.push('', '#### ' + question, '', answer)
+    }
   }
   for (const post of journal) {
     lines.push(

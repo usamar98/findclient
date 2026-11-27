@@ -6,7 +6,7 @@ import '../blog/guides.css'
 
 const path = '/find-clients'
 const title = 'Find freelance clients by service'
-const description = 'Choose your freelance service to find relevant communities, see examples of buyer requests and learn what to ask before you quote.'
+const description = 'Find freelance clients for web development, design, SEO, video editing, copywriting or agency work. Get buyer search phrases and questions to ask before you quote.'
 
 export const metadata = buildMetadata({ title, description, path })
 
@@ -15,8 +15,8 @@ export default function ServiceGuides() {
     <main className="guides-wrap">
       <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'Find clients by service', href: path }]} />
       <h1>{title}</h1>
-      <p>{description} A store owner looking for a theme fix will describe a different problem from a founder hiring a copywriter. Start with the words a buyer uses for the work you do.</p>
-      <h2>Which service do you sell?</h2>
+      <p>A merchant hiring a developer might write “custom product template.” A founder hiring a copywriter might ask someone to “rewrite our pricing page.” Choose your service for search phrases, communities to check and questions to ask before quoting.</p>
+      <h2>Which freelance clients are you looking for?</h2>
       <ul className="guide-cards">
         {niches.map((niche) => (
           <li key={niche.slug}>
@@ -25,6 +25,7 @@ export default function ServiceGuides() {
           </li>
         ))}
       </ul>
+      <p>For a different specialty, enter a custom service in your saved search and use the phrases buyers use for that work. <Link href="/faq">Read the freelance lead search FAQ</Link>.</p>
       <JsonLd data={{
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',

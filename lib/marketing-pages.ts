@@ -33,11 +33,11 @@ export const infoPages = {
     ],
   },
   faq: {
-    title: 'Lead To Client FAQ on live searches, leads and credits',
+    title: 'Finding freelance leads and paid projects | Lead To Client FAQ',
     description:
-      'Which platforms list paid freelance work? How fresh are the posts? Get answers on Live Research, saved leads, scoring credits, alerts and proposals.',
+      'Find freelance jobs by niche, check when a client posted, and see how lead scoring, Telegram alerts, proposals and follow-ups work in Lead To Client.',
     answer:
-      'Live Research lets you look for recent freelance openings and public requests without spending scoring credits. Saved searches monitor the communities you choose and bring qualifying leads into your shared inbox. Below you can check which platforms each search covers, how post age is measured and what it costs to score a lead or draft a reply.',
+      'To find freelance work posted today, browse 24-hour Jobs or use Live Research to search by skill and publication time. Both use zero scoring credits. Save a hiring request to your inbox, open the original listing to apply, and record your next follow-up.',
     sections: [],
   },
   about: {

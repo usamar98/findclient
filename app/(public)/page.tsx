@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { buildMetadata, absolute, siteConfig } from '@/lib/seo'
 import { organization } from '@/lib/brand'
-import { marketingFaq } from '@/lib/marketing-faq'
+import { homeFaq } from '@/lib/marketing-faq'
 import { shopifySnapshot } from '@/lib/demo-snapshot'
 import { DiscoveryHero, SourceExamples } from '@/components/marketing/home-discovery'
 import { PublicSearch } from '@/components/marketing/public-search'
@@ -94,8 +94,8 @@ export default function Home() {
         </div>
       </section>
       <Offers />
-      <div className="cf-home-section cf-faq"><FAQ items={[marketingFaq[3], marketingFaq[12], marketingFaq[15]]} />
-        <Link href="/faq">Read all questions <span aria-hidden="true">↗</span></Link>
+      <div className="cf-home-section cf-faq"><FAQ items={homeFaq} />
+        <Link href="/faq">Read the freelance lead generation FAQ <span aria-hidden="true">↗</span></Link>
         <aside id="workspace-preview" className="cf-workspace-preview" aria-labelledby="workspace-preview-title">
           <h2 id="workspace-preview-title">What you can automate in your workspace</h2>
           <ul>

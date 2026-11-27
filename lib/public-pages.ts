@@ -4,8 +4,13 @@ import { posts } from './posts'
 import { platformGuideUpdated } from './platform-guide'
 import { absolute, siteConfig } from './seo'
 export const contentUpdated = '2026-11-24'
-const updatedWithPlatformGuide = new Set(['/', '/platforms', '/about', '/faq', '/how-it-works', '/pricing', '/changelog'])
-export const staticPageUpdated = (path: string) => updatedWithPlatformGuide.has(path) ? platformGuideUpdated : contentUpdated
+const faqReleaseUpdated = '2026-11-27'
+const pagesWithRevisedFaq = new Set(['/', '/faq', '/find-clients', '/how-it-works', '/pricing'])
+const updatedWithPlatformGuide = new Set(['/platforms', '/about', '/changelog'])
+export function staticPageUpdated(path: string) {
+  if (pagesWithRevisedFaq.has(path) || path.startsWith('/find-clients/')) return faqReleaseUpdated
+  return updatedWithPlatformGuide.has(path) ? platformGuideUpdated : contentUpdated
+}
 export const staticPages = [
   ['/', 'Lead To Client'],
   ['/pricing', 'Pricing and credits'],
@@ -35,11 +40,10 @@ export function publicPages() {
       title,
       updated: staticPageUpdated(path),
     })),
-    ...niches.map((n) => ({
-      path: '/find-clients/' + n.slug,
-      title: n.title,
-      updated: contentUpdated,
-    })),
+    ...niches.map((n) => {
+      const path = '/find-clients/' + n.slug
+      return { path, title: n.title, updated: staticPageUpdated(path) }
+    }),
     ...posts().map((p) => ({
       path: '/blog/' + p.slug,
       title: p.title,

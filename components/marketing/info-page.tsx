@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { infoPages, type InfoSlug } from '@/lib/marketing-pages'
 import { absolute, buildMetadata } from '@/lib/seo'
 import { brandProfiles, organization } from '@/lib/brand'
-import { liveResearchTimingFaq, marketingFaq, productFaq } from '@/lib/marketing-faq'
+import { howItWorksFaq } from '@/lib/marketing-faq'
 import {
   buyerQualityExample,
   buyerQualityMethod,
@@ -19,16 +19,10 @@ export function infoMetadata(slug: InfoSlug) {
   const { title, description } = infoPages[slug]
   return buildMetadata({ title, description, path: '/' + slug })
 }
-export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
+export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing' | 'faq'> }) {
   const page = infoPages[slug]
   const path = '/' + slug
   const updated = staticPageUpdated(path)
-  const items =
-    slug === 'faq'
-      ? productFaq
-      : slug === 'how-it-works'
-        ? [marketingFaq[8], marketingFaq[12]]
-        : []
   return (
     <main
       className={
@@ -39,7 +33,7 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
         items={[
           { name: 'Home', href: '/' },
           {
-            name: slug === 'faq' ? 'FAQ' : slug.replaceAll('-', ' '),
+            name: slug.replaceAll('-', ' '),
             href: path,
           },
         ]}
@@ -167,42 +161,15 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
           )}
         </section>
       )}
-      {slug === 'faq' && (
-        <section id="source-freshness" aria-labelledby="fresh-leads-heading">
-          <h2 id="fresh-leads-heading">Finding fresh freelance leads</h2>
-          {liveResearchTimingFaq.map(({ question, answer, introduction, sources }) => (
-            <details key={question}>
-              <summary>{question}</summary>
-              {sources ? (
-                <>
-                  <p>{introduction}</p>
-                  <ul>
-                    {sources.map(row => (
-                      <li key={row.id}><strong>{row.name}.</strong> {row.freshness}</li>
-                    ))}
-                  </ul>
-                </>
-              ) : <p>{answer}</p>}
-            </details>
-          ))}
-          <p><Link href="/platforms#source-freshness">Compare source timing and see the publisher references</Link></p>
-        </section>
-      )}
-      {items.length > 0 && <FAQ items={items} />}
+      {slug === 'how-it-works' && <FAQ items={howItWorksFaq} />}
       <div className="mk-answer-links">
-        {['faq', 'how-it-works', 'about', 'changelog'].includes(slug) && (
+        {['how-it-works', 'about', 'changelog'].includes(slug) && (
           <>
             <Link href="/platforms">Compare Live Research platforms</Link>
             {' · '}
           </>
         )}
-        {slug === 'faq' ? (
-          <Link href="/how-it-works#source-coverage">
-            See saved search sources and scan intervals
-          </Link>
-        ) : (
-          <Link href="/faq">Browse all product questions</Link>
-        )}
+        <Link href="/faq">Browse all product questions</Link>
         {' · '}
         <Link href="/find-clients">Explore guides by service</Link>
       </div>
@@ -215,9 +182,7 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
               ? 'AboutPage'
               : slug === 'contact'
                 ? 'ContactPage'
-                : slug === 'faq'
-                  ? 'FAQPage'
-                  : 'WebPage',
+                : 'WebPage',
           '@id': absolute(path) + '#webpage',
           name: page.title,
           url: absolute(path),
@@ -228,13 +193,6 @@ export function InfoPage({ slug }: { slug: Exclude<InfoSlug, 'pricing'> }) {
           ...(slug === 'about' && { mainEntity: organization }),
           ...(slug === 'how-it-works' && {
             about: { '@id': absolute('/#app') },
-          }),
-          ...(slug === 'faq' && {
-            mainEntity: marketingFaq.map(({ question, answer }) => ({
-              '@type': 'Question',
-              name: question,
-              acceptedAnswer: { '@type': 'Answer', text: answer },
-            })),
           }),
         }}
       />

@@ -1,6 +1,6 @@
 import { Offers } from '@/components/marketing/offers'
 import { Breadcrumbs, FAQ } from '@/components/marketing/seo'
-import { marketingFaq } from '@/lib/marketing-faq'
+import { pricingFaq } from '@/lib/marketing-faq'
 import { infoPages } from '@/lib/marketing-pages'
 import { buildMetadata } from '@/lib/seo'
 import './pricing-page.css'
@@ -13,7 +13,7 @@ export default function Page() {
       <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'Pricing', href: '/pricing' }]} />
       <Offers full />
       <div className="cf-pricing-faq">
-        <FAQ title="Pricing questions" items={marketingFaq.slice(15, 20)} />
+        <FAQ title="Pricing questions" items={pricingFaq} />
       </div>
     </main>
   )
